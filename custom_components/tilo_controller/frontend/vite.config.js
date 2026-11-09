@@ -7,7 +7,12 @@ export default defineConfig({
         port: 5173,
     },
     build: {
-        outDir: "dist",
+        outDir: "../www",
         emptyOutDir: true,
+        lib: {
+            entry: "src/main.js",
+            formats: ["es"],
+            fileName: () => "tilo-controller.js",
+        },
     },
 });

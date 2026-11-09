@@ -1,24 +1,46 @@
 
 """Tilo Controller integration."""
 
+from pathlib import Path
+
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.frontend import async_register_built_in_panel
 
 from .const import DOMAIN
-from .device_manager import DeviceManager
-from .schedule_manager import ScheduleManager
-from .coordinator import TiloControllerCoordinator
+
+PANEL_URL = "/tilo_controller"
+PANEL_RESOURCE = "/tilo_controller/tilo-controller.js"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the integration."""
+    """Set up Tilo Controller."""
 
-    hass.data.setdefault(DOMAIN, {
-        "entries": set(),
-        "device_manager": DeviceManager(),
-        "schedule_manager": ScheduleManager(),
-        "coordinator": None,
-    })
+    www_path = Path(__file__).parent / "www"
+
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(
+            PANEL_RESOURCE,
+            str(www_path / "tilo-controller.js"),
+            False,
+        )
+    ])
+
+    async_register_built_in_panel(
+        hass,
+        component_name="custom",
+        sidebar_title="Tilo Controller",
+        sidebar_icon="mdi:air-purifier",
+        frontend_url_path=PANEL_URL.strip("/"),
+        config={
+            "_panel_custom": {
+                "name": "tilo-controller",
+                "module_url": PANEL_RESOURCE,
+            }
+        },
+        require_admin=False,
+    )
 
     return True
 
@@ -28,55 +50,5 @@ async def async_setup_entry(
     entry: ConfigEntry,
 ) -> bool:
     """Set up a config entry."""
-
-    domain_data = hass.data.setdefault(DOMAIN, {
-        "entries": set(),
-        "device_manager": DeviceManager(),
-        "schedule_manager": ScheduleManager(),
-        "coordinator": None,
-    })
-
-    device_manager = domain_data["device_manager"]
-
-    # Register this ESP controller.
-    device_manager.add_controller(
-        esp_id=entry.entry_id,
-        name=entry.data["name"],
-        host=entry.data["host"],
-    )
-
-    # Create the shared coordinator.
-    if domain_data["coordinator"] is None:
-        coordinator = TiloControllerCoordinator(
-            hass,
-            device_manager,
-        )
-
-        domain_data["coordinator"] = coordinator
-
-        await coordinator.async_config_entry_first_refresh()
-
-    domain_data["entries"].add(entry.entry_id)
-
-    return True
-
-
-async def async_unload_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-) -> bool:
-    """Unload a config entry."""
-
-    domain_data = hass.data.get(DOMAIN)
-
-    if domain_data is None:
-        return True
-
-    domain_data["entries"].discard(entry.entry_id)
-
-    domain_data["device_manager"].remove_controller(entry.entry_id)
-
-    if not domain_data["entries"]:
-        hass.data.pop(DOMAIN)
 
     return True
