@@ -1,17 +1,16 @@
-
 """Tilo Controller integration."""
 
 from pathlib import Path
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.components import panel_custom
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components.frontend import async_register_built_in_panel
 
 from .const import DOMAIN
 
-PANEL_URL = "/tilo_controller"
-PANEL_RESOURCE = "/tilo_controller/tilo-controller.js"
+PANEL_URL = "tilo_controller"
+PANEL_RESOURCE = "/tilo_controller_static"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -22,23 +21,19 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     await hass.http.async_register_static_paths([
         StaticPathConfig(
             PANEL_RESOURCE,
-            str(www_path / "tilo-controller.js"),
+            str(www_path),
             False,
         )
     ])
 
-    async_register_built_in_panel(
+    await panel_custom.async_register_panel(
         hass,
-        component_name="custom",
+        webcomponent_name="tilo-controller",
+        frontend_url_path=PANEL_URL,
+        module_url=f"{PANEL_RESOURCE}/tilo-controller.js",
         sidebar_title="Tilo Controller",
         sidebar_icon="mdi:air-purifier",
-        frontend_url_path=PANEL_URL.strip("/"),
-        config={
-            "_panel_custom": {
-                "name": "tilo-controller",
-                "module_url": PANEL_RESOURCE,
-            }
-        },
+        embed_iframe=False,
         require_admin=False,
     )
 
