@@ -1,0 +1,13 @@
+{
+    "domain": "geurbot",
+    "name": "GeurBot",
+    "version": "0.1.0",
+    "documentation": "https://github.com/USERNAME/REPOSITORY",
+    "codeowners": [],
+    "config_flow": true,
+    "dependencies": "zeroconf",
+    "requirements": [],
+    "iot_class": "local_polling"
+}
+
+
