@@ -3,10 +3,16 @@ import { createDeviceCard } from "./device-card.js";
 // Zet TEST_MODE op false zodra de echte apparatenlijst vanuit Home Assistant wordt aangeleverd.
 const TEST_MODE = true;
 const testDevices = [
-    { id: "geurbot_001", name: "GeurBot keuken", connection: { host: "192.168.1.100" } },
-    { id: "geurbot_002", name: "GeurBot woonkamer", connection: { host: "192.168.1.101" } },
-    { id: "geurbot_003", name: "GeurBot slaapkamer", connection: { host: "192.168.1.102" } },
-    { id: "geurbot_004", name: "GeurBot badkamer", connection: { host: "192.168.1.103" } }
+  //  {
+    //     id: "4CE750B2F180",
+    //     name: "GeurBot keuken",
+    //     connection: {
+    //         host: "192.168.2.4"
+    //     }
+    // },
+    // { id: "geurbot_002", name: "GeurBot woonkamer", connection: { host: "192.168.1.101" } },
+    // { id: "geurbot_003", name: "GeurBot slaapkamer", connection: { host: "192.168.1.102" } },
+    // { id: "geurbot_004", name: "GeurBot badkamer", connection: { host: "192.168.1.103" } }
 ];
 
 export function createDeviceList(devices = []) {

@@ -8,8 +8,8 @@ class EspClient:
     def __init__(self, device: dict):
         self.device = device
         self.base_url = f"http://{device['ip']}"
-        self.client_id = device["client_id"]
-        self.token = device["token"]
+        self.client_id = device.get("client_id")
+        self.token = device.get("token")
 
     async def request(self,method: str,endpoint: str,data: dict | None = None,params: dict | None = None,) -> dict[str, Any]:
 

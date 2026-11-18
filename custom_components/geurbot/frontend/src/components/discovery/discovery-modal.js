@@ -1,3 +1,4 @@
+
 import { scanDevices } from "../../services/discovery-api.js";
 import { addDiscoveredDevice } from "../../services/device-api.js";
 import { escapeHtml } from "../../utils/html.js";
@@ -11,8 +12,14 @@ export function setupDiscoveryModal(app) {
     const loading = app.querySelector("#discovery-loading");
     const count = app.querySelector("#discovery-count");
 
-    openButton?.addEventListener("click", () => { overlay.hidden = false; });
-    closeButton?.addEventListener("click", () => { overlay.hidden = true; });
+    openButton?.addEventListener("click", () => {
+        overlay.hidden = false;
+    });
+
+    closeButton?.addEventListener("click", () => {
+        overlay.hidden = true;
+    });
+
     overlay?.addEventListener("click", event => {
         if (event.target === overlay) overlay.hidden = true;
     });
@@ -26,16 +33,26 @@ export function setupDiscoveryModal(app) {
 
         try {
             const devices = await scanDevices();
+
             count.textContent = `${devices.length} gevonden`;
+
             if (!devices.length) {
-                discoveredDevices.innerHTML = emptyState("Geen GeurBots gevonden.", "Controleer of je apparaten verbonden zijn met het netwerk.");
+                discoveredDevices.innerHTML = emptyState(
+                    "Geen GeurBots gevonden.",
+                    "Controleer of je apparaten verbonden zijn met het netwerk."
+                );
                 return;
             }
-            discoveredDevices.innerHTML = devices.map(createDiscoveredDevice).join("");
+
+            discoveredDevices.innerHTML = devices
+                .map(createDiscoveredDevice)
+                .join("");
+
         } catch (error) {
             count.textContent = "Scan mislukt";
             discoveredDevices.textContent = "Er ging iets mis tijdens het scannen.";
             console.error("Discovery error:", error);
+
         } finally {
             loading.hidden = true;
             scanButton.disabled = false;
@@ -49,23 +66,39 @@ export function setupDiscoveryModal(app) {
 
         const deviceId = button.dataset.deviceId;
         const device = window.__geurbotDiscoveredDevices?.[deviceId];
+
         if (!device) return;
 
-        const name = window.prompt(`Geef ${device.hostname || deviceId} een naam:`, device.hostname || "Mijn GeurBot");
+        const name = window.prompt(
+            `Geef ${device.name || deviceId} een naam:`,
+            device.name || "Mijn GeurBot"
+        );
+
         if (name === null) return;
+
         const pairingCode = window.prompt("Voer de pairingcode van de GeurBot in:");
+
         if (pairingCode === null) return;
 
         button.disabled = true;
         button.textContent = "Koppelen...";
+
         try {
-            await addDiscoveredDevice(deviceId, name.trim(), pairingCode.trim());
+            await addDiscoveredDevice(
+                deviceId,
+                name.trim(),
+                pairingCode.trim()
+            );
+
             button.textContent = "Toegevoegd";
             button.classList.add("added");
+
             console.log("GeurBot toegevoegd:", deviceId);
+
         } catch (error) {
             button.disabled = false;
             button.textContent = "Opnieuw proberen";
+
             console.error("Toevoegen mislukt:", error);
             window.alert(error.message || "Toevoegen mislukt");
         }
@@ -75,18 +108,29 @@ export function setupDiscoveryModal(app) {
 function createDiscoveredDevice(device) {
     window.__geurbotDiscoveredDevices ??= {};
     window.__geurbotDiscoveredDevices[device.device_id] = device;
+
     return `
         <article class="discovered-device">
             <div class="discovered-device-icon">⌁</div>
+
             <div class="discovered-device-info">
-                <strong>${escapeHtml(device.hostname || device.device_id)}</strong>
-                <span>${escapeHtml(device.host || "Onbekend IP-adres")} · ${escapeHtml(device.device_id)}</span>
+                <strong>${escapeHtml(device.name || device.device_id)}</strong>
+                <span>${escapeHtml(device.ip || "Onbekend IP-adres")} · ${escapeHtml(device.device_id)}</span>
             </div>
-            <button class="add-discovered-device" data-device-id="${escapeHtml(device.device_id)}">Toevoegen</button>
+
+            <button class="add-discovered-device" data-device-id="${escapeHtml(device.device_id)}">
+                Toevoegen
+            </button>
         </article>
     `;
 }
 
 function emptyState(title, description) {
-    return `<div class="discovery-empty"><span>⌕</span><p>${escapeHtml(title)}</p><small>${escapeHtml(description)}</small></div>`;
+    return `
+        <div class="discovery-empty">
+            <span>⌕</span>
+            <p>${escapeHtml(title)}</p>
+            <small>${escapeHtml(description)}</small>
+        </div>
+    `;
 }
