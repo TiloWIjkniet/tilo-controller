@@ -1,127 +1,127 @@
 
-"""Discover GeurBot devices using mDNS."""
-
-from __future__ import annotations
-
 import asyncio
-import ipaddress
-import logging
-from typing import Any
-
-from homeassistant.components import zeroconf
-from homeassistant.core import HomeAssistant
+import inspect
+import aiohttp
 
 from zeroconf import ServiceStateChange
-from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
+from zeroconf.asyncio import (
+    AsyncZeroconf,
+    AsyncServiceBrowser,
+    AsyncServiceInfo,
+)
 
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_TYPE = "_geurbot._tcp.local."
-DEFAULT_SCAN_DURATION = 5.0
-SERVICE_INFO_TIMEOUT = 3000
 
 
-class GeurBotDiscovery:
-    """Discover GeurBot devices on the local network."""
+async def scan_devices(timeout=10, on_device_found=None):
+    zeroconf = AsyncZeroconf()
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        self.hass = hass
+    devices = {}
+    tasks = set()
+    discovered = set()
 
-    async def async_scan(
-        self,
-        duration: float = DEFAULT_SCAN_DURATION,
-    ) -> list[dict[str, Any]]:
-        """Scan the network for GeurBot devices."""
+    http_timeout = aiohttp.ClientTimeout(total=3)
 
-        aiozc = await zeroconf.async_get_async_instance(self.hass)
+    async def resolve_device(name, session):
+        info = AsyncServiceInfo(SERVICE_TYPE, name)
 
-        devices: dict[str, dict[str, Any]] = {}
-        tasks: set[asyncio.Task[None]] = set()
-
-        async def async_process_service(name: str) -> None:
-            """Retrieve information about a discovered service."""
-
-            info = AsyncServiceInfo(SERVICE_TYPE, name)
-
-            try:
-                found = await info.async_request(
-                    aiozc,
-                    timeout=SERVICE_INFO_TIMEOUT,
-                )
-            except Exception:
-                _LOGGER.debug(
-                    "Could not retrieve GeurBot service information: %s",
-                    name,
-                    exc_info=True,
-                )
-                return
-
-            if not found:
+        try:
+            if not await info.async_request(zeroconf.zeroconf, 3000):
                 return
 
             properties = {
-                key.decode("utf-8"): value.decode("utf-8")
+                key.decode(): value.decode()
                 for key, value in info.properties.items()
             }
 
-            device_id = properties.get("device_id")
-
-            if not device_id:
-                _LOGGER.debug(
-                    "Ignoring service without device_id: %s",
-                    name,
-                )
-                return
-
             addresses = info.parsed_addresses()
-
-            if not addresses:
-                return
-
-            # Prefer IPv4 addresses for the ESP32-C3.
-            addresses.sort(
-                key=lambda address: (
-                    ipaddress.ip_address(address).version != 4
-                )
+            ip = next(
+                (address for address in addresses if ":" not in address),
+                None
             )
 
-            devices[device_id] = {
+            device_id = properties.get("device_id")
+
+            if not device_id or not ip:
+                return
+
+            device = {
                 "device_id": device_id,
-                "hostname": info.server.rstrip("."),
-                "host": addresses[0],
+                "name": info.server.rstrip(".").split(".")[0],
+                "ip": ip,
                 "port": info.port,
                 "api_version": properties.get("api_version"),
+                "connected": None,
+                "ssid": None,
+                "rssi": None,
             }
 
-        def on_service_state_change(
-            zeroconf_instance: Any,
-            service_type: str,
-            name: str,
-            state_change: ServiceStateChange,
-        ) -> None:
-            """Handle mDNS service discovery events."""
+            try:
+                url = f"http://{ip}:{info.port}/api/network/status"
 
+                async with session.get(url) as response:
+                    if response.ok:
+                        network = await response.json(content_type=None)
+
+                        device["connected"] = network.get("connected")
+                        device["ssid"] = network.get("ssid")
+                        device["rssi"] = network.get("rssi")
+
+            except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
+                pass
+
+            devices[device_id] = device
+
+            # Direct doorgeven zodra het apparaat gevonden is
+            if on_device_found:
+                result = on_device_found(device)
+
+                if inspect.isawaitable(result):
+                    await result
+
+        except asyncio.CancelledError:
+            raise
+
+        except Exception as error:
+            print(f"Discovery error bij {name}: {error}")
+
+    async with aiohttp.ClientSession(timeout=http_timeout) as session:
+
+        def on_service_state_change(
+            zeroconf,
+            service_type,
+            name,
+            state_change,
+        ):
             if state_change != ServiceStateChange.Added:
                 return
 
-            task = self.hass.async_create_task(
-                async_process_service(name)
-            )
+            if name in discovered:
+                return
+
+            discovered.add(name)
+
+            task = asyncio.create_task(resolve_device(name, session))
             tasks.add(task)
             task.add_done_callback(tasks.discard)
 
         browser = AsyncServiceBrowser(
-            aiozc,
+            zeroconf.zeroconf,
             SERVICE_TYPE,
             handlers=[on_service_state_change],
         )
 
         try:
-            await asyncio.sleep(duration)
+            # Blijf gedurende de volledige scan zoeken
+            await asyncio.sleep(timeout)
+
         finally:
             await browser.async_cancel()
 
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
 
-        return list(devices.values())
+            await zeroconf.async_close()
+
+    return list(devices.values())

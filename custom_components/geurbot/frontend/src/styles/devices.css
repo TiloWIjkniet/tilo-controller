@@ -1,0 +1,42 @@
+.device-list { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.device-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.device-header button {
+    flex: 0 0 44px; width: 44px; height: 44px; border: 0; border-radius: 12px;
+    background: linear-gradient(135deg, #7187ff, #485ed5); color: white; font-size: 25px;
+    box-shadow: 0 5px 14px #3348b344; transition: transform .2s, filter .2s;
+}
+.device-header button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.device-search {
+    flex: 1; min-width: 0; height: 44px; margin: 12px 0; padding: 0 13px;
+    border: 1px solid #343c4d; border-radius: 10px; outline: none; background: #232936; color: white;
+}
+.device-search::placeholder { color: #8791a4; }
+.device-search:focus { border-color: #7187ff; }
+.device-items { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
+.device-items::-webkit-scrollbar { width: 5px; }
+.device-items::-webkit-scrollbar-thumb { border-radius: 10px; background: #41495b; }
+.device-card {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    margin: 8px 0; padding: 15px; border: 1px solid #2d3442; border-radius: 13px;
+    background: #222834; cursor: pointer; transition: .18s ease;
+}
+.device-card:hover { border-color: #5669b8; background: #293247; }
+.device-card.selected { border-color: #7187ff; background: #2b3550; box-shadow: inset 3px 0 #7187ff; }
+.device-card[hidden] { display: none; }
+.device-card-left { flex: 1; min-width: 0; }
+.device-card-left h3 { margin: 0 0 6px; overflow-wrap: anywhere; font-size: 14px; }
+.device-ip { color: #8e99ac; font-size: 11px; }
+.device-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.device-status { font-size: 11px; }
+.device-status.online, .device-status.good { color: #7dd9a5; }
+.device-status.stable { color: #82b7ef; }
+.device-status.warning { color: #f2bd65; }
+.device-status.offline { color: #ed7777; }
+.device-status.loading { color: #9aa4b6; }
+.device-fragrance { width: 18px; height: 18px; }
+.device-fragrance.good { color: #35b779; }
+.device-fragrance.warning { color: #e0a43c; }
+.device-fragrance.error { color: #e05252; }
+.device-fragrance.loading { color: #9298a5; }
+.device-update { padding: 4px 7px; border: 1px solid #9c4848; border-radius: 6px; background: #6f303055; color: #ffb5b5; font-size: 10px; }
+.device-update[hidden] { display: none; }
