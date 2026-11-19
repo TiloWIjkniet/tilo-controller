@@ -9,22 +9,21 @@ export async function updateDeviceStatus(card, deviceId) {
     try {
         const response = await fetch(`/api/geurbot/devices/${encodeURIComponent(deviceId)}/network/status`);
 
-        if (!response.ok) throw new Error(`Network API: ${response.status}`);
+        const raw = await response.text();
 
-        const status = await response.json();
+        if (!response.ok) throw new Error(`Network API: ${response.status} - ${raw}`);
+
+        const status = JSON.parse(raw);
         const result = getConnectionStatus(status);
 
         connection.textContent = result.label;
         connection.className = `device-status ${result.class}`;
 
-        updateDeviceFragrance(card, status, status.connected);
 
     } catch (error) {
         connection.textContent = "Offline";
         connection.className = "device-status offline";
-
-        updateDeviceFragrance(card, null, false);
-
+        
         console.error("Fout bij ophalen netwerkstatus:", error);
     }
 }

@@ -1,21 +1,31 @@
-import { API } from "./api-config.js";
-
-export async function addDiscoveredDevice(deviceId, name, pairingCode) {
-    const response = await fetch(API.addDevice, {
+export async function addDiscoveredDevice(deviceId, name, hostname, pairingCode) {
+    const response = await fetch("/api/devices/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             device_id: deviceId,
             name,
+            hostname,
             pairing_code: pairingCode
         })
     });
 
-    const result = await response.json().catch(() => ({}));
+    const raw = await response.text();
 
-    if (!response.ok) {
-        throw new Error(result.message || result.error || "Toevoegen mislukt");
+    console.log("HTTP status:", response.status);
+    console.log("Raw response:", JSON.stringify(raw));
+
+    let result;
+
+    try {
+        result = JSON.parse(raw);
+    } catch (error) {
+        throw new Error(`Ongeldige backend-response: ${raw}`);
     }
 
-    return result.device;
+    if (!response.ok || !result.success) {
+        throw new Error(result.error || "Apparaat koppelen mislukt.");
+    }
+
+    return result;
 }

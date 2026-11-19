@@ -42,13 +42,15 @@ async def scan_devices(timeout=10, on_device_found=None):
             )
 
             device_id = properties.get("device_id")
+            hostname = info.server.rstrip(".")
 
             if not device_id or not ip:
                 return
 
             device = {
                 "device_id": device_id,
-                "name": info.server.rstrip(".").split(".")[0],
+                "name": hostname.split(".")[0],
+                "hostname": hostname,
                 "ip": ip,
                 "port": info.port,
                 "api_version": properties.get("api_version"),

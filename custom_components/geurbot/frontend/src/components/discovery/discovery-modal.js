@@ -2,9 +2,11 @@
 import { scanDevices } from "../../services/discovery-api.js";
 import { addDiscoveredDevice } from "../../services/device-api.js";
 import { escapeHtml } from "../../utils/html.js";
+import { devices, renderDevices } from "../devices/device-list.js";
 
 export function setupDiscoveryModal(app) {
     const overlay = app.querySelector("#add-device-overlay");
+    const modal = overlay?.querySelector(".add-device-modal");
     const openButton = app.querySelector("#add-device");
     const closeButton = app.querySelector("#close-add-device");
     const scanButton = app.querySelector("#scan-devices");
@@ -32,19 +34,24 @@ export function setupDiscoveryModal(app) {
         count.textContent = "Scannen...";
 
         try {
-            const devices = await scanDevices();
+            const discovered = await scanDevices();
 
-            count.textContent = `${devices.length} gevonden`;
+            // Filter apparaten die al zijn toegevoegd.
+            const availableDevices = discovered.filter(device =>
+                !devices.some(existing => existing.id === device.device_id)
+            );
 
-            if (!devices.length) {
+            count.textContent = `${availableDevices.length} gevonden`;
+
+            if (!availableDevices.length) {
                 discoveredDevices.innerHTML = emptyState(
-                    "Geen GeurBots gevonden.",
-                    "Controleer of je apparaten verbonden zijn met het netwerk."
+                    "Geen nieuwe GeurBots gevonden.",
+                    "Er zijn geen beschikbare apparaten gevonden."
                 );
                 return;
             }
 
-            discoveredDevices.innerHTML = devices
+            discoveredDevices.innerHTML = availableDevices
                 .map(createDiscoveredDevice)
                 .join("");
 
@@ -60,49 +67,156 @@ export function setupDiscoveryModal(app) {
         }
     });
 
-    discoveredDevices?.addEventListener("click", async event => {
+    discoveredDevices?.addEventListener("click", event => {
         const button = event.target.closest(".add-discovered-device");
-        if (!button) return;
+        if (!button || button.disabled) return;
 
         const deviceId = button.dataset.deviceId;
         const device = window.__geurbotDiscoveredDevices?.[deviceId];
 
-        if (!device) return;
+        if (!device || !modal) return;
 
-        const name = window.prompt(
-            `Geef ${device.name || deviceId} een naam:`,
-            device.name || "Mijn GeurBot"
-        );
+        showAddDevicePopup(modal, device, button);
+    });
+}
 
-        if (name === null) return;
+function showAddDevicePopup(modal, device, originalButton) {
+    modal.querySelector(".device-form-overlay")?.remove();
 
-        const pairingCode = window.prompt("Voer de pairingcode van de GeurBot in:");
+    const popup = document.createElement("div");
+    popup.className = "device-form-overlay";
 
-        if (pairingCode === null) return;
+    popup.innerHTML = `
+        <div class="device-form-modal">
+            <div class="device-form-header">
+                <div>
+                    <h3>Apparaat toevoegen</h3>
+                    <p>Vul de gegevens van je GeurBot in.</p>
+                </div>
 
-        button.disabled = true;
-        button.textContent = "Koppelen...";
+                <button type="button" class="modal-close device-form-close">&times;</button>
+            </div>
+
+            <div class="device-form-device">
+                <div class="discovered-device-icon">⌁</div>
+                <div>
+                    <strong>${escapeHtml(device.name || device.device_id)}</strong>
+                    <span>${escapeHtml(device.ip || "Onbekend IP-adres")} · ${escapeHtml(device.device_id)}</span>
+                </div>
+            </div>
+
+            <form class="device-add-form">
+                <div class="device-form-field">
+                    <label for="device-name">Naam van het apparaat</label>
+                    <input
+                        id="device-name"
+                        name="name"
+                        type="text"
+                        value="${escapeHtml(device.name || "Mijn GeurBot")}"
+                        placeholder="Bijvoorbeeld: GeurBot woonkamer"
+                        required
+                        maxlength="64"
+                    >
+                </div>
+
+                <p class="device-form-error" hidden></p>
+
+                <div class="device-form-actions">
+                    <button type="button" class="device-form-cancel">
+                        Annuleren
+                    </button>
+
+                    <button type="submit" class="device-form-submit">
+                        Apparaat toevoegen
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(popup);
+
+    const form = popup.querySelector(".device-add-form");
+    const nameInput = popup.querySelector("#device-name");
+    const submitButton = popup.querySelector(".device-form-submit");
+    const errorMessage = popup.querySelector(".device-form-error");
+
+    const closePopup = () => popup.remove();
+
+    popup.querySelector(".device-form-close").addEventListener("click", closePopup);
+    popup.querySelector(".device-form-cancel").addEventListener("click", closePopup);
+
+    popup.addEventListener("click", event => {
+        if (event.target === popup) closePopup();
+    });
+
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const name = nameInput.value.trim();
+
+        if (!name) {
+            errorMessage.textContent = "Vul een naam in.";
+            errorMessage.hidden = false;
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Koppelen...";
+        errorMessage.hidden = true;
 
         try {
-            await addDiscoveredDevice(
-                deviceId,
-                name.trim(),
-                pairingCode.trim()
+            await addDiscoveredDevice(device.device_id, name);
+
+            const existingDevice = devices.some(
+                item => item.id === device.device_id
             );
 
-            button.textContent = "Toegevoegd";
-            button.classList.add("added");
+            if (!existingDevice) {
+                devices.push({
+                    id: device.device_id,
+                    name: name,
+                    connection: {
+                        hostname: device.hostname
+                    }
+                });
+            }
 
-            console.log("GeurBot toegevoegd:", deviceId);
+            renderDevices(document);
+
+            originalButton.disabled = true;
+            originalButton.textContent = "Toegevoegd";
+            originalButton.classList.add("added");
+
+            console.log("GeurBot toegevoegd:", device.device_id);
+
+            popup.innerHTML = `
+                <div class="device-form-modal device-form-success">
+                    <div class="success-icon">✓</div>
+                    <h3>Apparaat toegevoegd!</h3>
+                    <p>${escapeHtml(name)} is succesvol toegevoegd aan je GeurBot-controller.</p>
+                    <button type="button" class="device-form-submit device-success-close">
+                        Gereed
+                    </button>
+                </div>
+            `;
+
+            popup.querySelector(".device-success-close")
+                .addEventListener("click", closePopup);
 
         } catch (error) {
-            button.disabled = false;
-            button.textContent = "Opnieuw proberen";
+            submitButton.disabled = false;
+            submitButton.textContent = "Opnieuw proberen";
+
+            errorMessage.textContent = error.message || "Toevoegen mislukt.";
+            errorMessage.hidden = false;
 
             console.error("Toevoegen mislukt:", error);
-            window.alert(error.message || "Toevoegen mislukt");
         }
     });
+
+    nameInput.focus();
+    nameInput.select();
 }
 
 function createDiscoveredDevice(device) {

@@ -43,3 +43,231 @@
     .discovered-device { flex-wrap: wrap; }
     .add-discovered-device { margin-left: 52px; }
 }
+
+
+/* Device add popup */
+.add-device-modal {
+    position: relative;
+}
+
+.device-form-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: #080b12d9;
+    backdrop-filter: blur(8px);
+}
+
+.device-form-modal {
+    width: min(410px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    padding: 23px;
+    border: 1px solid #3b455a;
+    border-radius: 17px;
+    background: #202735;
+    color: #eef1f8;
+    box-shadow: 0 20px 60px #0009;
+}
+
+.device-form-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.device-form-header h3 {
+    margin: 0 0 6px;
+    font-size: 19px;
+}
+
+.device-form-header p {
+    margin: 0;
+    color: #9ca7ba;
+    font-size: 12px;
+}
+
+.device-form-device {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #3a4559;
+    border-radius: 11px;
+    background: #283243;
+}
+
+.device-form-device > div:last-child {
+    min-width: 0;
+}
+
+.device-form-device strong,
+.device-form-device span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.device-form-device strong {
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.device-form-device span {
+    color: #9ca7ba;
+    font-size: 10px;
+}
+
+.device-add-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.device-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.device-form-field label {
+    color: #cbd3e2;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.device-form-field input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #3b455a;
+    border-radius: 9px;
+    outline: none;
+    background: #283243;
+    color: #eef1f8;
+    font-size: 13px;
+}
+
+.device-form-field input:focus {
+    border-color: #7187ff;
+    box-shadow: 0 0 0 3px #7187ff22;
+}
+
+.device-form-field input::placeholder {
+    color: #78869c;
+}
+
+.device-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.device-form-actions button {
+    flex: 1;
+    padding: 12px;
+    border: 0;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.device-form-cancel {
+    background: #303a4d;
+    color: #c5ccda;
+}
+
+.device-form-cancel:hover {
+    background: #414e68;
+}
+
+.device-form-submit {
+    padding: 12px 16px;
+    border: 0;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #7187ff, #485ed5);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.device-form-actions .device-form-submit {
+    flex: 1;
+}
+
+.device-form-submit:hover {
+    filter: brightness(1.1);
+}
+
+.device-form-submit:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
+.device-form-error {
+    margin: 0;
+    padding: 10px;
+    border: 1px solid #8d4149;
+    border-radius: 8px;
+    background: #512d36;
+    color: #ffb8bf;
+    font-size: 12px;
+}
+
+.device-form-error[hidden] {
+    display: none;
+}
+
+/* Success popup */
+.device-form-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.success-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 15px;
+    border-radius: 50%;
+    background: #287b56;
+    color: white;
+    font-size: 27px;
+}
+
+.device-form-success h3 {
+    margin: 0 0 8px;
+    font-size: 19px;
+}
+
+.device-form-success p {
+    margin: 0 0 20px;
+    color: #9ca7ba;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.device-success-close {
+    width: 100%;
+}
+
+@media (max-width: 480px) {
+    .device-form-modal {
+        padding: 18px;
+    }
+}

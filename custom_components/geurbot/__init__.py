@@ -1,4 +1,4 @@
-from .backend.api.devices import DeviceProxyView
+from .backend.api.device_status import DeviceProxyView
 
 
 async def async_setup(hass, config):

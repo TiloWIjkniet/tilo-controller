@@ -1,4 +1,3 @@
-
 import { getFirmwareStatus } from "../../utils/firmware-status.js";
 
 export async function updateDeviceFirmware(card, deviceId) {
@@ -6,10 +5,7 @@ export async function updateDeviceFirmware(card, deviceId) {
     if (!update) return;
 
     try {
-        const response = await fetch(
-            `/api/geurbot/devices/${encodeURIComponent(deviceId)}/firmware/esp/info`
-        );
-
+        const response = await fetch(`/api/geurbot/devices/${encodeURIComponent(deviceId)}/firmware/esp/info`);
         if (!response.ok) throw new Error(`Firmware API: ${response.status}`);
 
         const firmware = await response.json();

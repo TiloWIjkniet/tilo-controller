@@ -1,22 +1,10 @@
 import { createDeviceCard } from "./device-card.js";
+import { updateDeviceStatus } from "./device-status.js";
+import { updateDeviceFirmware } from "./device-firmware.js";
+import { refreshDeviceFragrance } from "./device-fragrance.js";
+export const devices = [];
 
-// Zet TEST_MODE op false zodra de echte apparatenlijst vanuit Home Assistant wordt aangeleverd.
-const TEST_MODE = true;
-const testDevices = [
-  //  {
-    //     id: "4CE750B2F180",
-    //     name: "GeurBot keuken",
-    //     connection: {
-    //         host: "192.168.2.4"
-    //     }
-    // },
-    // { id: "geurbot_002", name: "GeurBot woonkamer", connection: { host: "192.168.1.101" } },
-    // { id: "geurbot_003", name: "GeurBot slaapkamer", connection: { host: "192.168.1.102" } },
-    // { id: "geurbot_004", name: "GeurBot badkamer", connection: { host: "192.168.1.103" } }
-];
-
-export function createDeviceList(devices = []) {
-    const visibleDevices = TEST_MODE ? testDevices : devices;
+export function createDeviceList() {
     return `
         <div class="device-list">
             <div class="device-header">
@@ -24,7 +12,7 @@ export function createDeviceList(devices = []) {
                 <button id="add-device" class="add-device-button" aria-label="GeurBot toevoegen">+</button>
             </div>
             <div class="device-items">
-                ${visibleDevices.map(createDeviceCard).join("")}
+                ${devices.map(createDeviceCard).join("")}
             </div>
         </div>
         <div class="add-device-overlay" id="add-device-overlay" hidden>
@@ -55,4 +43,43 @@ export function createDeviceList(devices = []) {
             </section>
         </div>
     `;
+}
+
+
+function refreshNetworkStatus(container) {
+    devices.forEach(device => {
+        const card = container.querySelector(
+            `[data-device-id="${device.id}"]`
+        );
+
+        if (card) updateDeviceStatus(card, device.id);
+    });
+}
+
+function refreshFirmwareStatus(container) {
+    devices.forEach(device => {
+        const card = container.querySelector(
+            `[data-device-id="${device.id}"]`
+        );
+
+        if (card) updateDeviceFirmware(card, device.id);
+    });
+}
+
+function refreshFragranceStatus(container) {
+    devices.forEach(device => {
+        const card = container.querySelector(`[data-device-id="${device.id}"]`);
+        if (card) refreshDeviceFragrance(card, device.id);
+    });
+}
+
+export function renderDevices(container) {
+    const deviceItems = container.querySelector(".device-items");
+    if (!deviceItems) return;
+
+    deviceItems.innerHTML = devices.map(createDeviceCard).join("");
+
+    refreshNetworkStatus(container);
+    refreshFirmwareStatus(container);
+    refreshFragranceStatus(container);
 }
