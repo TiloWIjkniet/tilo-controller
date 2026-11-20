@@ -1,4 +1,3 @@
-
 export function getFirmwareStatus(firmware) {
     if (!firmware?.success || !firmware?.version) {
         return {
@@ -11,15 +10,11 @@ export function getFirmwareStatus(firmware) {
         };
     }
 
-    // Placeholder: wordt later door de updatecontrole ingevuld.
-    const latest = null;
-    const updateAvailable = false;
-
     return {
-        available: updateAvailable,
-        label: updateAvailable ? `Update beschikbaar: ${latest}` : "",
+        available: firmware.update_available ?? false,
+        label: firmware.update_available ? `Update beschikbaar: ${firmware.latest}` : "",
         current: firmware.version,
-        latest,
+        latest: firmware.latest,
         buildDate: firmware.build_date,
         buildTime: firmware.build_time
     };

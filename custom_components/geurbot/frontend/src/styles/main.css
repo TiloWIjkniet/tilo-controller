@@ -1,15 +1,80 @@
-* { box-sizing: border-box; }
+
+* {
+    box-sizing: border-box;
+}
+
 :root {
     color-scheme: dark;
     font-family: Inter, "Segoe UI", Arial, sans-serif;
-    background: #10131a;
-    color: #eef1f8;
     font-synthesis: none;
+
+    --bg-main: #11151e;
+    --bg-sidebar: #191d27;
+    --bg-content: #191e2a;
+    --bg-card: #222834;
+    --bg-input: #252d3d;
+    --bg-hover: #293247;
+
+    --border: #343d50;
+    --border-soft: #2c3444;
+
+    --text-primary: #f1f3f9;
+    --text-secondary: #929bad;
+    --text-muted: #78869c;
+
+    --accent: #7187ff;
+    --accent-dark: #485ed5;
+    --accent-light: #aab8ff;
+
+    --success: #7dd9a5;
+    --warning: #f2bd65;
+    --danger: #ed7777;
+
+    background: var(--bg-main);
+    color: var(--text-primary);
 }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: #10131a; }
-button, input { font: inherit; }
-button { cursor: pointer; }
-button:focus-visible, input:focus-visible, .device-card:focus-visible {
-    outline: 2px solid #91a2ff; outline-offset: 3px;
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
 }
-.eyebrow { margin: 0 0 8px; color: #91a2ff; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+
+body {
+    min-height: 100vh;
+    background: var(--bg-main);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+.device-card:focus-visible {
+    outline: 2px solid var(--accent-light);
+    outline-offset: 3px;
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    color: var(--accent-light);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .14em;
+}
+
+/* Algemene tekst */
+
+h1,
+h2,
+h3,
+p {
+    overflow-wrap: break-word;
+    word-break: normal;
+}

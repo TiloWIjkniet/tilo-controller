@@ -1,0 +1,192 @@
+
+/* Fragrance list */
+
+.fragrance-list {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Fragrance header */
+
+.fragrance-header {
+    gap: 16px;
+}
+
+.fragrance-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    min-width: 0;
+}
+
+.fragrance-device-info {
+    flex: 1 1 180px;
+    min-width: 0;
+}
+
+.fragrance-device-info h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 24px;
+}
+
+.fragrance-device-info > p {
+    margin: 5px 0 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* Network information */
+
+.device-network-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-width: 0;
+}
+
+.device-network-info p {
+    margin: 5px 0 0;
+}
+
+/* Settings button */
+
+.fragrance-actions {
+    display: flex;
+    align-items: flex-start;
+    flex: 0 0 auto;
+}
+
+.device-settings {
+    flex-shrink: 0;
+    padding: 10px 14px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background: var(--bg-input);
+    color: var(--text-primary);
+
+    white-space: nowrap;
+}
+
+.device-settings:hover {
+    background: #30394b;
+    border-color: #46536c;
+}
+
+/* Firmware update */
+
+.firmware-update {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+
+    box-sizing: border-box;
+    overflow: hidden;
+
+    border: 1px solid #9c4848;
+    border-radius: 8px;
+
+    background: #3b2024;
+    color: #ffb5b5;
+    font-size: 11px;
+}
+
+.firmware-update[hidden],
+.firmware-update-progress[hidden],
+.firmware-update-button[hidden] {
+    display: none;
+}
+
+.firmware-update-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.firmware-update-label {
+    font-weight: 600;
+}
+
+.firmware-update-percentage {
+    text-align: right;
+}
+
+.firmware-update-progress {
+    width: 100%;
+    height: 6px;
+    overflow: hidden;
+
+    border-radius: 5px;
+    background: #572e32;
+}
+
+.firmware-update-progress-bar {
+    width: 0%;
+    height: 100%;
+
+    border-radius: 5px;
+    background: #ef7777;
+
+    transition: width .2s ease;
+}
+
+.firmware-update-button {
+    width: 100%;
+    padding: 8px;
+
+    border: 0;
+    border-radius: 6px;
+
+    background: #b94747;
+    color: white;
+}
+
+.firmware-update-button:hover {
+    background: #d15757;
+}
+
+/* Fragrance cards */
+
+.fragrance-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    align-content: start;
+    gap: 16px;
+    min-width: 0;
+}
+
+.fragrance-card {
+    min-width: 0;
+    padding: 18px;
+
+    box-sizing: border-box;
+
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.fragrance-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.fragrance-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+}

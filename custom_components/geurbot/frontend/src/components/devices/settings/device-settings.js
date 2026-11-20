@@ -1,0 +1,135 @@
+import { devices } from "../device-list.js";
+import { createSettingsTemplate } from "./settings-template.js";
+import { setupGeneralSettings } from "./settings-general.js";
+import { setupDevicesSettings } from "./settings-devices.js";
+import { setupLogsSettings } from "./settings-logs.js";
+import { setupMaintenanceSettings } from "./settings-maintenance.js";
+import { setupApiTerminal } from "./api-terminal/api-terminal.js";
+import { setupPerformanceSettings } from "./settings-performance.js";
+
+export function createDeviceSettings() {
+    return createSettingsTemplate();
+}
+
+export function setupDeviceSettings(app) {
+    const overlay = app.querySelector("#device-settings-overlay");
+    const openButton = app.querySelector(".device-settings");
+    const closeButton = app.querySelector("#close-device-settings");
+    const saveButton = app.querySelector("#save-device-name");
+    
+    if (!overlay || !openButton || !closeButton || !saveButton) {
+        console.error("Device settings: benodigde elementen ontbreken.");
+        return;
+    }
+
+    let selectedDevice = null;
+    let settingsRefreshInterval = null;
+
+    const getSelectedDevice = () => selectedDevice;
+    setupApiTerminal({ overlay, getSelectedDevice });
+    const general = setupGeneralSettings({ overlay, getSelectedDevice });
+    setupDevicesSettings({ overlay, getSelectedDevice });
+    const logs = setupLogsSettings({ overlay, getSelectedDevice });
+    setupMaintenanceSettings({ overlay, getSelectedDevice });
+    const performance = setupPerformanceSettings({ overlay, getSelectedDevice });
+    const maintenance = setupMaintenanceSettings({ overlay, getSelectedDevice });
+    
+    function showTab(tabName) {
+        overlay.querySelectorAll(".settings-tab").forEach(tab => {
+            tab.classList.toggle("active", tab.dataset.tab === tabName);
+        });
+
+        overlay.querySelectorAll(".settings-panel").forEach(panel => {
+            const active = panel.dataset.panel === tabName;
+            panel.hidden = !active;
+            panel.classList.toggle("active", active);
+        });
+
+        if (tabName === "logs") {
+            logs.load();
+            logs.startRefresh();
+        } else {
+            logs.stopRefresh();
+        }
+
+        if (tabName === "performance") {
+            performance.load();
+            performance.startRefresh();
+        } else {
+            performance.stopRefresh();
+        }
+    }
+
+    async function refreshSettings() {
+        if (overlay.hidden || !selectedDevice) return;
+        await general.refresh();
+    }
+
+    function startSettingsRefresh() {
+        stopSettingsRefresh();
+        settingsRefreshInterval = setInterval(refreshSettings, 30000);
+    }
+
+    function stopSettingsRefresh() {
+        clearInterval(settingsRefreshInterval);
+        settingsRefreshInterval = null;
+    }
+
+    async function openSettings() {
+        if (!selectedDevice) return;
+        maintenance.reset();
+        overlay.querySelector("#settings-device-name").value = selectedDevice.name ?? "";
+        overlay.hidden = false;
+        logs.reset();
+        showTab("general");
+        await refreshSettings();
+        startSettingsRefresh();
+    }
+
+    function closeSettings() {
+        overlay.hidden = true;
+        stopSettingsRefresh();
+        logs.stopRefresh();
+        general.reset();
+        performance.stopRefresh();
+    }
+
+    function saveDeviceName() {
+        if (!selectedDevice) return;
+        const input = overlay.querySelector("#settings-device-name");
+        const name = input.value.trim();
+        if (!name) {
+            input.focus();
+            return;
+        }
+
+        const device = devices.find(item => item.id === selectedDevice.id);
+        if (!device) return;
+        device.name = name;
+        selectedDevice.name = name;
+
+        const card = app.querySelector(`[data-device-id="${device.id}"]`);
+        const cardName = card?.querySelector(".device-card-left h3");
+        if (cardName) cardName.textContent = name;
+
+        const title = app.querySelector("#fragrance-title");
+        if (title) title.textContent = name;
+        closeSettings();
+    }
+
+    app.addEventListener("device-selected", event => {
+        selectedDevice = event.detail;
+    });
+
+    openButton.addEventListener("click", openSettings);
+    closeButton.addEventListener("click", closeSettings);
+    saveButton.addEventListener("click", saveDeviceName);
+
+    overlay.addEventListener("click", event => {
+        if (event.target === overlay) closeSettings();
+    });
+
+    overlay.querySelectorAll(".settings-tab").forEach(tab => {
+        tab.addEventListener("click", () => showTab(tab.dataset.tab));
+    });
+}

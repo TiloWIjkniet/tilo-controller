@@ -11,6 +11,13 @@ class DeviceManager:
 
     async def scan(self, timeout=10):
         async def handle_device(device):
+            existing = self.registry.get(device["device_id"])
+
+            if existing:
+                device["client_id"] = existing.get("client_id")
+                device["token"] = existing.get("token")
+                device["paired"] = existing.get("paired", False)
+
             self.registry.add(device)
 
             if self.on_device_found:

@@ -1,8 +1,5 @@
-
-export function getConnectionStatus(status) 
-{
-    if (!status?.success || !status.connected) 
-    {
+export function getConnectionStatus(status) {
+    if (!status?.success || !status.connected) {
         return {
             label: "Offline",
             class: "offline",

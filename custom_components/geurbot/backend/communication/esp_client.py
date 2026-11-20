@@ -1,5 +1,8 @@
+
 from typing import Any
 import aiohttp
+import json
+import time
 
 
 class EspClient:
@@ -9,13 +12,27 @@ class EspClient:
         self.client_id = device.get("client_id")
         self.token = device.get("token")
 
-    async def request(self, method: str, endpoint: str, data: dict | None = None, params: dict | None = None) -> dict[str, Any]:
+    async def request(
+        self,
+        method: str,
+        endpoint: str,
+        data: Any = None,
+        params: dict | None = None,
+        headers: dict | None = None
+    ) -> dict[str, Any]:
+
+        start = time.perf_counter()
+        method = method.upper()
         url = f"{self.base_url}{endpoint}"
-        headers = {"Content-Type": "application/json"}
+
+        request_headers = {
+            "Content-Type": "application/json",
+            **(headers or {})
+        }
 
         if self.client_id and self.token:
-            headers["X-Client-ID"] = self.client_id
-            headers["Authorization"] = f"Bearer {self.token}"
+            request_headers["X-Client-ID"] = self.client_id
+            request_headers["Authorization"] = f"Bearer {self.token}"
 
         try:
             timeout = aiohttp.ClientTimeout(total=5)
@@ -26,20 +43,36 @@ class EspClient:
                     url=url,
                     json=data,
                     params=params,
-                    headers=headers,
+                    headers=request_headers
                 ) as response:
+
+                    response_text = await response.text()
+
                     try:
-                        result = await response.json(content_type=None)
-                    except (ValueError, aiohttp.ContentTypeError):
-                        result = {"response": await response.text()}
+                        response_data = json.loads(response_text)
+                    except (ValueError, TypeError):
+                        response_data = {"response": response_text}
 
                     return {
                         "success": response.ok,
                         "status": response.status,
-                        "data": result,
+                        "status_text": response.reason,
+                        "headers": dict(response.headers),
+                        "data": response_data,
+                        "body": response_text,
+                        "method": method,
+                        "endpoint": endpoint,
+                        "duration_ms": round((time.perf_counter() - start) * 1000, 2),
+                        "response_size": len(response_text.encode("utf-8"))
                     }
 
-        except aiohttp.ClientError as error:
-            return {"success": False, "status": None, "error": str(error)}
-        except TimeoutError:
-            return {"success": False, "status": None, "error": "Connection timed out"}
+        except (aiohttp.ClientError, TimeoutError, ValueError) as error:
+            return {
+                "success": False,
+                "status": None,
+                "error": str(error),
+                "method": method,
+                "endpoint": endpoint,
+                "duration_ms": round((time.perf_counter() - start) * 1000, 2),
+                "response_size": 0
+            }

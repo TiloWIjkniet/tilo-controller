@@ -1,29 +1,39 @@
-
 import { getConnectionStatus } from "../../utils/network-status.js";
-import { updateDeviceFragrance } from "./device-fragrance.js";
+import { fetchDeviceNetworkStatus } from "../../services/services.js";
 
 export async function updateDeviceStatus(card, deviceId) {
     const connection = card.querySelector(".device-status");
+    const hostname = card.querySelector(".device-hostname");
+    const signal = card.querySelector(".device-signal");
+
     if (!connection) return;
 
     try {
-        const response = await fetch(`/api/geurbot/devices/${encodeURIComponent(deviceId)}/network/status`);
+        const status = getConnectionStatus(
+            await fetchDeviceNetworkStatus(deviceId)
+        );
 
-        const raw = await response.text();
+        connection.textContent = status.connected ? "Verbonden" : "Niet verbonden";
+        connection.className = `device-status ${status.class}`;
 
-        if (!response.ok) throw new Error(`Network API: ${response.status} - ${raw}`);
+        if (hostname) hostname.textContent = status.hostname;
 
-        const status = JSON.parse(raw);
-        const result = getConnectionStatus(status);
+        if (signal) {
+            signal.textContent = status.rssi !== null
+                ? `WiFi: ${status.label} (${status.rssi} dBm) · ${status.ssid}`
+                : "WiFi-signaal onbekend";
+        }
 
-        connection.textContent = result.label;
-        connection.className = `device-status ${result.class}`;
-
+        return status;
 
     } catch (error) {
         connection.textContent = "Offline";
         connection.className = "device-status offline";
-        
+
+        if (hostname) hostname.textContent = "";
+        if (signal) signal.textContent = "WiFi-signaal niet beschikbaar";
+
         console.error("Fout bij ophalen netwerkstatus:", error);
+        return null;
     }
 }

@@ -1,4 +1,3 @@
-
 import asyncio
 import inspect
 import aiohttp
@@ -10,11 +9,9 @@ from zeroconf.asyncio import (
     AsyncServiceInfo,
 )
 
-
 SERVICE_TYPE = "_geurbot._tcp.local."
 
-
-async def scan_devices(timeout=10, on_device_found=None):
+async def scan_devices(timeout=20, on_device_found=None):
     zeroconf = AsyncZeroconf()
 
     devices = {}
@@ -115,7 +112,6 @@ async def scan_devices(timeout=10, on_device_found=None):
         )
 
         try:
-            # Blijf gedurende de volledige scan zoeken
             await asyncio.sleep(timeout)
 
         finally:
