@@ -12,6 +12,7 @@ from ..api.device_status import (
     restart_device,
     unpair_device,
     factory_reset_device,
+    update_device_name,
 )
 
 def setup_device_routes(app, device_manager):
@@ -80,4 +81,14 @@ def setup_device_routes(app, device_manager):
     app.router.add_post(
         "/api/geurbot/devices/{device_id}/factory-reset",
         lambda request: factory_reset_device(request, device_manager)
+    )
+
+    app.router.add_get(
+        "/api/geurbot/devices",
+        lambda request: get_devices(request, device_manager)
+    )
+
+    app.router.add_patch(
+        "/api/geurbot/devices/{device_id}/name",
+        lambda request: update_device_name(request, device_manager)
     )

@@ -94,28 +94,53 @@ export function setupDeviceSettings(app) {
         performance.stopRefresh();
     }
 
-    function saveDeviceName() {
-        if (!selectedDevice) return;
-        const input = overlay.querySelector("#settings-device-name");
-        const name = input.value.trim();
-        if (!name) {
-            input.focus();
-            return;
-        }
+async function saveDeviceName() {
+    if (!selectedDevice) return;
+
+    const input = overlay.querySelector("#settings-device-name");
+    const name = input.value.trim();
+
+    if (!name) {
+        input.focus();
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/geurbot/devices/${encodeURIComponent(selectedDevice.id)}/name`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name })
+        });
+
+        const responseText = await response.text();
+
+        console.log("Status:", response.status);
+        console.log("Response headers:", [...response.headers.entries()]);
+        console.log("Response body:", responseText);
+
+        const result = JSON.parse(responseText);
+
+        if (!response.ok || !result.success)
+            throw new Error(result.error || "Naam wijzigen mislukt");
 
         const device = devices.find(item => item.id === selectedDevice.id);
         if (!device) return;
-        device.name = name;
-        selectedDevice.name = name;
 
-        const card = app.querySelector(`[data-device-id="${device.id}"]`);
+        device.name = result.name;
+        selectedDevice.name = result.name;
+
+        const card = app.querySelector(`[data-device-id="${CSS.escape(device.id)}"]`);
         const cardName = card?.querySelector(".device-card-left h3");
-        if (cardName) cardName.textContent = name;
+        if (cardName) cardName.textContent = result.name;
 
         const title = app.querySelector("#fragrance-title");
-        if (title) title.textContent = name;
+        if (title) title.textContent = result.name;
+
         closeSettings();
+    } catch (error) {
+        console.error("Failed to update device name:", error);
     }
+}
 
     app.addEventListener("device-selected", event => {
         selectedDevice = event.detail;

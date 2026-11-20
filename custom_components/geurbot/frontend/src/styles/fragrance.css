@@ -190,3 +190,51 @@
     color: var(--text-secondary);
     font-size: 13px;
 }
+.device-fragrance.good {
+    color: #22c55e;
+}
+
+.device-fragrance.bad {
+    color: #ef4444;
+}
+
+.fragrance-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fragrance-info {
+    min-width: 0;
+}
+
+.fragrance-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    align-self: stretch;
+    gap: 12px;
+    padding: 4px 2px;
+}
+
+.fragrance-connection {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.fragrance-connection.connected {
+    color: #22c55e;
+}
+
+.fragrance-connection.disconnected {
+    color: #ef4444;
+}
+
+.device-fragrance.good {
+    color: #22c55e;
+}
+
+.device-fragrance.bad {
+    color: #ef4444;
+}

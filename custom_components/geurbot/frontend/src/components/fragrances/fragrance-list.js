@@ -5,6 +5,13 @@ import { updateDeviceFirmware } from "../devices/device-firmware.js";
 import { createDeviceSettings, setupDeviceSettings } from "../devices/settings/device-settings.js";
 export const fragrances = [];
 
+const mockFragrances = {
+    "4CE750B2F180": [
+        { id: 1, name: "Lavendel", description: "Ontspannende lavendelgeur.",reachable: true, good: true },
+        { id: 2, name: "Vanille", description: "Warme zoete vanillegeur.", good: false },
+        { id: 3, name: "Citrus", description: "Frisse citrusgeur.", good: true }
+    ]
+};
 export function createFragranceHeader() {
     return `
         <header class="panel-header fragrance-header">
@@ -71,6 +78,13 @@ export function setupFragranceSelection(app) {
 
         const title = panel.querySelector("#fragrance-title");
         if (title) title.textContent = device.name;
+
+        const deviceFragrances = mockFragrances[device.id] ?? [];
+
+        fragrances.splice(0, fragrances.length, ...deviceFragrances);
+
+        const items = app.querySelector(".fragrance-items");
+        if (items) items.innerHTML = fragrances.map(createFragranceCard).join("");
 
         await updateDeviceStatus(panel, device.id);
         await updateDeviceFirmware(panel, device.id);

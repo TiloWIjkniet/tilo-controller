@@ -4,6 +4,7 @@ import { updateDeviceFirmware } from "./device-firmware.js";
 import { refreshDeviceFragrance } from "./device-fragrance.js";
 import { clearFragranceData } from "../fragrances/fragrance-list.js";
 
+
 export const devices = [];
 
 document.addEventListener("geurbot:device-removed", event => {
@@ -181,4 +182,31 @@ export function removeDeviceFromDashboard(deviceId) {
     document.dispatchEvent(new CustomEvent("geurbot:device-selection-cleared", {
         detail: { deviceId: id }
     }));
+}
+
+
+export async function loadDevices() {
+    try {
+        const response = await fetch("/api/devices");
+
+        if (!response.ok)
+            throw new Error("Could not retrieve devices");
+
+        const result = await response.json();
+
+        if (!result.success)
+            throw new Error("Could not load devices");
+
+        devices.splice(0, devices.length, ...result.devices.map(device => ({
+            ...device,
+            id: device.device_id,
+            name: device.name || device.hostname
+        })));
+
+        return devices;
+
+    } catch (error) {
+        console.error("Failed to load devices:", error);
+        return [];
+    }
 }

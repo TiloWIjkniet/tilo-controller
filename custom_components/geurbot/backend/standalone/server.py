@@ -10,21 +10,23 @@ from ..api.device_status import (
     get_device_fragrance_status,
     get_device_diagnostics,
     get_device_logs,
-    get_device_performance,
     clear_device_errors,
+    get_device_performance,
     clear_device_logs,
     restart_device,
     unpair_device,
-    factory_reset_device
+    factory_reset_device,
+    update_device_name,
 )
+
 device_manager = DeviceManager()
 
 
 async def get_devices(request):
     return web.json_response({
+        "success": True,
         "devices": device_manager.get_devices()
     })
-
 
 async def start_scan(request):
     timeout = int(request.query.get("timeout", 10))
@@ -123,7 +125,13 @@ def create_app():
         "/api/geurbot/devices/{device_id}/factory-reset",
         lambda request: factory_reset_device(request, device_manager)
     )
+
+    app.router.add_patch(
+        "/api/geurbot/devices/{device_id}/name",
+        lambda request: update_device_name(request, device_manager)
+    )
     return app
+
 
 
 if __name__ == "__main__":

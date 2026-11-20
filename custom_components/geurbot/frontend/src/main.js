@@ -14,8 +14,11 @@ import { refreshDeviceFragrance } from "./components/devices/device-fragrance.js
 import { setupDeviceSelection } from "./components/devices/device-selection.js";
 import { setupDiscoveryModal } from "./components/discovery/discovery-modal.js";
 import { setupFragranceSelection } from "./components/fragrances/fragrance-list.js";
-import { devices } from "./components/devices/device-list.js";
+import { devices, loadDevices } from "./components/devices/device-list.js";
 import { createDeviceSettings, setupDeviceSettings } from "./components/devices/settings/device-settings.js";
+
+await loadDevices();
+
 const app = document.querySelector("#app");
 app.innerHTML = createApp();
 

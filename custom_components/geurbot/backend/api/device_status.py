@@ -291,6 +291,7 @@ async def unpair_device(request, device_manager):
             status=502
         )
 
+    device_manager.remove_device(device_id)
     return web.json_response(result["data"])
 
 
@@ -329,8 +330,47 @@ async def factory_reset_device(request, device_manager):
             },
             status=502
         )
-
+    device_manager.remove_device(device_id)
     return web.json_response(
         result["data"],
         status=result.get("status") or 200
     )
+
+async def update_device_name(request, device_manager):
+    device_id = request.match_info["device_id"]
+
+    try:
+        data = await request.json()
+    except Exception:
+        return web.json_response({"success": False, "error": "Invalid JSON"}, status=400)
+
+    name = data.get("name")
+
+    if not isinstance(name, str) or not name.strip():
+        return web.json_response({"success": False, "error": "Invalid name"}, status=400)
+
+    device = device_manager.update_device_name(device_id, name.strip())
+
+    if not device:
+        return web.json_response({"success": False, "error": "Device not found"}, status=404)
+
+    return web.json_response({"success": True, "name": device["name"]})
+
+
+async def get_devices(request, device_manager):
+    
+    devices = device_manager.get_devices()
+
+    public_devices = [
+        {
+            key: value
+            for key, value in device.items()
+            if key not in ("token", "client_id")
+        }
+        for device in devices
+    ]
+
+    return web.json_response({
+        "success": True,
+        "devices": public_devices
+    })
