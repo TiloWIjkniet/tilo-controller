@@ -1,3 +1,6 @@
+/* ========================================
+   DEVICE SETTINGS MODAL
+======================================== */
 
 .device-settings-overlay {
     position: fixed;
@@ -7,7 +10,7 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: rgba(0, 0, 0, 0.65);
+    background: rgba(0, 0, 0, .65);
     backdrop-filter: blur(5px);
 }
 
@@ -18,28 +21,34 @@
 .device-settings-modal {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    max-width: 1200px;
-    max-height: 92vh;
+    width: 1300px;
+    height: 1100px;
+    max-width: calc(100vw - 48px);
+    max-height: calc(100vh - 48px);
     overflow: hidden;
-    background: #191e2a;
-    border: 1px solid #343d50;
+    border: 1px solid var(--border);
     border-radius: 16px;
-    color: #f1f3f9;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+    background: var(--bg-content);
+    color: var(--text-primary);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .4);
 }
-/* Header */
+
+
+/* ========================================
+   SETTINGS HEADER
+======================================== */
 
 .settings-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    gap: 16px;
     padding: 28px 28px 22px;
 }
 
 .settings-eyebrow {
     margin: 0 0 7px;
-    color: #7187ff;
+    color: var(--accent-light);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1.2px;
@@ -47,68 +56,101 @@
 
 .settings-header h2 {
     margin: 0;
+    color: var(--text-primary);
     font-size: 23px;
 }
 
 .settings-header p:last-child {
     margin: 7px 0 0;
-    color: #929bad;
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
 .settings-close {
+    flex: 0 0 36px;
     width: 36px;
     height: 36px;
-    border: 0;
+    border: 1px solid transparent;
     border-radius: 9px;
-    background: #252d3d;
-    color: #f1f3f9;
+    background: var(--bg-input);
+    color: var(--text-primary);
     font-size: 23px;
     cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
 }
 
 .settings-close:hover {
-    background: #343d50;
+    border-color: var(--border);
+    background: var(--bg-hover);
 }
 
-/* Tabs */
+
+/* ========================================
+   SETTINGS TABS
+======================================== */
 
 .settings-tabs {
     display: flex;
-    padding: 0 28px;
-    border-bottom: 1px solid #343d50;
+    gap: 8px;
+    padding: 12px 24px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border-soft);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
 }
 
 .settings-tab {
-    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 10px 16px;
     border: 0;
-    border-bottom: 2px solid transparent;
+    border-radius: 8px;
     background: transparent;
-    color: #929bad;
+    color: var(--text-secondary);
     font-size: 13px;
     cursor: pointer;
+    white-space: nowrap;
+    transition: background .2s ease, color .2s ease;
+}
+
+.settings-tab:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .settings-tab.active {
-    border-bottom-color: #7187ff;
-    color: #aebaff;
+    background: rgba(113, 135, 255, .16);
+    color: var(--accent-light);
 }
 
-/* Content */
+.settings-panel[hidden] {
+    display: none;
+}
+
+
+/* ========================================
+   SETTINGS CONTENT
+======================================== */
 
 .settings-content {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
     gap: 16px;
     padding: 24px 28px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
 }
 
 .settings-card {
     padding: 20px;
-    border: 1px solid #343d50;
+    border: 1px solid var(--border);
     border-radius: 12px;
-    background: #222834;
+    background: var(--bg-card);
 }
 
 .settings-card-title {
@@ -120,8 +162,21 @@
 
 .settings-card-title h3 {
     margin: 0;
+    color: var(--text-primary);
     font-size: 15px;
 }
+
+.settings-card > p {
+    margin: -8px 0 16px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+/* ========================================
+   SETTINGS STATUS
+======================================== */
 
 .settings-status {
     margin-left: auto;
@@ -132,16 +187,19 @@
 }
 
 .settings-status.online {
-    background: #1e3b30;
-    color: #7dd9a5;
+    background: rgba(125, 217, 165, .13);
+    color: var(--success);
 }
 
 .settings-status.offline {
-    background: #3b2529;
-    color: #ed7777;
+    background: rgba(237, 119, 119, .13);
+    color: var(--danger);
 }
 
-/* Fields */
+
+/* ========================================
+   SETTINGS FIELDS
+======================================== */
 
 .settings-field {
     display: flex;
@@ -150,9 +208,8 @@
     margin-top: 16px;
 }
 
-.settings-field label,
-.settings-info-item span {
-    color: #929bad;
+.settings-field label {
+    color: var(--text-secondary);
     font-size: 12px;
 }
 
@@ -165,10 +222,10 @@
 .settings-readonly {
     min-width: 0;
     padding: 12px;
-    border: 1px solid #343d50;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: #191d27;
-    color: #f1f3f9;
+    background: var(--bg-input);
+    color: var(--text-primary);
     font: inherit;
     font-size: 13px;
 }
@@ -179,28 +236,32 @@
 
 .settings-name-input input:focus {
     outline: none;
-    border-color: #7187ff;
+    border-color: var(--accent);
 }
 
 .settings-name-input button {
     padding: 0 16px;
-    border: 0;
+    border: 1px solid var(--accent);
     border-radius: 8px;
-    background: #5369e6;
+    background: var(--accent);
     color: white;
     font-weight: 600;
     cursor: pointer;
+    transition: background .2s ease;
 }
 
 .settings-name-input button:hover {
-    background: #647aff;
+    background: var(--accent-dark);
 }
 
 .settings-readonly {
-    color: #929bad;
+    color: var(--text-secondary);
 }
 
-/* Information grid */
+
+/* ========================================
+   INFORMATION GRID
+======================================== */
 
 .settings-info-grid {
     display: grid;
@@ -212,66 +273,29 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 13px;
-    border-radius: 8px;
-    background: #191d27;
     min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    background: var(--bg-input);
 }
 
-.settings-info-item strong {
-    font-size: 13px;
-    font-weight: 600;
-}
-
-/* Firmware */
-
-.settings-refresh {
-    margin-left: auto;
-    color: #929bad;
+.settings-info-item span {
+    color: var(--text-secondary);
     font-size: 11px;
 }
 
-.settings-firmware-progress {
-    margin-top: 18px;
-    padding: 14px;
-    border-radius: 8px;
-    background: #191d27;
+.settings-info-item strong {
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
 }
 
-.settings-firmware-progress-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    color: #929bad;
-    font-size: 12px;
-}
 
-.settings-firmware-progress-info strong {
-    color: #aebaff;
-}
-
-.settings-firmware-progress-track {
-    height: 7px;
-    overflow: hidden;
-    border-radius: 10px;
-    background: #343d50;
-}
-
-.settings-firmware-progress-track div {
-    width: 0;
-    height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, #7187ff, #485ed5);
-    transition: width 0.3s ease;
-}
-
-.settings-firmware-error {
-    margin: 14px 0 0;
-    color: #ed7777;
-    font-size: 12px;
-}
-
-/* System information: four blocks */
+/* ========================================
+   SYSTEM INFORMATION
+======================================== */
 
 .settings-system-grid {
     display: grid;
@@ -285,250 +309,100 @@
     gap: 8px;
     min-width: 0;
     padding: 13px;
+    border: 1px solid var(--border-soft);
     border-radius: 8px;
-    background: #191d27;
+    background: var(--bg-input);
 }
 
 .settings-system-card h4 {
     margin: 0 0 4px;
-    color: #aebaff;
+    color: var(--accent-light);
     font-size: 13px;
     font-weight: 600;
 }
 
 .settings-system-card p {
     margin: 0;
-    color: #929bad;
+    color: var(--text-secondary);
     font-size: 12px;
     overflow-wrap: anywhere;
 }
 
 .settings-system-card strong {
-    color: #f1f3f9;
+    color: var(--text-primary);
     font-size: 13px;
     font-weight: 600;
 }
 
-/* Footer */
+
+/* ========================================
+   FIRMWARE
+======================================== */
+
+.settings-refresh {
+    margin-left: auto;
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.settings-firmware-progress {
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    background: var(--bg-input);
+}
+
+.settings-firmware-progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.settings-firmware-progress-info strong {
+    color: var(--accent-light);
+}
+
+.settings-firmware-progress-track {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: var(--border);
+}
+
+.settings-firmware-progress-track div {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    transition: width .3s ease;
+}
+
+.settings-firmware-error {
+    margin: 14px 0 0;
+    color: var(--danger);
+    font-size: 12px;
+}
+
+
+/* ========================================
+   SETTINGS FOOTER
+======================================== */
 
 .settings-footer {
     padding: 14px 28px;
-    border-top: 1px solid #343d50;
-    color: #929bad;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
     font-size: 11px;
     text-align: right;
 }
 
-/* Responsive */
 
-@media (max-width: 900px) {
-    .settings-system-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 600px) {
-    .device-settings-overlay {
-        padding: 12px;
-    }
-
-    .settings-header,
-    .settings-content {
-        padding: 20px;
-    }
-
-    .settings-tabs {
-        padding: 0 20px;
-    }
-
-    .settings-info-grid,
-    .settings-system-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.settings-tabs {
-    display: flex;
-    gap: 8px;
-    padding: 12px 24px;
-    border-bottom: 1px solid #303644;
-    overflow-x: auto;
-}
-
-.settings-tab {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    color: #9ca3af;
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.settings-tab:hover {
-    background: #252b38;
-    color: white;
-}
-
-.settings-tab.active {
-    background: #30394b;
-    color: white;
-}
-
-.settings-panel[hidden] {
-    display: none;
-}
-/* Logs */
-
-.logs-toolbar {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-top: 18px;
-}
-
-.logs-filters,
-.logs-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.logs-filter,
-.logs-actions button {
-    padding: 8px 13px;
-    border: 1px solid #343b4a;
-    border-radius: 7px;
-    background: #202633;
-    color: #cbd2df;
-    cursor: pointer;
-}
-
-.logs-filter.active {
-    background: #354a68;
-    border-color: #5578a8;
-    color: white;
-}
-
-.logs-actions button:hover,
-.logs-filter:hover {
-    background: #303a4b;
-}
-
-#clear-device-logs {
-    border-color: #874444;
-    color: #ff9999;
-}
-
-.logs-summary {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 18px 0 12px;
-    color: #8993a5;
-    font-size: 12px;
-}
-
-.logs-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.log-item {
-    padding: 14px;
-    border: 1px solid #303847;
-    border-left: 3px solid #64748b;
-    border-radius: 8px;
-    background: #191f2b;
-}
-
-.log-item.log-error {
-    border-left-color: #ef5555;
-}
-
-.log-item.log-warning {
-    border-left-color: #e9ad45;
-}
-
-.log-item.log-log {
-    border-left-color: #4c9de0;
-}
-
-.log-item-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-}
-
-.log-type {
-    font-size: 11px;
-    font-weight: 700;
-    color: #aab7ca;
-}
-
-.log-time {
-    color: #8993a5;
-    font-size: 11px;
-}
-
-.log-description {
-    display: block;
-    color: #e5eaf2;
-    font-size: 14px;
-}
-
-.log-explanation {
-    margin: 7px 0 0;
-    color: #a5afbf;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-.log-code {
-    display: inline-block;
-    margin-bottom: 8px;
-    padding: 3px 7px;
-    border-radius: 4px;
-    background: #482c35;
-    color: #ffaaaa;
-    font-size: 11px;
-}
-
-.log-details {
-    margin-top: 12px;
-    color: #aab7ca;
-    font-size: 12px;
-}
-
-.log-details summary {
-    cursor: pointer;
-}
-
-.log-details pre {
-    overflow-x: auto;
-    margin-top: 8px;
-    padding: 10px;
-    border-radius: 6px;
-    background: #111722;
-    color: #b9c9dc;
-    font-size: 11px;
-}
-
-.logs-empty {
-    padding: 30px 15px;
-    text-align: center;
-    color: #8993a5;
-}
-
-.logs-error {
-    margin-top: 12px;
-    color: #ff8888;
-}
+/* ========================================
+   LOGS
+======================================== */
 
 .logs-toolbar {
     display: flex;
@@ -552,12 +426,13 @@
 }
 
 .logs-section-header strong {
+    color: var(--text-primary);
     font-size: 14px;
 }
 
 .logs-section-header span {
+    color: var(--text-secondary);
     font-size: 12px;
-    color: var(--text-secondary, #888);
 }
 
 .logs-filters,
@@ -571,59 +446,170 @@
 .logs-actions button,
 .logs-export button {
     padding: 9px 14px;
-    border: 1px solid var(--border-color, #444);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--card-background, #222);
-    color: inherit;
+    background: var(--bg-card);
+    color: var(--text-primary);
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    transition: background .2s ease, border-color .2s ease;
 }
 
 .logs-filter:hover,
 .logs-actions button:hover,
 .logs-export button:hover {
-    border-color: var(--accent-color, #888);
+    border-color: var(--accent);
+    background: var(--bg-hover);
 }
 
 .logs-filter.active {
-    background: var(--accent-color, #444);
-    border-color: var(--accent-color, #888);
-    color: white;
+    border-color: var(--accent);
+    background: rgba(113, 135, 255, .18);
+    color: var(--accent-light);
 }
 
 .logs-actions button:first-child {
-    color: #e5a44c;
+    color: var(--warning);
 }
 
 .logs-actions button:last-child {
-    color: #e36b6b;
+    color: var(--danger);
+}
+
+#clear-device-logs {
+    border-color: rgba(237, 119, 119, .4);
+    color: var(--danger);
 }
 
 .logs-refresh-button {
-    margin-left: auto;
     width: 32px;
     height: 32px;
-    border: 1px solid var(--border-color, #444);
+    margin-left: auto;
+    border: 1px solid var(--border);
     border-radius: 8px;
     background: transparent;
-    color: inherit;
+    color: var(--text-secondary);
     font-size: 20px;
     cursor: pointer;
+    transition: background .2s ease, color .2s ease;
 }
 
 .logs-refresh-button:hover {
-    background: var(--card-background, #222);
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
+.logs-summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 18px 0 12px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
 
-/* Maintenance */
+.logs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-.settings-card > p {
-    margin: -8px 0 16px;
-    color: #929bad;
+.log-item {
+    padding: 14px;
+    border: 1px solid var(--border-soft);
+    border-left: 3px solid #64748b;
+    border-radius: 8px;
+    background: var(--bg-card);
+}
+
+.log-item.log-error {
+    border-left-color: var(--danger);
+}
+
+.log-item.log-warning {
+    border-left-color: var(--warning);
+}
+
+.log-item.log-log {
+    border-left-color: #4c9de0;
+}
+
+.log-item-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.log-type {
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.log-time {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.log-description {
+    display: block;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.log-explanation {
+    margin: 7px 0 0;
+    color: var(--text-secondary);
     font-size: 13px;
-    line-height: 1.6;
+    line-height: 1.5;
 }
+
+.log-code {
+    display: inline-block;
+    margin-bottom: 8px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: rgba(237, 119, 119, .13);
+    color: var(--danger);
+    font-size: 11px;
+}
+
+.log-details {
+    margin-top: 12px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.log-details summary {
+    cursor: pointer;
+}
+
+.log-details pre {
+    overflow-x: auto;
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    background: var(--bg-main);
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.logs-empty {
+    padding: 30px 15px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.logs-error {
+    margin-top: 12px;
+    color: var(--danger);
+}
+
+
+/* ========================================
+   MAINTENANCE
+======================================== */
 
 .maintenance-button {
     display: inline-flex;
@@ -631,65 +617,64 @@
     justify-content: center;
     min-height: 38px;
     padding: 10px 16px;
-    border: 1px solid #3b465c;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: #30394b;
-    color: #dce2ef;
+    background: var(--bg-hover);
+    color: var(--text-primary);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+    transition: background .2s ease, border-color .2s ease, opacity .2s ease;
 }
 
 .maintenance-button:hover:not(:disabled) {
-    border-color: #7187ff;
-    background: #3a4660;
+    border-color: var(--accent);
+    background: var(--bg-card);
 }
 
 .maintenance-button:focus-visible {
-    outline: 2px solid #7187ff;
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
 .maintenance-button:disabled {
-    opacity: 0.45;
+    opacity: .45;
     cursor: not-allowed;
 }
 
-/* Warning button */
-
 .maintenance-button-warning {
-    border-color: #765a32;
-    background: #3b3025;
-    color: #edbd70;
+    border-color: rgba(242, 189, 101, .35);
+    background: rgba(242, 189, 101, .1);
+    color: var(--warning);
 }
 
 .maintenance-button-warning:hover:not(:disabled) {
-    border-color: #d69b43;
-    background: #493925;
+    border-color: var(--warning);
+    background: rgba(242, 189, 101, .17);
 }
 
-/* Danger button */
-
 .maintenance-button-danger {
-    border-color: #754047;
-    background: #3b252d;
-    color: #ed858c;
+    border-color: rgba(237, 119, 119, .35);
+    background: rgba(237, 119, 119, .1);
+    color: var(--danger);
 }
 
 .maintenance-button-danger:hover:not(:disabled) {
-    border-color: #d65d69;
-    background: #4a2932;
+    border-color: var(--danger);
+    background: rgba(237, 119, 119, .18);
 }
 
-/* Status messages */
+
+/* ========================================
+   MAINTENANCE STATUS
+======================================== */
 
 .maintenance-status {
     padding: 13px 15px;
-    border: 1px solid #343d50;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: #222834;
-    color: #cbd2df;
+    background: var(--bg-card);
+    color: var(--text-primary);
     font-size: 13px;
     line-height: 1.5;
 }
@@ -699,35 +684,12 @@
 }
 
 .maintenance-status.loading {
-    border-color: #46588c;
-    background: #242d43;
-    color: #aebaff;
-}
-
-.maintenance-status.success {
-    border-color: #315d49;
-    background: #1e332b;
-    color: #7dd9a5;
-}
-
-.maintenance-status.error {
-    border-color: #754047;
-    background: #3b252d;
-    color: #ed858c;
-}
-
-/* Responsive */
-
-@media (max-width: 600px) {
-    .maintenance-button {
-        width: 100%;
-    }
-}
-
-.maintenance-status.loading {
     display: flex;
     align-items: center;
     gap: 12px;
+    border-color: rgba(113, 135, 255, .4);
+    background: rgba(113, 135, 255, .08);
+    color: var(--accent-light);
 }
 
 .maintenance-status.loading::before {
@@ -735,10 +697,22 @@
     flex-shrink: 0;
     width: 17px;
     height: 17px;
-    border: 2px solid #46588c;
-    border-top-color: #aebaff;
+    border: 2px solid rgba(113, 135, 255, .3);
+    border-top-color: var(--accent-light);
     border-radius: 50%;
-    animation: maintenance-spin 0.8s linear infinite;
+    animation: maintenance-spin .8s linear infinite;
+}
+
+.maintenance-status.success {
+    border-color: rgba(125, 217, 165, .35);
+    background: rgba(125, 217, 165, .08);
+    color: var(--success);
+}
+
+.maintenance-status.error {
+    border-color: rgba(237, 119, 119, .35);
+    background: rgba(237, 119, 119, .08);
+    color: var(--danger);
 }
 
 @keyframes maintenance-spin {
@@ -746,6 +720,11 @@
         transform: rotate(360deg);
     }
 }
+
+
+/* ========================================
+   MAINTENANCE CONFIRMATION
+======================================== */
 
 .maintenance-confirm-overlay {
     position: fixed;
@@ -755,7 +734,7 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, .7);
     backdrop-filter: blur(4px);
 }
 
@@ -763,13 +742,13 @@
     width: 100%;
     max-width: 400px;
     padding: 24px;
-    border: 1px solid #343d50;
+    border: 1px solid var(--border);
     border-radius: 14px;
-    background: #191e2a;
-    color: #f1f3f9;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    background: var(--bg-content);
+    color: var(--text-primary);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .4);
     text-align: center;
-    animation: maintenance-confirm-in 0.2s ease-out;
+    animation: maintenance-confirm-in .2s ease-out;
 }
 
 .maintenance-confirm-icon {
@@ -780,7 +759,7 @@
     height: 52px;
     margin: 0 auto 16px;
     border-radius: 14px;
-    background: #3b3025;
+    background: rgba(242, 189, 101, .12);
     font-size: 25px;
 }
 
@@ -791,7 +770,7 @@
 
 .maintenance-confirm p {
     margin: 0 0 24px;
-    color: #929bad;
+    color: var(--text-secondary);
     font-size: 13px;
     line-height: 1.6;
 }
@@ -804,35 +783,369 @@
 .maintenance-confirm-actions button {
     flex: 1;
     min-height: 40px;
-    border: 1px solid #3b465c;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    cursor: pointer;
     font-size: 13px;
     font-weight: 600;
+    cursor: pointer;
 }
 
 .maintenance-confirm-cancel {
-    background: #30394b;
-    color: #dce2ef;
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.maintenance-confirm-cancel:hover {
+    background: var(--border);
 }
 
 .maintenance-confirm-submit {
-    border-color: #765a32 !important;
-    background: #3b3025;
-    color: #edbd70;
+    border-color: rgba(242, 189, 101, .4) !important;
+    background: rgba(242, 189, 101, .12);
+    color: var(--warning);
 }
 
 .maintenance-confirm-submit:hover {
-    background: #493925;
+    background: rgba(242, 189, 101, .2);
 }
 
 @keyframes maintenance-confirm-in {
     from {
         opacity: 0;
-        transform: translateY(8px) scale(0.98);
+        transform: translateY(8px) scale(.98);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}
+
+
+/* ========================================
+   FRAGRANCE SETTINGS
+======================================== */
+
+.settings-fragrance {
+    margin-top: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--bg-content);
+    transition: border-color .2s ease, background .2s ease;
+}
+
+.settings-fragrance:hover {
+    border-color: #53617b;
+}
+
+.settings-fragrance[open] {
+    border-color: var(--accent-dark);
+    background: var(--bg-card);
+}
+
+.settings-fragrance summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 17px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.settings-fragrance summary::-webkit-details-marker {
+    display: none;
+}
+
+.settings-fragrance-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 16px;
+}
+
+.settings-fragrance-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.settings-fragrance-identity strong {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.settings-fragrance-identity span {
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-family: monospace;
+}
+
+
+/* ========================================
+   FRAGRANCE STATUS
+======================================== */
+
+.settings-fragrance-status {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 7px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.settings-fragrance-status::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.settings-fragrance-status.online {
+    background: rgba(125, 217, 165, .13);
+    color: var(--success);
+}
+
+.settings-fragrance-status.offline {
+    background: rgba(237, 119, 119, .13);
+    color: var(--danger);
+}
+
+
+/* ========================================
+   FRAGRANCE CONTENT
+======================================== */
+
+.settings-fragrance-content {
+    padding: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.settings-fragrance-section {
+    margin-top: 22px;
+}
+
+.settings-fragrance-section h4 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 12px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.settings-fragrance-section h4::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border-soft);
+}
+
+
+/* ========================================
+   FRAGRANCE DATA
+======================================== */
+
+.settings-fragrance-data {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-fragrance-data-item {
+    padding: 10px;
+    border: 1px solid var(--border-soft);
+    border-radius: 7px;
+    background: var(--bg-input);
+}
+
+.settings-fragrance-data-item strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.settings-fragrance-data-item pre {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+
+/* ========================================
+   FRAGRANCE RENAME
+======================================== */
+
+.settings-fragrance-rename {
+    display: flex;
+    gap: 8px;
+    margin: 8px 0 16px;
+}
+
+.settings-fragrance-rename input {
+    flex: 1;
+    min-width: 0;
+}
+
+
+/* ========================================
+   REFRESH FRAGRANCE DATA
+======================================== */
+
+.refresh-fragrance-data {
+    width: 100%;
+    margin-top: 22px;
+    padding: 12px;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.refresh-fragrance-data:hover {
+    border-color: var(--accent-light);
+    background: var(--accent-dark);
+}
+
+
+/* ========================================
+   UNREACHABLE FRAGRANCE SETTINGS
+======================================== */
+
+.settings-fragrance.unreachable {
+    border-color: rgba(237, 119, 119, .45);
+    background: rgba(237, 119, 119, .07);
+}
+
+.settings-fragrance.unreachable summary {
+    background: rgba(237, 119, 119, .05);
+}
+
+.settings-fragrance.unreachable .settings-fragrance-content {
+    background: rgba(237, 119, 119, .03);
+}
+
+.settings-fragrance.unreachable .settings-fragrance-status {
+    color: var(--danger);
+}
+
+.settings-fragrance.unreachable input:disabled,
+.settings-fragrance.unreachable button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+
+/* ========================================
+   UNAVAILABLE FRAGRANCE
+======================================== */
+
+.fragrance-card.unavailable {
+    border: 1px solid rgba(237, 119, 119, .5);
+    background: rgba(237, 119, 119, .08);
+}
+
+.fragrance-unavailable {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--danger);
+}
+
+.remove-fragrance {
+    padding: 7px 12px;
+    border: 1px solid rgba(237, 119, 119, .4);
+    border-radius: 6px;
+    background: rgba(237, 119, 119, .12);
+    color: var(--danger);
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.remove-fragrance:hover {
+    border-color: var(--danger);
+    background: rgba(237, 119, 119, .2);
+}
+
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 900px) {
+    .settings-system-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .device-settings-overlay {
+        padding: 12px;
+    }
+
+    .device-settings-modal {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+    }
+
+    .settings-header,
+    .settings-content {
+        padding: 20px;
+    }
+
+    .settings-tabs {
+        padding: 12px 20px;
+    }
+
+    .settings-info-grid,
+    .settings-system-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .maintenance-button {
+        width: 100%;
+    }
+
+    .settings-fragrance summary {
+        padding: 14px;
+    }
+
+    .settings-fragrance-content {
+        padding: 14px;
+    }
+
+    .settings-fragrance-heading {
+        align-items: flex-start;
+    }
+
+    .settings-fragrance-status {
+        font-size: 10px;
+    }
+
+    .settings-name-input {
+        flex-direction: column;
+    }
+
+    .settings-name-input button {
+        min-height: 40px;
     }
 }

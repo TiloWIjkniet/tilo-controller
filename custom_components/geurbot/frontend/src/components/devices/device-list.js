@@ -1,11 +1,32 @@
+
 import { createDeviceCard } from "./device-card.js";
 import { updateDeviceStatus } from "./device-status.js";
 import { updateDeviceFirmware } from "./device-firmware.js";
-import { refreshDeviceFragrance } from "./device-fragrance.js";
+import {updateDeviceFragrance } from "./device-fragrance.js";
 import { clearFragranceData } from "../fragrances/fragrance-list.js";
-
-
+import {fetchDeviceFragranceStatus,fetchDeviceFragrances
+} from "../../services/device-fragrance.js";
 export const devices = [];
+
+
+
+document.addEventListener("geurbot:device-network-status-updated", event => {
+    const { deviceId, unreachable } = event.detail;
+
+    const device = devices.find(device =>
+        String(device.id) === String(deviceId)
+    );
+
+    if (!device) return;
+
+    device.unreachable = unreachable;
+
+    const card = document.querySelector(`[data-device-id="${deviceId}"]`);
+
+    if (card)
+        updateDeviceFragrance(card, device.fragrances, !unreachable);
+});
+
 
 document.addEventListener("geurbot:device-removed", event => {
     removeDeviceFromDashboard(event.detail?.deviceId);
@@ -99,13 +120,6 @@ function refreshFirmwareStatus(container) {
     });
 }
 
-function refreshFragranceStatus(container) {
-    devices.forEach(device => {
-        const card = container.querySelector(`[data-device-id="${device.id}"]`);
-        if (card) refreshDeviceFragrance(card, device.id);
-    });
-}
-
 export function renderDevices(container) {
     const deviceItems = container.querySelector(".device-items");
     if (!deviceItems) return;
@@ -114,7 +128,12 @@ export function renderDevices(container) {
 
     refreshNetworkStatus(container);
     refreshFirmwareStatus(container);
-    refreshFragranceStatus(container);
+
+    devices.forEach(device => {
+        const card = container.querySelector(`[data-device-id="${device.id}"]`);
+        if (card)
+            updateDeviceFragrance(card, device.fragrances, !device.unreachable);
+    });
 }
 
 // ==================================================
@@ -125,32 +144,23 @@ export function removeDeviceFromDashboard(deviceId) {
     if (!deviceId) return;
 
     const id = String(deviceId);
-
-    // Apparaat uit de apparatenlijst verwijderen
     const index = devices.findIndex(device => String(device.id) === id);
 
-    if (index !== -1) {
+    if (index !== -1)
         devices.splice(index, 1);
-    }
 
-    // Alle apparaatgerelateerde HTML verwijderen
     document.querySelectorAll("[data-device-id]").forEach(element => {
-        if (element.dataset.deviceId === id) {
+        if (element.dataset.deviceId === id)
             element.remove();
-        }
     });
 
-    // Gegevens en selectie van geuren verwijderen
     clearFragranceData(id);
 
-    // Instellingenvenster sluiten
     const settingsOverlay = document.getElementById("device-settings-overlay");
 
-    if (settingsOverlay) {
+    if (settingsOverlay)
         settingsOverlay.hidden = true;
-    }
 
-    // Instellingentabbladen resetten
     document.querySelectorAll(".settings-tab").forEach(tab => {
         tab.classList.remove("active");
     });
@@ -160,7 +170,6 @@ export function removeDeviceFromDashboard(deviceId) {
         panel.hidden = true;
     });
 
-    // Terug naar het standaardtabblad
     const generalTab = document.querySelector('.settings-tab[data-tab="general"]');
     const generalPanel = document.querySelector('.settings-panel[data-panel="general"]');
 
@@ -171,42 +180,115 @@ export function removeDeviceFromDashboard(deviceId) {
         generalPanel.hidden = false;
     }
 
-    // Discoveryvenster sluiten indien geopend
     const discoveryOverlay = document.getElementById("add-device-overlay");
 
-    if (discoveryOverlay) {
+    if (discoveryOverlay)
         discoveryOverlay.hidden = true;
-    }
 
-    // Andere onderdelen informeren dat de selectie is gewist
     document.dispatchEvent(new CustomEvent("geurbot:device-selection-cleared", {
         detail: { deviceId: id }
     }));
 }
 
+// ==================================================
+// APPARATEN OPHALEN
+// ==================================================
+
 
 export async function loadDevices() {
     try {
         const response = await fetch("/api/devices");
-
         if (!response.ok)
             throw new Error("Could not retrieve devices");
 
         const result = await response.json();
-
         if (!result.success)
             throw new Error("Could not load devices");
 
-        devices.splice(0, devices.length, ...result.devices.map(device => ({
-            ...device,
-            id: device.device_id,
-            name: device.name || device.hostname
-        })));
+        const oldDevices = new Map(devices.map(device => [device.id, device]));
+
+        devices.splice(0, devices.length, ...result.devices.map(device => {
+            const oldDevice = oldDevices.get(device.device_id);
+
+            return {
+                ...device,
+                id: device.device_id,
+                name: device.name || device.hostname,
+                fragrances: oldDevice?.fragrances ?? [],
+                unreachable: oldDevice?.unreachable ?? false
+            };
+        }));
+
+        await refreshDevices();
 
         return devices;
-
     } catch (error) {
         console.error("Failed to load devices:", error);
         return [];
     }
+}
+// ==================================================
+// APPARATEN EN FRAGRANCES VERNIEUWEN
+// ==================================================
+
+export async function refreshDevices() {
+    await Promise.all(devices.map(async device => {
+        try {
+            const oldFragrances = (device.fragrances ?? []).filter(fragrance =>
+                fragrance?.mac_address && fragrance?.name
+            );
+
+            const [status, result] = await Promise.all([
+                fetchDeviceFragranceStatus(device.id),
+                fetchDeviceFragrances(device.id)
+            ]);
+
+            if (!result?.success || !Array.isArray(result.fragrances))
+                throw new Error("Ongeldig geurresultaat ontvangen van API");
+
+            const newFragrances = result.fragrances.filter(fragrance =>
+                fragrance?.mac_address && fragrance?.name
+            );
+
+            const oldByMac = new Map(
+                oldFragrances.map(fragrance => [fragrance.mac_address, fragrance])
+            );
+
+            const newMacAddresses = new Set(
+                newFragrances.map(fragrance => fragrance.mac_address)
+            );
+
+            const updatedFragrances = [
+                ...newFragrances.map(fragrance => ({
+                    ...oldByMac.get(fragrance.mac_address),
+                    ...fragrance,
+                    unreachable: false
+                })),
+
+                ...oldFragrances
+                    .filter(fragrance => !newMacAddresses.has(fragrance.mac_address))
+                    .map(fragrance => ({
+                        ...fragrance,
+                        unreachable: true
+                    }))
+            ];
+
+            device.fragrances = updatedFragrances;
+            device.status = status;
+            device.unreachable = false;
+
+            document.dispatchEvent(new CustomEvent("geurbot:fragrances-updated", {
+                detail: { deviceId: device.id }
+            }));
+
+        } catch (error) {
+            console.error(`Fout bij ophalen geuren van ${device.name}:`, error);
+            return;
+        }
+
+        const card = document.querySelector(`[data-device-id="${device.id}"]`);
+
+        if (card)
+            updateDeviceFragrance(card, device.fragrances, true);
+    }));
 }

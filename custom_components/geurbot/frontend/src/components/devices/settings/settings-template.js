@@ -19,7 +19,7 @@ export function createSettingsTemplate() {
 
                 <div class="settings-tabs">
                     <button class="settings-tab active" type="button" data-tab="general"><span>⚙</span> Algemeen</button>
-                    <button class="settings-tab" type="button" data-tab="devices"><span>🔌</span> Apparaten</button>
+                    <button class="settings-tab" type="button" data-tab="fragrances"><span>🌸</span> Geuren</button>
                     <button class="settings-tab" type="button" data-tab="logs"><span>📋</span> Logs</button>
                     <button class="settings-tab" type="button" data-tab="performance"><span>📊</span> Prestaties</button>
                     <button class="settings-tab" type="button" data-tab="maintenance"><span>🛠</span> Onderhoud</button>
@@ -28,7 +28,7 @@ export function createSettingsTemplate() {
 
                 <div class="settings-content">
                     <div class="settings-panel active" data-panel="general">${createGeneralTemplate()}</div>
-                    <div class="settings-panel" data-panel="devices" hidden>${createDevicesTemplate()}</div>
+                    <div class="settings-panel" data-panel="fragrances" hidden>${createDevicesTemplate()}</div>
                     <div class="settings-panel" data-panel="logs" hidden>${createLogsTemplate()}</div>
                     <div class="settings-panel" data-panel="performance" hidden>${createPerformanceTemplate()}</div>
                     <div class="settings-panel" data-panel="maintenance" hidden>${createMaintenanceTemplate()}</div>

@@ -21,7 +21,7 @@
 .dashboard-headers,
 .dashboard-content {
     display: grid;
-    grid-template-columns: 20% 20% 60%;
+    grid-template-columns: 20% 40% 40%;
     width: 100%;
     min-width: 1200px;
 }
@@ -61,13 +61,24 @@
 }
 
 .sidebar,
-.content,
-.extra-panel {
+.content{
     min-width: 0;
     min-height: 0;
     padding: 24px;
     box-sizing: border-box;
 }
+
+.extra-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: 24px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
 
 .sidebar {
     background: var(--bg-sidebar);
@@ -76,6 +87,11 @@
 
 .content {
     background: var(--bg-content);
+        display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .extra-panel {
@@ -122,15 +138,13 @@
 
 /* Kolominhoud */
 
-.device-list,
-.fragrance-list {
+.device-list {
     width: 100%;
     min-width: 0;
     min-height: 0;
 }
 
 .device-items,
-.fragrance-items,
 .extra-content {
     min-width: 0;
 }

@@ -2,6 +2,7 @@ from aiohttp import web
 
 from ..communication.esp_client import EspClient
 from .manager import get_data, send_data, get_performance_stats
+from urllib.parse import urlencode
 
 async def get_network_status(request, device_manager):
     device_id = request.match_info["device_id"]
@@ -43,16 +44,26 @@ async def get_device_fragrance_status(request, device_manager):
     device = device_manager.get_device(device_id)
 
     if not device:
-        return web.json_response({"success": False, "error": "Device not found"}, status=404)
+        return web.json_response(
+            {"success": False, "error": "Device not found"},
+            status=404
+        )
 
     result = await get_data(device, "/api/device/modules-health")
 
     if not result["success"]:
-        return web.json_response({"success": False, "error": result.get("error") or "Could not retrieve device modules-health", "status": result.get("status")}, status=502)
+        return web.json_response(
+            {"success": False, "error": result.get("error") or "Could not retrieve device status"},
+            status=502
+        )
 
     return web.json_response(result["data"])
 
-
+async def get_device_fragrances(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "GET",
+        "/api/device/fragrances/get-all"
+    )
 
 async def get_device_diagnostics(request, device_manager):
 
@@ -371,6 +382,157 @@ async def get_devices(request, device_manager):
     ]
 
     return web.json_response({
+
         "success": True,
         "devices": public_devices
     })
+
+
+async def _proxy_fragrance_request(request, device_manager, method, endpoint):
+    device_id = request.match_info["device_id"]
+    device = device_manager.get_device(device_id)
+
+    if not device:
+        return web.json_response(
+            {"success": False, "error": "Device not found"},
+            status=404
+        )
+
+    data = None
+
+    if method in ("POST", "PUT", "PATCH") and request.can_read_body:
+        try:
+            data = await request.json()
+        except Exception:
+            return web.json_response(
+                {"success": False, "error": "Invalid JSON"},
+                status=400
+            )
+
+    result = await send_data(
+        device,
+        endpoint,
+        data=data,
+        method=method
+    )
+
+    if not result["success"]:
+        return web.json_response({
+            "success": False,
+            "error": result.get("error") or "Fragrance request failed",
+            "status": result.get("status")
+        }, status=502)
+
+    return web.json_response(
+        result["data"],
+        status=result.get("status") or 200
+    )
+
+
+async def get_device_fragrance_status(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "GET",
+        "/api/device/fragrances/get-all"
+    )
+
+
+async def get_device_fragrance(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/get"
+    )
+
+
+async def spray_device_fragrance(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/spray"
+    )
+
+
+async def rename_device_fragrance(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/rename"
+    )
+
+
+async def set_device_fragrance_enabled(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/set-enabled"
+    )
+
+
+async def get_device_fragrance_stats(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/get-stats"
+    )
+
+
+async def get_device_fragrance_total_sprays(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/get-total-sprays"
+    )
+
+
+async def get_device_fragrance_uptime(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/get-uptime"
+    )
+
+
+async def get_device_fragrance_firmware_version(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/get-firmware-version"
+    )
+
+
+async def reset_device_fragrance_counter(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/reset-counter"
+    )
+
+
+async def set_device_fragrance_estimated_sprays(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "PUT",
+        "/api/device/fragrances/set-estimated-sprays"
+    )
+
+
+async def get_device_fragrance_spray_log(request, device_manager):
+    mac_address = request.query.get("mac_address")
+
+    if not mac_address:
+        return web.json_response(
+            {"success": False, "error": "Missing mac_address"},
+            status=400
+        )
+
+    endpoint = (
+        "/api/device/fragrances/get-spray-log?"
+        + urlencode({"mac_address": mac_address})
+    )
+
+    return await _proxy_fragrance_request(
+        request, device_manager, "GET", endpoint
+    )
+
+async def get_device_fragrance_empty_bottle_value(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "POST",
+        "/api/device/fragrances/get-empty-bottle-value"
+    )
+
+
+async def set_device_fragrance_empty_bottle_threshold(request, device_manager):
+    return await _proxy_fragrance_request(
+        request, device_manager, "PUT",
+        "/api/device/fragrances/set-empty-bottle-threshold"
+    )

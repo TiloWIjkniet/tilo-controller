@@ -1,11 +1,18 @@
-
-/* Performance dashboard */
+/* ========================================
+   PERFORMANCE DASHBOARD
+======================================== */
 
 .performance-dashboard {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    min-width: 0;
+    overflow: hidden;
 }
+
+/* ========================================
+   HEADER
+======================================== */
 
 .performance-header,
 .performance-section-heading {
@@ -18,13 +25,13 @@
 .performance-header p,
 .performance-section p {
     margin: 4px 0;
-    color: var(--text-secondary, #888);
+    color: var(--text-secondary);
 }
 
 #performance-updated,
 .performance-muted {
     font-size: 12px;
-    color: var(--text-secondary, #888);
+    color: var(--text-secondary);
 }
 
 .performance-live {
@@ -33,16 +40,20 @@
     gap: 7px;
     font-size: 11px;
     font-weight: 700;
-    color: #16b981;
+    color: var(--success);
 }
 
 .performance-live i {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #16b981;
-    box-shadow: 0 0 8px #16b981;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
 }
+
+/* ========================================
+   SUMMARY
+======================================== */
 
 .performance-summary {
     display: grid;
@@ -52,48 +63,64 @@
 
 .performance-metric,
 .performance-chart-card {
-    padding: 16px;
-    border: 1px solid var(--border-color, #333);
-    border-radius: 12px;
-    background: var(--card-background, rgba(128, 128, 128, .06));
     min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-card);
 }
 
 .performance-metric span,
 .performance-metric small {
     display: block;
-    color: var(--text-secondary, #888);
+    color: var(--text-secondary);
+}
+
+.performance-metric span {
     font-size: 12px;
 }
 
 .performance-metric strong {
     display: block;
     margin: 8px 0 4px;
-    font-size: clamp(20px, 3vw, 27px);
+    font-size: 17px;
     overflow-wrap: anywhere;
 }
+
+.performance-metric small {
+    font-size: 10px;
+}
+
+/* ========================================
+   SECTIONS
+======================================== */
 
 .performance-section {
     min-width: 0;
     padding: 18px;
-    border: 1px solid var(--border-color, #333);
+    border: 1px solid var(--border);
     border-radius: 12px;
-    background: var(--card-background, rgba(128, 128, 128, .04));
+    background: var(--bg-content);
 }
 
 .performance-section h4 {
     margin: 0 0 8px;
 }
 
+/* ========================================
+   CHART
+======================================== */
+
 .performance-chart {
     width: 100%;
-    overflow-x: auto;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .performance-chart svg {
     display: block;
     width: 100%;
-    min-width: 600px;
+    max-width: 100%;
     height: auto;
 }
 
@@ -109,7 +136,7 @@
     align-items: center;
     gap: 6px;
     font-size: 11px;
-    color: var(--text-secondary, #888);
+    color: var(--text-secondary);
 }
 
 .performance-legend-item i {
@@ -117,6 +144,10 @@
     height: 9px;
     border-radius: 50%;
 }
+
+/* ========================================
+   CHART GRID
+======================================== */
 
 .performance-chart-grid {
     display: grid;
@@ -127,6 +158,10 @@
 .performance-chart-card h4 {
     margin: 0 0 18px;
 }
+
+/* ========================================
+   BAR CHART
+======================================== */
 
 .performance-bar-row {
     display: grid;
@@ -145,9 +180,9 @@
 
 .performance-bar-track {
     height: 8px;
-    border-radius: 10px;
-    background: var(--border-color, #333);
     overflow: hidden;
+    border-radius: 10px;
+    background: var(--border);
 }
 
 .performance-bar-track div {
@@ -155,6 +190,10 @@
     border-radius: inherit;
     transition: width .3s ease;
 }
+
+/* ========================================
+   TABLE
+======================================== */
 
 .performance-table-scroll {
     width: 100%;
@@ -172,67 +211,64 @@
 .performance-table td {
     padding: 11px 10px;
     text-align: left;
-    border-bottom: 1px solid var(--border-color, #333);
+    border-bottom: 1px solid var(--border-soft);
 }
 
 .performance-table th {
-    color: var(--text-secondary, #888);
+    color: var(--text-secondary);
     font-weight: 600;
 }
 
 .performance-table tbody tr:hover {
-    background: rgba(128, 128, 128, .08);
+    background: var(--bg-hover);
 }
+
+/* ========================================
+   TIME RANGE
+======================================== */
 
 #performance-time-range {
     padding: 8px 12px;
-    border: 1px solid var(--border-color, #444);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--card-background, transparent);
-    color: inherit;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    outline: none;
 }
+
+#performance-time-range:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px #7187ff22;
+}
+
+/* ========================================
+   EMPTY / ERROR
+======================================== */
 
 .performance-empty,
 .performance-error {
     padding: 16px;
-    color: var(--text-secondary, #888);
+    color: var(--text-secondary);
 }
 
 .performance-error {
-    color: #ef6b6b;
+    color: var(--danger);
 }
 
-@media (max-width: 800px) {
-    .performance-summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .performance-chart-grid {
-        grid-template-columns: 1fr;
-    }
+.performance-good {
+    color: var(--success) !important;
 }
 
-@media (max-width: 480px) {
-    .performance-summary {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .performance-section {
-        padding: 12px;
-    }
-
-    .performance-section-heading {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-}
-
+/* ========================================
+   FILTERS
+======================================== */
 
 .performance-filters {
     padding: 16px;
     margin-bottom: 20px;
-    border: 1px solid var(--border-color, #444);
+    border: 1px solid var(--border);
     border-radius: 10px;
+    background: var(--bg-card);
 }
 
 .performance-filter-actions {
@@ -242,11 +278,17 @@
 
 .performance-filter-actions button {
     padding: 6px 12px;
-    border: 1px solid var(--border-color, #555);
+    border: 1px solid var(--border);
     border-radius: 6px;
-    background: transparent;
-    color: inherit;
+    background: var(--bg-input);
+    color: var(--text-primary);
     cursor: pointer;
+    transition: background .2s, border-color .2s;
+}
+
+.performance-filter-actions button:hover {
+    border-color: var(--accent);
+    background: var(--bg-hover);
 }
 
 .performance-filter-list {
@@ -260,15 +302,22 @@
     display: flex;
     align-items: center;
     gap: 9px;
-    padding: 9px;
-    border-radius: 7px;
-    background: var(--card-background, rgba(128, 128, 128, .08));
-    cursor: pointer;
     min-width: 0;
+    padding: 9px;
+    border: 1px solid var(--border-soft);
+    border-radius: 7px;
+    background: var(--bg-content);
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+}
+
+.performance-filter-item:hover {
+    border-color: var(--border);
+    background: var(--bg-hover);
 }
 
 .performance-filter-item input {
-    accent-color: #4f8cff;
+    accent-color: var(--accent);
 }
 
 .performance-filter-item i {
@@ -283,6 +332,10 @@
     font-size: 12px;
 }
 
+/* ========================================
+   STATUS LIST
+======================================== */
+
 .performance-status-list {
     display: flex;
     flex-wrap: wrap;
@@ -294,8 +347,9 @@
     flex-direction: column;
     gap: 5px;
     padding: 12px 16px;
-    border: 1px solid var(--border-color, #444);
+    border: 1px solid var(--border);
     border-radius: 8px;
+    background: var(--bg-card);
 }
 
 .performance-status-item strong {
@@ -304,31 +358,12 @@
 
 .performance-status-item span {
     font-size: 12px;
-    opacity: .7;
+    color: var(--text-secondary);
 }
 
-.performance-chart svg {
-    display: block;
-    width: 100%;
-    height: auto;
-}
-.performance-chart {
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-}
-
-.performance-chart svg {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-}
-
-.performance-dashboard {
-    min-width: 0;
-    overflow: hidden;
-}
+/* ========================================
+   SYSTEM / WIFI GRIDS
+======================================== */
 
 .performance-system-grid,
 .performance-wifi-grid {
@@ -348,39 +383,31 @@
     overflow-wrap: anywhere;
 }
 
-.performance-good {
-    color: #16b981 !important;
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 800px) {
+    .performance-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .performance-chart-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-.performance-error {
-    color: #ef6b6b;
-}
+@media (max-width: 480px) {
+    .performance-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 
-.performance-chart {
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-}
+    .performance-section {
+        padding: 12px;
+    }
 
-.performance-chart svg {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-}
-
-.performance-dashboard {
-    min-width: 0;
-    overflow: hidden;
-}
-.performance-metric span {
-    font-size: 12px;
-}
-
-.performance-metric strong {
-    font-size: 17px;
-}
-
-.performance-metric small {
-    font-size: 10px;
+    .performance-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }

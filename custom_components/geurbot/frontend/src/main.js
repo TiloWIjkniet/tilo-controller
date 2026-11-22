@@ -6,17 +6,19 @@ import "./styles/discovery.css";
 import "./styles/fragrance.css";
 import "./styles/device-settings.css";
 import "./styles/performance.css";
+import "./styles/schedule.css";
 
 import { createApp } from "./app/app.js";
 import { updateDeviceStatus } from "./components/devices/device-status.js";
 import { updateDeviceFirmware } from "./components/devices/device-firmware.js";
-import { refreshDeviceFragrance } from "./components/devices/device-fragrance.js";
+import { updateDeviceFragrance } from "./components/devices/device-fragrance.js";
 import { setupDeviceSelection } from "./components/devices/device-selection.js";
 import { setupDiscoveryModal } from "./components/discovery/discovery-modal.js";
 import { setupFragranceSelection } from "./components/fragrances/fragrance-list.js";
-import { devices, loadDevices } from "./components/devices/device-list.js";
-import { createDeviceSettings, setupDeviceSettings } from "./components/devices/settings/device-settings.js";
-
+import { devices, loadDevices, refreshDevices } from "./components/devices/device-list.js";
+import { setupDeviceSettings } from "./components/devices/settings/device-settings.js";
+import { startScheduleClock } from "./components/schedule/schedule-list.js";
+import { initializeScheduleEvents } from "./components/schedule/schedule-events.js";
 await loadDevices();
 
 const app = document.querySelector("#app");
@@ -43,18 +45,29 @@ async function refreshFirmwareStatus() {
     return results.some(status => status?.running);
 }
 
-function refreshFragranceStatus() {
+function updateFragranceIcons() {
     app.querySelectorAll(".device-card").forEach(card => {
-        refreshDeviceFragrance(card, card.dataset.deviceId);
+        const device = devices.find(device => device.id === card.dataset.deviceId);
+
+        if (device)
+            updateDeviceFragrance(card, device.fragrances, !device.unreachable);
     });
 }
 
+async function refreshFragranceStatus() {
+    await refreshDevices();
+    updateFragranceIcons();
+}
+
+// De gegevens zijn al opgehaald door loadDevices().
+initializeScheduleEvents();
+startScheduleClock();
 refreshNetworkStatus();
 refreshFirmwareStatus();
-refreshFragranceStatus();
+updateFragranceIcons();
 
 setInterval(refreshNetworkStatus, 10000);
-setInterval(refreshFragranceStatus, 10000);
+setInterval(refreshFragranceStatus, 30000);
 
 let firmwareInterval;
 

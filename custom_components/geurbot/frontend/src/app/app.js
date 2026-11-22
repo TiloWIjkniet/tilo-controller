@@ -10,6 +10,16 @@ import {
     createFragranceContent
 } from "../components/fragrances/fragrance-list.js";
 
+import {
+    createScheduleHeader,
+    createScheduleContent
+} from "../components/schedule/schedule-list.js";
+
+import {
+    createScheduleModal,
+    initializeScheduleEvents
+} from "../components/schedule/schedule-events.js";
+
 export function createApp() {
     return `
         <main class="dashboard">
@@ -17,13 +27,7 @@ export function createApp() {
             <div class="dashboard-headers">
                 ${createDeviceHeader()}
                 ${createFragranceHeader()}
-
-                <header class="panel-header extra-header">
-                    <div class="panel-header-title">
-                        <h2>Extra functies</h2>
-                        <p>Toekomstige uitbreidingen</p>
-                    </div>
-                </header>
+                ${createScheduleHeader()}
             </div>
 
             <div class="dashboard-content">
@@ -36,7 +40,8 @@ export function createApp() {
                 </section>
 
                 <section class="extra-panel">
-                    <div class="extra-content"></div>
+                    ${createScheduleContent()}
+                    ${createScheduleModal()}
                 </section>
             </div>
 

@@ -1,5 +1,6 @@
-
-/* Device list */
+/* ========================================
+   DEVICE LIST
+======================================== */
 
 .device-list {
     display: flex;
@@ -7,7 +8,9 @@
     min-height: 0;
 }
 
-/* Search header */
+/* ========================================
+   SEARCH HEADER
+======================================== */
 
 .device-header {
     display: flex;
@@ -19,18 +22,19 @@
 
 .device-search {
     flex: 1;
-    min-width: 0;
     width: 100%;
+    min-width: 0;
     height: 44px;
     margin: 12px 0;
     padding: 0 13px;
-
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 9px;
     outline: none;
-
     background: var(--bg-input);
     color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    transition: border-color .2s, background .2s;
 }
 
 .device-search::placeholder {
@@ -46,34 +50,33 @@
     display: grid;
     flex: 0 0 44px;
     place-items: center;
-
     width: 44px;
     height: 44px;
-
-    border: 0;
-    border-radius: 12px;
-
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    border: 1px solid var(--accent-dark);
+    border-radius: 10px;
+    background: var(--accent-dark);
     color: white;
     font-size: 25px;
-
-    box-shadow: 0 5px 14px #3348b344;
-    transition: transform .2s, filter .2s;
+    cursor: pointer;
+    transition: transform .2s, background .2s, border-color .2s;
 }
 
-.device-header button:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
+.device-header button:hover,
+.add-device-button:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    background: var(--accent);
 }
 
-/* Device items */
+/* ========================================
+   DEVICE ITEMS
+======================================== */
 
 .device-items {
     display: flex;
     flex: 1;
     flex-direction: column;
     gap: 8px;
-
     min-height: 0;
     overflow-y: auto;
     padding-right: 4px;
@@ -85,10 +88,16 @@
 
 .device-items::-webkit-scrollbar-thumb {
     border-radius: 10px;
-    background: #41495b;
+    background: var(--border);
 }
 
-/* Device card */
+.device-items::-webkit-scrollbar-thumb:hover {
+    background: #53617b;
+}
+
+/* ========================================
+   DEVICE CARD
+======================================== */
 
 .device-card {
     display: flex;
@@ -96,27 +105,24 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
-
     min-width: 0;
     margin: 0;
     padding: 15px;
-
     border: 1px solid var(--border-soft);
-    border-radius: 13px;
-
+    border-radius: 11px;
     background: var(--bg-card);
     cursor: pointer;
-    transition: .18s ease;
+    transition: border-color .2s, background .2s, box-shadow .2s;
 }
 
 .device-card:hover {
-    border-color: #5669b8;
+    border-color: #53617b;
     background: var(--bg-hover);
 }
 
 .device-card.selected {
     border-color: var(--accent);
-    background: #2b3550;
+    background: rgba(113, 135, 255, .1);
     box-shadow: inset 3px 0 var(--accent);
 }
 
@@ -132,8 +138,9 @@
 .device-card-left h3 {
     margin: 0 0 6px;
     overflow-wrap: break-word;
-    word-break: normal;
+    color: var(--text-primary);
     font-size: 14px;
+    font-weight: 600;
 }
 
 .device-ip {
@@ -148,10 +155,13 @@
     gap: 8px;
 }
 
-/* Device status */
+/* ========================================
+   DEVICE STATUS
+======================================== */
 
 .device-status {
     font-size: 11px;
+    font-weight: 600;
 }
 
 .device-status.online,
@@ -172,10 +182,12 @@
 }
 
 .device-status.loading {
-    color: #9aa4b6;
+    color: var(--text-muted);
 }
 
-/* Device fragrance status */
+/* ========================================
+   FRAGRANCE STATUS ICON
+======================================== */
 
 .device-fragrance {
     width: 18px;
@@ -183,46 +195,44 @@
 }
 
 .device-fragrance.good {
-    color: #35b779;
+    color: var(--success);
 }
 
 .device-fragrance.warning {
-    color: #e0a43c;
+    color: var(--warning);
 }
 
 .device-fragrance.error {
-    color: #e05252;
+    color: var(--danger);
 }
 
 .device-fragrance.loading {
     color: var(--text-secondary);
 }
 
-/* Firmware update inside device card */
+/* ========================================
+   FIRMWARE UPDATE
+======================================== */
 
 .device-update {
-    position: relative;
     display: flex;
     flex: 0 0 100%;
     flex-direction: column;
     gap: 4px;
-
     width: 100%;
     min-width: 0;
-    padding: 7px;
-
     box-sizing: border-box;
     overflow: hidden;
-
-    border: 1px solid #9c4848;
-    border-radius: 7px;
-
-    background: #3b2024;
-    color: #ffb5b5;
+    padding: 9px;
+    border: 1px solid rgba(237, 119, 119, .3);
+    border-radius: 8px;
+    background: rgba(237, 119, 119, .08);
+    color: var(--danger);
     font-size: 10px;
 }
 
-.device-update[hidden] {
+.device-update[hidden],
+.device-update-progress[hidden] {
     display: none;
 }
 
@@ -246,16 +256,53 @@
     height: 5px;
     overflow: hidden;
     border-radius: 5px;
-    background: #572e32;
-}
-
-.device-update-progress[hidden] {
-    display: none;
+    background: rgba(237, 119, 119, .18);
 }
 
 .device-update-progress-bar {
     width: 0%;
     height: 100%;
-    background: #ef7777;
+    border-radius: inherit;
+    background: var(--danger);
     transition: width .2s ease;
+}
+
+/* ========================================
+   DEVICE FRAGRANCE AVAILABILITY
+======================================== */
+
+.device-fragrance-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 11px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.device-fragrance-status.available {
+    border-color: rgba(125, 217, 165, .2);
+    background: rgba(125, 217, 165, .1);
+    color: var(--success);
+}
+
+.device-fragrance-status.unavailable {
+    border-color: rgba(237, 119, 119, .2);
+    background: rgba(237, 119, 119, .1);
+    color: var(--danger);
+}
+
+.device-fragrance-status.empty {
+    border-color: rgba(242, 189, 101, .2);
+    background: rgba(242, 189, 101, .1);
+    color: var(--warning);
+}
+
+.device-fragrance-status.error {
+    border-color: rgba(237, 119, 119, .2);
+    background: rgba(237, 119, 119, .1);
+    color: var(--danger);
 }

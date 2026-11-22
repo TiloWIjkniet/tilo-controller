@@ -1,4 +1,6 @@
 
+import { devices } from "./device-list.js";
+
 export function setupDeviceSelection(app) {
     app.addEventListener("click", event => {
         const card = event.target.closest(".device-card");
@@ -29,6 +31,7 @@ export function setupDeviceSelection(app) {
     });
 }
 
+
 function selectCard(app, card) {
     app.querySelectorAll(".device-card").forEach(item =>
         item.classList.remove("selected")
@@ -36,13 +39,17 @@ function selectCard(app, card) {
 
     card.classList.add("selected");
 
-    const device = {
-        id: card.dataset.deviceId,
-        name: card.querySelector("h3")?.textContent ?? "Onbekend apparaat"
-    };
+    const device = devices.find(device =>
+        String(device.id) === String(card.dataset.deviceId)
+    );
+
+    if (!device) {
+        console.error("Apparaat niet gevonden:", card.dataset.deviceId);
+        return;
+    }
 
     console.log("Geselecteerde GeurBot:", device);
-
+    
     app.dispatchEvent(new CustomEvent("device-selected", {
         detail: device
     }));

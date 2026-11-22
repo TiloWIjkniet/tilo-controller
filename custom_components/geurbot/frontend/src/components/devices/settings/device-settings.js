@@ -28,7 +28,7 @@ export function setupDeviceSettings(app) {
     const getSelectedDevice = () => selectedDevice;
     setupApiTerminal({ overlay, getSelectedDevice });
     const general = setupGeneralSettings({ overlay, getSelectedDevice });
-    setupDevicesSettings({ overlay, getSelectedDevice });
+    const devicesSettings = setupDevicesSettings({ overlay, getSelectedDevice });
     const logs = setupLogsSettings({ overlay, getSelectedDevice });
     setupMaintenanceSettings({ overlay, getSelectedDevice });
     const performance = setupPerformanceSettings({ overlay, getSelectedDevice });
@@ -82,6 +82,7 @@ export function setupDeviceSettings(app) {
         overlay.hidden = false;
         logs.reset();
         showTab("general");
+        devicesSettings.load();
         await refreshSettings();
         startSettingsRefresh();
     }

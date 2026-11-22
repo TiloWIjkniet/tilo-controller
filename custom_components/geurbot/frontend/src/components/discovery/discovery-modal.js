@@ -2,7 +2,7 @@
 import { scanDevices } from "../../services/discovery-api.js";
 import { addDiscoveredDevice } from "../../services/device-api.js";
 import { escapeHtml } from "../../utils/html.js";
-import { devices, renderDevices } from "../devices/device-list.js";
+import { devices, renderDevices, refreshDevices } from "../devices/device-list.js";
 
 export function setupDiscoveryModal(app) {
     const overlay = app.querySelector("#add-device-overlay");
@@ -174,15 +174,17 @@ function showAddDevicePopup(modal, device, originalButton) {
 
             if (!existingDevice) {
                 devices.push({
+                    ...device,
                     id: device.device_id,
                     name: name,
-                    connection: {
-                        hostname: device.hostname
-                    }
+                    fragrances: [],
+                    unreachable: false
                 });
             }
 
             renderDevices(document);
+
+            await refreshDevices();
 
             originalButton.disabled = true;
             originalButton.textContent = "Toegevoegd";

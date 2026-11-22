@@ -43,26 +43,3 @@ export function fetchDeviceDiagnostics(deviceId, endpoint) {
 
     return requestJson(deviceId, `/diagnostics/${endpoint}`);
 }
-
-
-export async function loadDevices() {
-    try {
-        const response = await fetch("/api/geurbot/devices");
-
-        if (!response.ok)
-            throw new Error("Could not retrieve devices");
-
-        const result = await response.json();
-
-        if (!result.success)
-            throw new Error("Could not load devices");
-
-        devices.splice(0, devices.length, ...result.devices);
-
-        return devices;
-
-    } catch (error) {
-        console.error("Failed to load devices:", error);
-        return [];
-    }
-}
