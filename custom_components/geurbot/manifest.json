@@ -8,7 +8,8 @@
   "dependencies": [
     "zeroconf",
     "http",
-    "frontend"
+    "frontend",
+    "panel_custom"
   ],
   "requirements": [],
   "iot_class": "local_polling"

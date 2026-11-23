@@ -8,3 +8,6 @@ CONF_SCAN_TIMEOUT = "scan_timeout"
 DEFAULT_SCAN_TIMEOUT = 10
 API_TIMEOUT = 5
 SERVICE_API_COMMAND = "api_command"
+
+PANEL_TITLE = "GeurBot"
+PANEL_ICON = "mdi:air-purifier"

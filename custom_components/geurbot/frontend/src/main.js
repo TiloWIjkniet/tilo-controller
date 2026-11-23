@@ -21,8 +21,7 @@ if (!authReady) {
     document.querySelector("#app").innerHTML = `
         <main style="padding:24px;font-family:system-ui,sans-serif">
             <h2>GeurBot kan niet aanmelden bij Home Assistant</h2>
-            <p>Open GeurBot via het Home Assistant-dashboard terwijl je bent ingelogd.
-            Controleer ook of de dashboard-URL op hetzelfde Home Assistant-adres staat.</p>
+            <p>Open GeurBot via het GeurBot-zijpaneel in Home Assistant en controleer of je bent ingelogd.</p>
         </main>`;
     throw new Error("Home Assistant-authenticatie ontbreekt in het Webpage-dashboard.");
 }

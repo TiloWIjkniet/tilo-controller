@@ -9,8 +9,9 @@ from pathlib import Path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.http import StaticPathConfig
+from homeassistant.components import frontend, panel_custom
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, PANEL_TITLE, PANEL_ICON
 from .storage import GeurBotStore
 from .api import async_register_services
 from .coordinator import GeurBotCoordinator
@@ -155,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(stop_background_tasks)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    # Serve the existing frontend for a standard Home Assistant Webpage dashboard.
+    # Serve the existing frontend and the panel wrapper from the integration.
     frontend_dir = Path(__file__).parent / "frontend"
     if not hass.data.get(f"{DOMAIN}_static_registered"):
         try:
@@ -166,6 +167,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except (OSError, ValueError, RuntimeError) as err:
             _LOGGER.error("GeurBot frontend kon niet worden gepubliceerd: %s", err)
             raise
+
+    # Register GeurBot as its own Home Assistant sidebar panel.
+    if not hass.data.get(f"{DOMAIN}_panel_registered"):
+        await panel_custom.async_register_panel(
+            hass,
+            webcomponent_name="ha-panel-geurbot",
+            frontend_url_path=DOMAIN,
+            sidebar_title=PANEL_TITLE,
+            sidebar_icon=PANEL_ICON,
+            module_url="/geurbot_static/panel.js",
+            embed_iframe=False,
+            require_admin=False,
+        )
+        hass.data[f"{DOMAIN}_panel_registered"] = True
+        _LOGGER.info("GeurBot-zijpaneel is geregistreerd.")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -180,6 +196,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await runtime["store"].async_save_devices(
                 runtime["device_manager"].get_devices()
             )
+        if hass.data.pop(f"{DOMAIN}_panel_registered", False):
+            frontend.async_remove_panel(hass, DOMAIN)
     return unload_ok
 
 
