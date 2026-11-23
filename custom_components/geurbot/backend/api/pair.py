@@ -23,8 +23,8 @@ async def add_discovered_device(request, device_manager):
         # ha_url = os.getenv("GEURBOT_HOME_ASSISTANT_URL")
         # ha_token = os.getenv("GEURBOT_ACCESS_TOKEN")
 
-        ha_url = "http://127.0.0.1:8000"
-        ha_token = "JOUW_OKEN"
+        ha_url = os.getenv("GEURBOT_HOME_ASSISTANT_URL")
+        ha_token = os.getenv("GEURBOT_ACCESS_TOKEN")
 
         if not ha_url or not ha_token:
             return web.json_response({"success": False, "error": "Home Assistant configuration missing"}, status=500)
@@ -32,7 +32,6 @@ async def add_discovered_device(request, device_manager):
         esp = EspClient(device)
 
         pairing_result = await esp.request("POST", "/api/security/pairing/open")
-        print("Pairing open response:", pairing_result)
 
         if not pairing_result["success"]:
             return web.json_response({"success": False, "error": "Could not open pairing window on ESP", "details": pairing_result.get("error") or pairing_result.get("data")}, status=502)
@@ -46,7 +45,6 @@ async def add_discovered_device(request, device_manager):
         client_id = secrets.token_hex(16)
 
         result = await esp.request("POST", "/api/security/pair", data={"client_id": client_id, "pairing_code": pairing_code, "home_assistant_url": ha_url, "access_token": ha_token})
-        print("Pair response from ESP:", result)
 
         if not result["success"]:
             return web.json_response({"success": False, "error": result.get("data", {}).get("error") or result.get("error") or "Pairing failed", "status": result.get("status")}, status=502)
@@ -67,5 +65,5 @@ async def add_discovered_device(request, device_manager):
         return web.json_response({"success": True, "device": { "device_id": device_id, "name": name, "hostname": device["hostname"], "paired": True }})
 
     except Exception as error:
-        print(f"Pairing error: {error}")
+        print("Pairing mislukt:", type(error).__name__)
         return web.json_response({"success": False, "error": str(error)}, status=500)

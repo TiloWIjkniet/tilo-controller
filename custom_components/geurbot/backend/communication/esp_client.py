@@ -5,10 +5,19 @@ import json
 import time
 
 
+_SHARED_SESSION = None
+
+def set_shared_session(session):
+    global _SHARED_SESSION
+    _SHARED_SESSION = session
+
+
 class EspClient:
     def __init__(self, device: dict):
         self.device = device
-        self.base_url = f"http://{device['hostname']}"
+        host = device.get("ip") or device.get("hostname")
+        port = int(device.get("port") or 80)
+        self.base_url = f"http://{host}:{port}"
         self.client_id = device.get("client_id")
         self.token = device.get("token")
 
@@ -36,35 +45,18 @@ class EspClient:
 
         try:
             timeout = aiohttp.ClientTimeout(total=5)
-
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.request(
-                    method=method,
-                    url=url,
-                    json=data,
-                    params=params,
-                    headers=request_headers
-                ) as response:
-
+            if _SHARED_SESSION is not None:
+                response_context = _SHARED_SESSION.request(
+                    method=method, url=url, json=data, params=params,
+                    headers=request_headers, timeout=timeout
+                )
+                async with response_context as response:
                     response_text = await response.text()
-
-                    try:
-                        response_data = json.loads(response_text)
-                    except (ValueError, TypeError):
-                        response_data = {"response": response_text}
-
-                    return {
-                        "success": response.ok,
-                        "status": response.status,
-                        "status_text": response.reason,
-                        "headers": dict(response.headers),
-                        "data": response_data,
-                        "body": response_text,
-                        "method": method,
-                        "endpoint": endpoint,
-                        "duration_ms": round((time.perf_counter() - start) * 1000, 2),
-                        "response_size": len(response_text.encode("utf-8"))
-                    }
+                    return self._format_response(response, response_text, method, endpoint, start)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.request(method=method, url=url, json=data, params=params, headers=request_headers) as response:
+                    response_text = await response.text()
+                    return self._format_response(response, response_text, method, endpoint, start)
 
         except (aiohttp.ClientError, TimeoutError, ValueError) as error:
             return {
@@ -76,3 +68,23 @@ class EspClient:
                 "duration_ms": round((time.perf_counter() - start) * 1000, 2),
                 "response_size": 0
             }
+
+    @staticmethod
+    def _format_response(response, response_text, method, endpoint, start):
+
+        try:
+            response_data = json.loads(response_text)
+        except (ValueError, TypeError):
+            response_data = {"response": response_text}
+        return {
+            "success": response.ok,
+            "status": response.status,
+            "status_text": response.reason,
+            "headers": dict(response.headers),
+            "data": response_data,
+            "body": response_text,
+            "method": method,
+            "endpoint": endpoint,
+            "duration_ms": round((time.perf_counter() - start) * 1000, 2),
+            "response_size": len(response_text.encode("utf-8")),
+        }

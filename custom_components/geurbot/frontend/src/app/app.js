@@ -20,10 +20,13 @@ import {
     initializeScheduleEvents
 } from "../components/schedule/schedule-events.js";
 
+import { createGeneralSettingsTemplate } from "../components/algemene-settings/settings-general-template.js";
+
 export function createApp() {
     return `
         <main class="dashboard">
 
+     
             <div class="dashboard-headers">
                 ${createDeviceHeader()}
                 ${createFragranceHeader()}
@@ -46,6 +49,8 @@ export function createApp() {
             </div>
 
             ${createDiscoveryModal()}
+
+            ${createGeneralSettingsTemplate()}
 
         </main>
     `;

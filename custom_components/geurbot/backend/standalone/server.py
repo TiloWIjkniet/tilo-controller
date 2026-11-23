@@ -30,8 +30,21 @@ from ..api.device_status import (
     set_device_fragrance_estimated_sprays,
     get_device_fragrance_empty_bottle_value,
     set_device_fragrance_empty_bottle_threshold,
-    get_device_fragrance_spray_log
+    get_device_fragrance_spray_log,
+    start_firmware_update,
+    update_backend_device_fragrances,
+    get_backend_device_fragrances,
+    delete_backend_device_fragrance
 )
+
+from ..api.notification_settings import (
+    get_notification_settings,
+    update_notification_settings
+)
+
+from ..notification.notifications import notification_manager
+from ..automations.fragrance_monitor import FragranceMonitor
+from ..automations.schedule_runner import ScheduleRunner
 
 device_manager = DeviceManager()
 
@@ -55,6 +68,28 @@ async def start_scan(request):
 
 def create_app():
     app = web.Application()
+
+
+        # BACKGROUND TASKS
+    fragrance_monitor = FragranceMonitor(device_manager)
+    schedule_runner = ScheduleRunner(device_manager)
+
+    async def start_background_tasks(app):
+        await notification_manager.start()
+        await fragrance_monitor.start()
+        await schedule_runner.start()
+
+        print("[BACKEND] Background tasks gestart")
+
+    async def stop_background_tasks(app):
+        await fragrance_monitor.stop()
+        await schedule_runner.stop()
+        await notification_manager.stop()
+
+        print("[BACKEND] Background tasks gestopt")
+
+    app.on_startup.append(start_background_tasks)
+    app.on_cleanup.append(stop_background_tasks)
 
     # DEVICES
     app.router.add_get("/api/devices", get_devices)
@@ -345,10 +380,38 @@ def create_app():
         "/api/geurbot/devices/{device_id}/fragrance/empty-bottle-threshold",
         lambda request: set_device_fragrance_empty_bottle_threshold(request, device_manager)
     )
+    app.router.add_post(
+        "/api/geurbot/devices/{device_id}/firmware/esp/update",
+        lambda request: start_firmware_update(request, device_manager)
+    )
 
+        # NOTIFICATIONS
+    app.router.add_get(
+        "/api/notifications",
+        get_notification_settings
+    )
+
+    app.router.add_put(
+        "/api/notifications",
+        update_notification_settings
+    )
+
+    app.router.add_get(
+        "/api/geurbot/devices/{device_id}/fragrance/backend",
+        lambda request: get_backend_device_fragrances(request, device_manager)
+    )
+
+    app.router.add_post(
+        "/api/geurbot/devices/{device_id}/fragrance/backend/update",
+        lambda request: update_backend_device_fragrances(request, device_manager)
+    )
+    app.router.add_delete(
+        "/api/geurbot/devices/{device_id}/fragrance/backend/{mac_address}",
+        lambda request: delete_backend_device_fragrance(request, device_manager)
+    )
     return app
 
 
-
+print("[DEBUG] update_backend_device_fragrances:", update_backend_device_fragrances)
 if __name__ == "__main__":
     web.run_app(create_app(), host="127.0.0.1", port=8000)

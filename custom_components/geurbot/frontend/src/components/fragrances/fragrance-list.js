@@ -5,11 +5,15 @@ import { updateDeviceFirmware } from "../devices/device-firmware.js";
 import { createDeviceSettings } from "../devices/settings/device-settings.js";
 import { devices } from "../devices/device-list.js";
 import { updateDeviceFragranceStatus } from "../devices/device-card.js";
+
+
 import {
     sprayFragrance,
     resetFragranceCounter,
     setFragranceEnabled,
-    fetchDeviceFragrances
+    fetchDeviceFragrances,
+    updateBackendDeviceFragrances,
+    deleteBackendDeviceFragrance
 } from "../../services/device-fragrance.js";
 
 let selectedDevice = null;
@@ -125,7 +129,7 @@ export function createFragranceHeader() {
                         <div class="firmware-update-progress-bar"></div>
                     </div>
 
-                    <button class="firmware-update-button" type="button">
+                     <button class="firmware-update-button" type="button">
                         Firmware bijwerken
                     </button>
                 </div>
@@ -135,6 +139,47 @@ export function createFragranceHeader() {
         </header>
     `;
 }
+
+document.addEventListener("click", async event => {
+    const button = event.target.closest(".firmware-update-button");
+    if (!button || button.disabled) return;
+
+    event.stopPropagation();
+
+    const deviceId = selectedDevice?.id;
+
+    if (!deviceId) {
+        console.error("[FIRMWARE] Geen apparaat geselecteerd");
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Update starten...";
+
+    try {
+        const response = await fetch(
+            `/api/geurbot/devices/${encodeURIComponent(deviceId)}/firmware/esp/update`,
+            { method: "POST" }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success)
+            throw new Error(result.message || result.error || "Firmware-update starten mislukt");
+
+        button.textContent = "Update gestart";
+
+     
+
+    } catch (error) {
+        console.error("[FIRMWARE] Update mislukt:", error);
+
+        button.disabled = false;
+        button.textContent = "Firmware bijwerken";
+
+        alert(error.message);
+    }
+});
 
 export function createFragranceContent(device = null) {
     return `
@@ -193,24 +238,32 @@ export function setupFragranceSelection(app) {
         }, 30000);
     }
 
-    app.addEventListener("device-selected", async event => {
-        const selected = event.detail;
+app.addEventListener("device-selected", async event => {
+    const selected = event.detail;
 
-        if (!selected) return;
+    if (!selected) return;
 
-        selectedDevice = selected;
+    selectedDevice = selected;
 
-        const device = getDevice(selected.id);
-        if (!device) return;
+    const panel = app.querySelector(".fragrance-header");
+    if (!panel) return;
 
-        const panel = app.querySelector(".fragrance-header");
-        if (!panel) return;
+    panel.dataset.deviceId = selected.id;
 
-        const title = panel.querySelector("#fragrance-title");
-        if (title) title.textContent = selected.name;
+    const device = getDevice(selected.id);
+    if (!device) return;
 
-        // Bestaande gegevens direct weergeven.
-        renderFragrances(app);
+     
+
+    const title = panel.querySelector("#fragrance-title");
+    if (title) title.textContent = selected.name;
+
+    // Firmwarestatus direct verversen bij apparaatselectie.
+    document.dispatchEvent(new CustomEvent("geurbot:firmware-update-started", {
+        detail: { deviceId: selected.id }
+    }));
+
+    renderFragrances(app);
 
         try {
             // Eerst controleren of het apparaat bereikbaar is.
@@ -771,6 +824,17 @@ async function refreshFragrances(app, deviceId) {
 
         device.fragrances = updatedFragrances;
 
+        console.log("[FRAGRANCES] Volledige lijst die wordt opgeslagen:", device.fragrances);
+
+        try 
+        {
+            await updateBackendDeviceFragrances(device.id, device.fragrances);
+            console.log("[FRAGRANCES] Volledige lijst opgeslagen in backend");
+        } catch (error) 
+        {
+            console.error("[FRAGRANCES] Backend opslaan mislukt:", error);
+        }
+
         if (selectedDevice && String(selectedDevice.id) === String(deviceId))
             selectedDevice.fragrances = updatedFragrances;
 
@@ -842,3 +906,36 @@ function showResetAllCountersConfirm(count, onConfirm) {
         }
     });
 }
+
+app.addEventListener("click", async event => {
+    const button = event.target.closest(".remove-fragrance-button");
+
+    if (!button)
+        return;
+
+    const macAddress = button.dataset.fragranceId;
+    const device = getDevice(selectedDevice?.id);
+
+    if (!device || !macAddress)
+        return;
+
+    button.disabled = true;
+
+    try {
+        await deleteBackendDeviceFragrance(device.id, macAddress);
+
+        device.fragrances = device.fragrances.filter(
+            fragrance => fragrance.mac_address !== macAddress
+        );
+
+        selectedDevice.fragrances = device.fragrances;
+
+        console.log(`[FRAGRANCES] Geur ${macAddress} verwijderd uit frontend`);
+
+        renderFragrances(app);
+
+    } catch (error) {
+        console.error("[FRAGRANCES] Verwijderen mislukt:", error);
+        button.disabled = false;
+    }
+});

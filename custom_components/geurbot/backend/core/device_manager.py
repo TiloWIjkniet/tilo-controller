@@ -25,12 +25,12 @@ class DeviceManager:
                     if key not in device or device[key] is None:
                         device[key] = value
 
-            self.registry.add(device)
+            registered_device = self.registry.add(device)
 
-            print("Device registered:", device.get("name"), device.get("ip"))
+            print("Device registered:", registered_device.get("name"), registered_device.get("ip"))
 
             if self.on_device_found:
-                await self.on_device_found(device)
+                await self.on_device_found(registered_device)
 
         return await scan_devices(
             timeout=timeout,
@@ -55,3 +55,29 @@ class DeviceManager:
 
         device["name"] = name.strip()
         return device
+
+    
+    def update_device_fragrances(self, device_id, fragrances):
+        device = self.get_device(device_id)
+        if not device:
+            return None
+
+        device["fragrances"] = fragrances
+        return device
+
+    def remove_device_fragrance(self, device_id, mac_address):
+        device = self.get_device(device_id)
+
+        if not device:
+            return False
+
+        fragrances = device.get("fragrances", [])
+
+        original_count = len(fragrances)
+
+        device["fragrances"] = [
+            fragrance for fragrance in fragrances
+            if fragrance.get("mac_address") != mac_address
+        ]
+
+        return len(device["fragrances"]) < original_count

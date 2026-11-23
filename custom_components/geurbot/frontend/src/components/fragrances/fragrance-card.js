@@ -1,3 +1,7 @@
+import {
+    deleteBackendDeviceFragrance
+} from "../../services/device-fragrance.js";
+
 function getScheduledSpraysPerWeek(fragranceMac) {
     let scheduleEvents = [];
 
@@ -245,3 +249,37 @@ function escapeHtml(value) {
         "'": "&#39;"
     })[char]);
 }
+
+
+app.addEventListener("click", async event => {
+    const button = event.target.closest(".remove-fragrance-button");
+
+    if (!button)
+        return;
+
+    const macAddress = button.dataset.fragranceId;
+    const device = getDevice(selectedDevice?.id);
+
+    if (!device || !macAddress)
+        return;
+
+    button.disabled = true;
+
+    try {
+        await deleteBackendDeviceFragrance(device.id, macAddress);
+
+        device.fragrances = device.fragrances.filter(
+            fragrance => fragrance.mac_address !== macAddress
+        );
+
+        selectedDevice.fragrances = device.fragrances;
+
+        console.log(`[FRAGRANCES] Geur ${macAddress} verwijderd uit frontend`);
+
+        renderFragrances(app);
+
+    } catch (error) {
+        console.error("[FRAGRANCES] Verwijderen mislukt:", error);
+        button.disabled = false;
+    }
+});

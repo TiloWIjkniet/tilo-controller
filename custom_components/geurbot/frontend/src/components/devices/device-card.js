@@ -1,6 +1,6 @@
 
 export function createDeviceCard(device) {
-    console.log("[DEVICE CARD] Apparaatgegevens:", JSON.stringify(device, null, 2));
+   // console.log("[DEVICE CARD] Apparaatgegevens:", JSON.stringify(device, null, 2));
 
    const fragrances = device.fragrances ?? [];
 

@@ -4,7 +4,10 @@ import { updateDeviceStatus } from "./device-status.js";
 import { updateDeviceFirmware } from "./device-firmware.js";
 import {updateDeviceFragrance } from "./device-fragrance.js";
 import { clearFragranceData } from "../fragrances/fragrance-list.js";
-import {fetchDeviceFragranceStatus,fetchDeviceFragrances
+import {
+    fetchDeviceFragranceStatus,
+    fetchDeviceFragrances,
+    updateBackendDeviceFragrances
 } from "../../services/device-fragrance.js";
 export const devices = [];
 
@@ -32,6 +35,7 @@ document.addEventListener("geurbot:device-removed", event => {
     removeDeviceFromDashboard(event.detail?.deviceId);
 });
 
+
 export function createDeviceHeader() {
     return `
         <header class="panel-header device-list-header">
@@ -40,6 +44,10 @@ export function createDeviceHeader() {
                 <p>Beheer je gekoppelde GeurBots</p>
             </div>
 
+            <button class="general-settings-button" type="button">
+                <i data-lucide="settings"></i>
+                Algemene instellingen
+            </button>
             <div class="device-header">
                 <input type="search" id="device-search" class="device-search"
                     placeholder="Zoek apparaat..." aria-label="Zoek apparaat">
@@ -202,6 +210,7 @@ export async function loadDevices() {
             throw new Error("Could not retrieve devices");
 
         const result = await response.json();
+        console.log("[DEVICES] Backend devices ontvangen:", result.devices);
         if (!result.success)
             throw new Error("Could not load devices");
 
@@ -214,7 +223,7 @@ export async function loadDevices() {
                 ...device,
                 id: device.device_id,
                 name: device.name || device.hostname,
-                fragrances: oldDevice?.fragrances ?? [],
+                fragrances: device.fragrances ?? oldDevice?.fragrances ?? [],
                 unreachable: oldDevice?.unreachable ?? false
             };
         }));
@@ -222,6 +231,7 @@ export async function loadDevices() {
         await refreshDevices();
 
         return devices;
+
     } catch (error) {
         console.error("Failed to load devices:", error);
         return [];
@@ -234,10 +244,7 @@ export async function loadDevices() {
 export async function refreshDevices() {
     await Promise.all(devices.map(async device => {
         try {
-            const oldFragrances = (device.fragrances ?? []).filter(fragrance =>
-                fragrance?.mac_address && fragrance?.name
-            );
-
+            // Eerst de actuele gegevens van de ESP ophalen.
             const [status, result] = await Promise.all([
                 fetchDeviceFragranceStatus(device.id),
                 fetchDeviceFragrances(device.id)
@@ -246,18 +253,26 @@ export async function refreshDevices() {
             if (!result?.success || !Array.isArray(result.fragrances))
                 throw new Error("Ongeldig geurresultaat ontvangen van API");
 
+            const oldFragrances = (device.fragrances ?? []).filter(fragrance =>
+                fragrance?.mac_address && fragrance?.name
+            );
+
             const newFragrances = result.fragrances.filter(fragrance =>
                 fragrance?.mac_address && fragrance?.name
             );
 
             const oldByMac = new Map(
-                oldFragrances.map(fragrance => [fragrance.mac_address, fragrance])
+                oldFragrances.map(fragrance => [
+                    fragrance.mac_address,
+                    fragrance
+                ])
             );
 
             const newMacAddresses = new Set(
                 newFragrances.map(fragrance => fragrance.mac_address)
             );
 
+            // Oude gegevens combineren met de actuele ESP-gegevens.
             const updatedFragrances = [
                 ...newFragrances.map(fragrance => ({
                     ...oldByMac.get(fragrance.mac_address),
@@ -273,9 +288,23 @@ export async function refreshDevices() {
                     }))
             ];
 
+            // Frontend bijwerken.
             device.fragrances = updatedFragrances;
             device.status = status;
             device.unreachable = false;
+
+            // Nieuwe gegevens naar de Python-backend sturen.
+            try {
+                await updateBackendDeviceFragrances(
+                    device.id,
+                    updatedFragrances
+                );
+            } catch (error) {
+                console.error(
+                    `[FRAGRANCES] Backend opslaan mislukt voor ${device.name}:`,
+                    error
+                );
+            }
 
             document.dispatchEvent(new CustomEvent("geurbot:fragrances-updated", {
                 detail: { deviceId: device.id }
@@ -286,9 +315,12 @@ export async function refreshDevices() {
             return;
         }
 
-        const card = document.querySelector(`[data-device-id="${device.id}"]`);
+        const card = document.querySelector(
+            `[data-device-id="${device.id}"]`
+        );
 
         if (card)
             updateDeviceFragrance(card, device.fragrances, true);
     }));
 }
+

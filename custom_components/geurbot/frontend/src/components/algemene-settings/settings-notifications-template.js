@@ -1,0 +1,519 @@
+
+export function createNotificationsTemplate() {
+    return `
+        <div class="notification-settings">
+
+            <div class="notification-intro">
+                <div>
+                    <h3>Notificatievoorkeuren</h3>
+                    <p>Bepaal welke meldingen je wilt ontvangen.</p>
+                </div>
+
+                <label class="notification-toggle notification-master-toggle">
+                    <input type="checkbox" id="notifications-enabled" checked>
+                    <span class="notification-toggle-slider"></span>
+                </label>
+            </div>
+
+            <!-- ALGEMENE VOORKEUREN -->
+            <section class="notification-general-card">
+                <div class="notification-card-heading">
+                    <div class="notification-icon general-icon">
+                        <i data-lucide="sliders-horizontal"></i>
+                    </div>
+                    <div>
+                        <h4>Algemene voorkeuren</h4>
+                        <p>Instellingen voor alle notificaties</p>
+                    </div>
+                </div>
+
+                <div class="notification-general-options">
+                    <div class="notification-row">
+                        <div class="notification-row-info">
+                            <span>Geluid</span>
+                            <small>Een geluid afspelen bij nieuwe meldingen</small>
+                        </div>
+                        <label class="notification-toggle">
+                            <input type="checkbox" id="notification-sound">
+                            <span class="notification-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="notification-row notification-quiet-row">
+                        <div class="notification-row-info">
+                            <span>Stille uren</span>
+                            <small>Geen notificatiegeluiden tijdens ingestelde uren</small>
+                        </div>
+                        <label class="notification-toggle">
+                            <input type="checkbox" id="notification-quiet-hours">
+                            <span class="notification-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="notification-quiet-settings">
+                        <div class="notification-time-field">
+                            <label for="notification-quiet-start">Starttijd</label>
+                            <input type="time" id="notification-quiet-start" value="22:00">
+                        </div>
+                        <div class="notification-time-field">
+                            <label for="notification-quiet-end">Eindtijd</label>
+                            <input type="time" id="notification-quiet-end" value="08:00">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CATEGORIEËN -->
+            <div class="notification-section-heading">
+                <div>
+                    <h4>Notificatiecategorieën</h4>
+                    <p>Klik op een categorie om de meldingen te beheren.</p>
+                </div>
+            </div>
+
+            <div class="notification-categories">
+
+                <!-- APPARATEN -->
+                <details class="notification-category">
+                    <summary class="notification-category-header">
+                        <div class="notification-category-icon device-icon">
+                            <i data-lucide="cpu"></i>
+                        </div>
+                        <div class="notification-category-info">
+                            <span>Apparaatmeldingen</span>
+                            <small>Verbinding en technische problemen</small>
+                        </div>
+                        <div class="notification-category-meta">
+                            <span>4 opties</span>
+                            <i data-lucide="chevron-down" class="notification-chevron"></i>
+                        </div>
+                    </summary>
+
+                    <div class="notification-category-content">
+                        <div class="notification-row">
+                            <div class="notification-row-info">
+                                <span>Apparaatfouten</span>
+                                <small>Meldingen bij technische fouten</small>
+                            </div>
+                            <label class="notification-toggle">
+                                <input type="checkbox" id="notification-device-errors" checked>
+                                <span class="notification-toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-row">
+                            <div class="notification-row-info">
+                                <span>Apparaat offline</span>
+                                <small>Wanneer een GeurBot geen verbinding meer heeft</small>
+                            </div>
+                            <label class="notification-toggle">
+                                <input type="checkbox" id="notification-device-offline" checked>
+                                <span class="notification-toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-row">
+                            <div class="notification-row-info">
+                                <span>Verbinding hersteld</span>
+                                <small>Wanneer een GeurBot weer online komt</small>
+                            </div>
+                            <label class="notification-toggle">
+                                <input type="checkbox" id="notification-device-online" checked>
+                                <span class="notification-toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-row">
+                            <div class="notification-row-info">
+                                <span>Sensorfouten</span>
+                                <small>Wanneer een sensor niet goed functioneert</small>
+                            </div>
+                            <label class="notification-toggle">
+                                <input type="checkbox" id="notification-sensor-errors" checked>
+                                <span class="notification-toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- GEURFLACONS -->
+                <details class="notification-category">
+                    <summary class="notification-category-header">
+                        <div class="notification-category-icon fragrance-icon">
+                            <i data-lucide="flask-conical"></i>
+                        </div>
+                        <div class="notification-category-info">
+                            <span>Geurflacons</span>
+                            <small>Voorraad en voorspellingen</small>
+                        </div>
+                        <div class="notification-category-meta">
+                            <span>2 opties</span>
+                            <i data-lucide="chevron-down" class="notification-chevron"></i>
+                        </div>
+                    </summary>
+
+                    <div class="notification-category-content">
+                        <div class="notification-row">
+                            <div class="notification-row-info">
+                                <span>Flacon leeg</span>
+                                <small>Wanneer een geurflacon daadwerkelijk leeg is</small>
+                            </div>
+                            <label class="notification-toggle">
+                                <input type="checkbox" id="notification-empty-fragrance" checked>
+                                <span class="notification-toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-row notification-prediction-row">
+                            <div class="notification-row-info">
+                                <span>Voorspelling lege flacon</span>
+                                <small>Waarschuw wanneer een flacon naar verwachting leeg raakt</small>
+                            </div>
+                            <label class="notification-toggle">
+                                <input type="checkbox" id="notification-predicted-empty" checked>
+                                <span class="notification-toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-prediction-settings">
+                            <div class="notification-slider-heading">
+                                <div>
+                                   
+                                    <small>Hoeveel dagen voordat de flacon leeg raakt?</small>
+                                </div>
+                                <strong id="notification-prediction-value">3 dagen</strong>
+                            </div>
+
+                            <input type="range" id="notification-prediction-days"
+                                min="1" max="14" value="3" step="1">
+
+                            <div class="notification-slider-labels">
+                                <span>1 dag</span>
+                                <span>14 dagen</span>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- PLANNING -->
+                <details class="notification-category">
+                    <summary class="notification-category-header">
+                        <div class="notification-category-icon schedule-icon">
+                            <i data-lucide="calendar-clock"></i>
+                        </div>
+                        <div class="notification-category-info">
+                            <span>Sproeien en planning</span>
+                            <small>Uitvoering van sproeiacties en planningen</small>
+                        </div>
+                        <div class="notification-category-meta">
+                            <span>2 opties</span>
+                            <i data-lucide="chevron-down" class="notification-chevron"></i>
+                        </div>
+                    </summary>
+
+                    <div class="notification-category-content">
+                        <div class="notification-row">
+                            <div class="notification-row-info">
+                                <span>Sproeifout</span>
+                                <small>Wanneer een sproeiactie niet goed wordt uitgevoerd</small>
+                            </div>
+                            <label class="notification-toggle">
+                                <input type="checkbox" id="notification-spray-error" checked>
+                                <span class="notification-toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-row">
+                            <div class="notification-row-info">
+                                <span>Planning mislukt</span>
+                                <small>Wanneer een geplande sproeiactie niet uitgevoerd kan worden</small>
+                            </div>
+                            <label class="notification-toggle">
+                                <input type="checkbox" id="notification-schedule-error" checked>
+                                <span class="notification-toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- FIRMWARE -->
+                <details class="notification-category">
+                    <summary class="notification-category-header">
+                        <div class="notification-category-icon firmware-icon">
+                            <i data-lucide="download-cloud"></i>
+                        </div>
+                        <div class="notification-category-info">
+                            <span>Firmware</span>
+                            <small>Beschikbare firmware-updates</small>
+                        </div>
+                        <div class="notification-category-meta">
+                            <span>1 optie</span>
+                            <i data-lucide="chevron-down" class="notification-chevron"></i>
+                        </div>
+                    </summary>
+
+                    <div class="notification-category-content">
+                        <div class="notification-row">
+                            <div class="notification-row-info">
+                                <span>Update beschikbaar</span>
+                                <small>Wanneer er een nieuwe firmwareversie beschikbaar is</small>
+                            </div>
+                            <label class="notification-toggle">
+                                <input type="checkbox" id="notification-firmware-available" checked>
+                                <span class="notification-toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </details>
+
+            </div>
+        </div>
+    `;
+}
+
+
+
+
+const DEFAULT_NOTIFICATION_SETTINGS = {
+    enabled: true,
+
+    general: {
+        sound: false,
+        quietHours: {
+            enabled: false,
+            start: "22:00",
+            end: "08:00"
+        }
+    },
+
+    devices: {
+        errors: true,
+        offline: true,
+        online: true,
+        sensorErrors: true
+    },
+
+    fragrances: {
+        empty: true,
+        predictedEmpty: true,
+        predictionDays: 3
+    },
+
+    schedule: {
+        sprayError: true,
+        scheduleError: true
+    },
+
+    firmware: {
+        available: true
+    }
+};
+
+const NOTIFICATION_ELEMENTS = {
+    "notifications-enabled": "enabled",
+
+    "notification-sound": "general.sound",
+    "notification-quiet-hours": "general.quietHours.enabled",
+    "notification-quiet-start": "general.quietHours.start",
+    "notification-quiet-end": "general.quietHours.end",
+
+    "notification-device-errors": "devices.errors",
+    "notification-device-offline": "devices.offline",
+    "notification-device-online": "devices.online",
+    "notification-sensor-errors": "devices.sensorErrors",
+
+    "notification-empty-fragrance": "fragrances.empty",
+    "notification-predicted-empty": "fragrances.predictedEmpty",
+    "notification-prediction-days": "fragrances.predictionDays",
+
+    "notification-spray-error": "schedule.sprayError",
+    "notification-schedule-error": "schedule.scheduleError",
+
+    "notification-firmware-available": "firmware.available"
+};
+
+let notificationSettings = structuredClone(DEFAULT_NOTIFICATION_SETTINGS);
+
+let notificationSaveQueue = Promise.resolve();
+
+
+// ==================================================
+// INSTELLINGEN OPHALEN (GET)
+// ==================================================
+
+export async function loadNotificationSettings() {
+    try {
+        const response = await fetch("/api/notifications");
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const settings = await response.json();
+
+        notificationSettings = {
+            ...structuredClone(DEFAULT_NOTIFICATION_SETTINGS),
+            ...settings,
+
+            general: {
+                ...DEFAULT_NOTIFICATION_SETTINGS.general,
+                ...settings.general,
+                quietHours: {
+                    ...DEFAULT_NOTIFICATION_SETTINGS.general.quietHours,
+                    ...settings.general?.quietHours
+                }
+            },
+
+            devices: {
+                ...DEFAULT_NOTIFICATION_SETTINGS.devices,
+                ...settings.devices
+            },
+
+            fragrances: {
+                ...DEFAULT_NOTIFICATION_SETTINGS.fragrances,
+                ...settings.fragrances
+            },
+
+            schedule: {
+                ...DEFAULT_NOTIFICATION_SETTINGS.schedule,
+                ...settings.schedule
+            },
+
+            firmware: {
+                ...DEFAULT_NOTIFICATION_SETTINGS.firmware,
+                ...settings.firmware
+            }
+        };
+
+        console.log("[NOTIFICATIONS] Settings loaded");
+
+        return structuredClone(notificationSettings);
+
+    } catch (error) {
+        console.error("[NOTIFICATIONS] Failed to load settings:", error);
+        throw error;
+    }
+}
+
+
+// ==================================================
+// INSTELLINGEN OPSLAAN (PUT)
+// ==================================================
+
+async function saveNotificationSettings() {
+    const settings = structuredClone(notificationSettings);
+
+    notificationSaveQueue = notificationSaveQueue.then(async () => {
+        const response = await fetch("/api/notifications", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(settings)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        console.log("[NOTIFICATIONS] Settings saved");
+    });
+
+    try {
+        await notificationSaveQueue;
+    } catch (error) {
+        console.error("[NOTIFICATIONS] Failed to save settings:", error);
+    }
+}
+
+
+// ==================================================
+// INSTELLING WIJZIGEN
+// ==================================================
+
+export function updateNotificationSettings(path, value) {
+    const keys = path.split(".");
+    let target = notificationSettings;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+        target = target[keys[i]];
+    }
+
+    target[keys[keys.length - 1]] = value;
+
+    console.log("[NOTIFICATIONS] Settings updated:", path, value);
+
+    return saveNotificationSettings();
+}
+
+
+// ==================================================
+// FRONTEND BIJWERKEN
+// ==================================================
+
+export function applyNotificationSettings(settings, app) {
+    Object.entries(NOTIFICATION_ELEMENTS).forEach(([id, path]) => {
+        const element = app.querySelector(`#${id}`);
+        if (!element) return;
+
+        const value = path.split(".").reduce(
+            (obj, key) => obj[key],
+            settings
+        );
+
+        if (element.type === "checkbox") {
+            element.checked = value;
+        } else {
+            element.value = value;
+        }
+    });
+
+    const predictionValue = app.querySelector("#notification-prediction-value");
+
+    if (predictionValue) {
+        predictionValue.textContent = `${settings.fragrances.predictionDays} dagen`;
+    }
+}
+
+
+// ==================================================
+// FRONTEND EVENTS
+// ==================================================
+
+export function setupNotificationListeners(app) {
+    Object.entries(NOTIFICATION_ELEMENTS).forEach(([id, path]) => {
+        const element = app.querySelector(`#${id}`);
+        if (!element) return;
+
+        element.addEventListener("change", () => {
+            const value = element.type === "checkbox"
+                ? element.checked
+                : element.type === "range"
+                    ? Number(element.value)
+                    : element.value;
+
+            updateNotificationSettings(path, value);
+
+            if (id === "notification-prediction-days") {
+                const output = app.querySelector("#notification-prediction-value");
+
+                if (output) {
+                    output.textContent = `${value} dagen`;
+                }
+            }
+        });
+    });
+}
+
+export async function setupNotifications(app) {
+    try {
+        const settings = await loadNotificationSettings();
+
+        applyNotificationSettings(settings, app);
+        setupNotificationListeners(app);
+
+        console.log("[NOTIFICATIONS] Initialized");
+    } catch (error) {
+        console.error("[NOTIFICATIONS] Initialization failed:", error);
+    }
+}

@@ -116,3 +116,62 @@ export async function fetchFragranceSprayLog(deviceId, macAddress) {
         `spray-log?mac_address=${encodeURIComponent(macAddress)}`
     );
 }
+
+
+
+export async function updateBackendDeviceFragrances(deviceId, fragrances) {
+    console.log(`[BACKEND] Geuren opslaan voor ${deviceId}:`, fragrances);
+
+    const response = await fetch(
+        `/api/geurbot/devices/${encodeURIComponent(deviceId)}/fragrance/backend/update`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ fragrances })
+        }
+    );
+
+    const rawResponse = await response.text();
+
+    console.log("[BACKEND] HTTP status:", response.status);
+    console.log("[BACKEND] Ruwe response:", rawResponse);
+
+    let result;
+
+    try {
+        result = JSON.parse(rawResponse);
+    } catch (error) {
+        console.error("[BACKEND] Response is geen geldige JSON:", error);
+        throw error;
+    }
+
+    if (!response.ok) {
+        console.error("[BACKEND] Opslaan mislukt:", result);
+        throw new Error(result.error || "Backend fragrances opslaan mislukt");
+    }
+
+    console.log(`[BACKEND] Geuren succesvol opgeslagen voor ${deviceId}:`, result);
+
+    return result;
+}
+
+
+export async function deleteBackendDeviceFragrance(deviceId, macAddress) {
+    console.log(`[BACKEND] Geur verwijderen: ${macAddress}`);
+
+    const response = await fetch(
+        `/api/geurbot/devices/${encodeURIComponent(deviceId)}/fragrance/backend/${encodeURIComponent(macAddress)}`,
+        { method: "DELETE" }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok)
+        throw new Error(result.error || "Geur verwijderen mislukt");
+
+    console.log(`[BACKEND] Geur ${macAddress} verwijderd`);
+
+    return result;
+}

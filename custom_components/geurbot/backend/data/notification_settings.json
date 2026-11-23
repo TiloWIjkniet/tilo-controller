@@ -1,0 +1,39 @@
+{
+    "enabled": true,
+    "general": {
+        "sound": true,
+        "quietHours": {
+            "enabled": false,
+            "start": "22:00",
+            "end": "08:00"
+        }
+    },
+    "devices": {
+        "errors": true,
+        "offline": true,
+        "online": true,
+        "sensorErrors": true
+    },
+    "fragrances": {
+        "empty": true,
+        "predictedEmpty": true,
+        "unavailable": true,
+        "available": true,
+        "predictionDays": 14
+    },
+    "schedule": {
+        "sprayError": true,
+        "scheduleError": true
+    },
+    "firmware": {
+        "available": true
+    },
+    "buffer": {
+        "enabled": true,
+        "delaySeconds": 10
+    },
+    "repeat": {
+        "enabled": true,
+        "intervalMinutes": 360
+    }
+}

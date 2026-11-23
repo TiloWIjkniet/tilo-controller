@@ -1,12 +1,5 @@
+import { geurbotAuthReady } from "./auth.js";
 
-import "./styles/main.css";
-import "./styles/layout.css";
-import "./styles/devices.css";
-import "./styles/discovery.css";
-import "./styles/fragrance.css";
-import "./styles/device-settings.css";
-import "./styles/performance.css";
-import "./styles/schedule.css";
 
 import { createApp } from "./app/app.js";
 import { updateDeviceStatus } from "./components/devices/device-status.js";
@@ -19,6 +12,11 @@ import { devices, loadDevices, refreshDevices } from "./components/devices/devic
 import { setupDeviceSettings } from "./components/devices/settings/device-settings.js";
 import { startScheduleClock } from "./components/schedule/schedule-list.js";
 import { initializeScheduleEvents } from "./components/schedule/schedule-events.js";
+import { fetchDeviceFirmwareInfo } from "./services/services.js";
+import { setupGeneralSettings } from "./components/algemene-settings/settings-general.js";
+import { setupNotifications } from "./components/algemene-settings/settings-notifications-template.js";
+
+await geurbotAuthReady;
 await loadDevices();
 
 const app = document.querySelector("#app");
@@ -28,6 +26,8 @@ setupDeviceSelection(app);
 setupDiscoveryModal(app);
 setupFragranceSelection(app);
 setupDeviceSettings(app);
+setupGeneralSettings(app);
+await setupNotifications(app);
 
 function refreshNetworkStatus() {
     app.querySelectorAll(".device-card").forEach(card => {
@@ -36,13 +36,48 @@ function refreshNetworkStatus() {
 }
 
 async function refreshFirmwareStatus() {
+    const targets = [...app.querySelectorAll(".device-card")].map(card => ({
+        element: card,
+        deviceId: card.dataset.deviceId
+    }));
+
+    const header = app.querySelector(".fragrance-header");
+    const selectedId = header?.dataset.deviceId;
+
+    if (header && selectedId) {
+        targets.push({
+            element: header,
+            deviceId: selectedId
+        });
+    }
+
+    const grouped = new Map();
+
+    for (const target of targets) {
+        if (!target.deviceId) continue;
+
+        if (!grouped.has(target.deviceId))
+            grouped.set(target.deviceId, []);
+
+        grouped.get(target.deviceId).push(target);
+    }
+
     const results = await Promise.all(
-        [...app.querySelectorAll(".device-card")].map(async card => {
-            return updateDeviceFirmware(card, card.dataset.deviceId);
+        [...grouped.entries()].map(async ([deviceId, elements]) => {
+            try {
+                const firmware = await fetchDeviceFirmwareInfo(deviceId);
+
+                return elements.map(({ element }) =>
+                    updateDeviceFirmware(element, deviceId, firmware)
+                );
+            } catch (error) {
+                console.error(`[FIRMWARE] Status ophalen mislukt ${deviceId}:`, error);
+                return [];
+            }
         })
     );
 
-    return results.some(status => status?.running);
+    return results.flat().some(status => status?.running);
 }
 
 function updateFragranceIcons() {
@@ -69,17 +104,42 @@ updateFragranceIcons();
 setInterval(refreshNetworkStatus, 10000);
 setInterval(refreshFragranceStatus, 30000);
 
-let firmwareInterval;
+let firmwareInterval = null;
+let firmwarePolling = false;
+let firmwareStartPending = false;
 
 async function pollFirmwareStatus() {
-    const updating = await refreshFirmwareStatus();
+    if (firmwarePolling) return;
 
-    clearInterval(firmwareInterval);
+    firmwarePolling = true;
 
-    firmwareInterval = setInterval(
+    let updating = false;
+
+    try {
+        updating = await refreshFirmwareStatus();
+    } catch (error) {
+        console.error("[FIRMWARE] Status ophalen mislukt:", error);
+    } finally {
+        firmwarePolling = false;
+    }
+
+    if (updating)
+        firmwareStartPending = false;
+
+    clearTimeout(firmwareInterval);
+
+    firmwareInterval = setTimeout(
         pollFirmwareStatus,
-        updating ? 1000 : 5 * 60 * 1000
+        updating || firmwareStartPending ? 2000 : 5 * 60 * 1000
     );
 }
+
+document.addEventListener("geurbot:firmware-update-started", () => {
+    console.log("[FIRMWARE] Update gestart");
+
+    firmwareStartPending = true;
+    clearTimeout(firmwareInterval);
+    pollFirmwareStatus();
+});
 
 pollFirmwareStatus();

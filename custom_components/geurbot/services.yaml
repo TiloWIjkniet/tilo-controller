@@ -1,0 +1,59 @@
+api_command:
+  name: API-commando
+  description: Voer een HTTP-commando uit op een gekoppeld GeurBot-apparaat.
+  fields:
+    device_id:
+      name: Apparaat
+      required: true
+      selector:
+        text:
+    endpoint:
+      name: Endpoint
+      required: true
+      selector:
+        text:
+    method:
+      name: Methode
+      default: GET
+      selector:
+        select:
+          options: [GET, POST, PUT, PATCH, DELETE]
+    payload:
+      name: JSON-payload
+      selector:
+        object:
+    params:
+      name: Queryparameters
+      selector:
+        object:
+set_schedules:
+  name: Schedules instellen
+  description: Vervang de schedules van één geurmodule. De schedules worden lokaal in Home Assistant opgeslagen.
+  fields:
+    device_id:
+      name: Apparaat-ID
+      required: true
+      selector:
+        text:
+    mac_address:
+      name: MAC-adres geurmodule
+      required: true
+      selector:
+        text:
+    schedules:
+      name: Schedules
+      required: true
+      selector:
+        object:
+scan_devices:
+  name: Apparaten scannen
+  description: Zoek GeurBot-apparaten op het lokale netwerk.
+  fields:
+    timeout:
+      name: Scan-time-out
+      default: 10
+      selector:
+        number:
+          min: 3
+          max: 60
+          unit_of_measurement: s

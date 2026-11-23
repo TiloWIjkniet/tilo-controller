@@ -1148,4 +1148,55 @@
     .settings-name-input button {
         min-height: 40px;
     }
+
+
+}.general-settings-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    flex-shrink: 0;
+    padding: 6px 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
 }
+
+.general-settings-button:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+}
+
+.general-settings-button svg {
+    width: 15px;
+    height: 15px;
+}
+
+.device-list-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.panel-header-title {
+    flex: 1;
+}
+
+.general-settings-button {
+    position: absolute;
+    top: 20px;
+    right: 10px;
+}
+
+.device-list-header {
+    position: relative;
+}
+

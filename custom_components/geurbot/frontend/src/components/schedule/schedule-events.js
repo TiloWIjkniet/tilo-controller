@@ -1,10 +1,12 @@
 import { devices } from "../devices/device-list.js";
-import { updateWeekdays} from "./schedule-list.js";
-const STORAGE_KEY = "geurbot-schedule-events";
+import { updateWeekdays } from "./schedule-list.js";
+import { updateBackendDeviceFragrances } from "../../services/device-fragrance.js";
+
+
 const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
-let scheduleEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+let scheduleEvents = [];
 let editingEventId = null;
 let selectedDeviceId = null;
 let selectedScheduleDay = (new Date().getDay() + 6) % 7;
@@ -18,8 +20,47 @@ function getSelectedDeviceId() {
     return document.querySelector(".device-card.selected")?.dataset.deviceId ?? null;
 }
 
-function saveScheduleEvents() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(scheduleEvents));
+function loadScheduleEvents() {
+    scheduleEvents = devices.flatMap(device =>
+        (device.fragrances ?? []).flatMap(fragrance =>
+            (fragrance.schedule ?? []).map(event => ({
+                ...event,
+                deviceId: String(device.id),
+                deviceName: device.name,
+                fragranceMac: fragrance.mac_address,
+                fragranceName: fragrance.name
+            }))
+        )
+    );
+
+    console.log("[SCHEDULE] Planningen geladen:", scheduleEvents);
+}
+
+async function saveScheduleEvents(deviceId = selectedDeviceId) {
+    const device = getDevice(deviceId);
+
+    if (!device) return;
+
+    device.fragrances.forEach(fragrance => {
+        fragrance.schedule = scheduleEvents
+            .filter(event =>
+                String(event.deviceId) === String(device.id) &&
+                event.fragranceMac === fragrance.mac_address
+            )
+            .map(({ id, time, sprays, days }) => ({
+                id,
+                time,
+                sprays,
+                days
+            }));
+    });
+
+    try {
+        await updateBackendDeviceFragrances(device.id, device.fragrances);
+        console.log(`[SCHEDULE] Planning opgeslagen voor ${device.name}:`, device.fragrances);
+    } catch (error) {
+        console.error("[SCHEDULE] Opslaan mislukt:", error);
+    }
 }
 
 function getEventDays(event) {
@@ -172,8 +213,6 @@ function removeDeletedFragrances() {
             fragrance.mac_address === event.fragranceMac
         );
     });
-
-    saveScheduleEvents();
 }
 
 function createClusterDetails(container, events, top) {
@@ -581,15 +620,16 @@ function closeScheduleModal() {
     editingEventId = null;
 }
 
-function deleteScheduleEvent(eventId = editingEventId) {
-    if (!eventId) return;
+    async function deleteScheduleEvent(eventId = editingEventId) {
+        if (!eventId) return;
 
-    scheduleEvents = scheduleEvents.filter(item => item.id !== eventId);
+        scheduleEvents = scheduleEvents.filter(item => item.id !== eventId);
 
-    saveScheduleEvents();
-    closeScheduleModal();
-    renderScheduleEvents();
-}
+        await saveScheduleEvents();
+
+        closeScheduleModal();
+        renderScheduleEvents();
+    }
 
 function toggleAllScheduleDays() {
     const checkboxes = [...document.querySelectorAll('[name="schedule-days"]')];
@@ -607,7 +647,7 @@ export function initializeScheduleEvents() {
     if (!modal || !form || modal.dataset.initialized) return;
 
     modal.dataset.initialized = "true";
-
+    loadScheduleEvents();
     selectedDeviceId = getSelectedDeviceId();
 
     if (selectedDeviceId) {
@@ -679,7 +719,7 @@ export function initializeScheduleEvents() {
         checkbox.addEventListener("change", updateScheduleInfo);
     });
 
-    form.addEventListener("submit", event => {
+    form.addEventListener("submit", async event => {
         event.preventDefault();
 
         const device = getDevice(selectedDeviceId);
@@ -714,7 +754,8 @@ export function initializeScheduleEvents() {
             scheduleEvents.push(eventData);
         }
 
-        saveScheduleEvents();
+        await saveScheduleEvents(device.id);
+
         closeScheduleModal();
         renderScheduleEvents();
     });

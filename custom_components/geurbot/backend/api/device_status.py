@@ -536,3 +536,195 @@ async def set_device_fragrance_empty_bottle_threshold(request, device_manager):
         request, device_manager, "PUT",
         "/api/device/fragrances/set-empty-bottle-threshold"
     )
+
+
+async def start_firmware_update(request, device_manager):
+    device_id = request.match_info["device_id"]
+    device = device_manager.get_device(device_id)
+
+    if not device:
+        return web.json_response(
+            {"success": False, "error": "Device not found"},
+            status=404
+        )
+
+    # Haal de nieuwste firmware-informatie op
+    info = await get_data(device, "/api/firmware/esp/info")
+
+    if not info["success"]:
+        return web.json_response({
+            "success": False,
+            "error": "Could not retrieve firmware information"
+        }, status=502)
+
+    firmware = info["data"]
+
+    if not firmware.get("update_available"):
+        return web.json_response({
+            "success": False,
+            "error": "NO_UPDATE_AVAILABLE"
+        }, status=409)
+
+    # Updategegevens
+    data = {
+        "client_id": device.get("client_id", ""),
+        "token": device.get("token", ""),
+        "version": firmware.get("latest", ""),
+         "url": "https://raw.githubusercontent.com/TiloWIjkniet/tilo-controller/main/firmware/esp32/version.json"
+    }
+
+    if not all(data.values()):
+        return web.json_response({
+            "success": False,
+            "error": "MISSING_UPDATE_DATA"
+        }, status=400)
+
+    # Start firmware-update op de ESP32
+    result = await send_data(
+        device,
+        "/api/firmware/esp/update",
+        data=data,
+        method="POST"
+    )
+
+    if not result["success"]:
+        return web.json_response(
+            result.get("data") or {
+                "success": False,
+                "error": result.get("error") or "UPDATE_START_FAILED"
+            },
+            status=502
+        )
+
+    return web.json_response(
+        result["data"],
+        status=result.get("status") or 202
+    )
+
+async def get_device_fragrances(request, device_manager):
+    device_id = request.match_info["device_id"]
+    device = device_manager.get_device(device_id)
+
+    if not device:
+        return web.json_response(
+            {"success": False, "error": "Device not found"},
+            status=404
+        )
+
+    result = await get_data(
+        device,
+        "/api/device/fragrances/get-all"
+    )
+
+    if not result["success"]:
+        return web.json_response(
+            {
+                "success": False,
+                "error": result.get("error") or "Could not retrieve fragrances"
+            },
+            status=502
+        )
+
+    data = result["data"]
+
+    # Ondersteun zowel een lijst als een object met fragrances.
+    fragrances = data if isinstance(data, list) else data.get("fragrances")
+
+    if not isinstance(fragrances, list):
+        return web.json_response(
+            {"success": False, "error": "Invalid fragrance response"},
+            status=502
+        )
+
+    device_manager.update_device_fragrances(device_id, fragrances)
+
+    return web.json_response(data)
+
+
+async def get_backend_device_fragrances(request, device_manager):
+    device_id = request.match_info["device_id"]
+    device = device_manager.get_device(device_id)
+
+    if not device:
+        return web.json_response({"success": False, "error": "Device not found"}, status=404)
+
+    return web.json_response({
+        "success": True,
+        "fragrances": device.get("fragrances", [])
+    })
+
+
+async def update_backend_device_fragrances(request, device_manager):
+    device_id = request.match_info["device_id"]
+    device = device_manager.get_device(device_id)
+
+    if not device:
+        return web.json_response({"success": False, "error": "Device not found"}, status=404)
+
+    try:
+        data = await request.json()
+        fragrances = data.get("fragrances")
+
+        if not isinstance(fragrances, list):
+            return web.json_response({"success": False, "error": "Invalid fragrances"}, status=400)
+
+        device_manager.update_device_fragrances(device_id, fragrances)
+
+        return web.json_response({"success": True})
+
+    except Exception as error:
+        return web.json_response({"success": False, "error": str(error)}, status=400)
+
+
+async def delete_backend_device_fragrance(request, device_manager):
+    device_id = request.match_info["device_id"]
+    mac_address = request.match_info["mac_address"]
+
+    print(f"[FRAGRANCES] Verwijderen: {mac_address} van {device_id}")
+
+    try:
+        removed = device_manager.remove_device_fragrance(
+            device_id,
+            mac_address
+        )
+
+        if not removed:
+            return web.json_response({
+                "success": False,
+                "error": "Device or fragrance not found"
+            }, status=404)
+
+        print(f"[FRAGRANCES] Geur {mac_address} verwijderd")
+
+        return web.json_response({"success": True})
+
+    except Exception as error:
+        print(f"[FRAGRANCES] Verwijderen mislukt: {error}")
+
+        return web.json_response({
+            "success": False,
+            "error": str(error)
+        }, status=500)
+
+
+import asyncio
+async def execute_device_fragrance_spray(device, mac_address, amount=1, interval=2):
+    for spray_number in range(amount):
+        result = await send_data(
+            device,
+            "/api/device/fragrances/spray",
+            data={"mac_address": mac_address},
+            method="POST"
+        )
+
+        if not result["success"]:
+            return {
+                "success": False,
+                "error": result.get("error") or "Spray failed",
+                "spray_number": spray_number + 1
+            }
+
+        if spray_number < amount - 1:
+            await asyncio.sleep(interval)
+
+    return {"success": True}

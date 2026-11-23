@@ -1,0 +1,812 @@
+/* ========================================
+   GENERAL SETTINGS MODAL
+======================================== */
+
+.general-settings-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, .65);
+    backdrop-filter: blur(5px);
+}
+
+.general-settings-overlay[hidden] {
+    display: none;
+}
+
+.general-settings-modal {
+    display: flex;
+    flex-direction: column;
+    width: 1300px;
+    height: 1100px;
+    max-width: calc(100vw - 48px);
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--bg-content);
+    color: var(--text-primary);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .4);
+}
+
+/* ========================================
+   GENERAL SETTINGS HEADER
+======================================== */
+
+.general-settings-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 28px 28px 22px;
+}
+
+
+/* ========================================
+   GENERAL SETTINGS TABS
+======================================== */
+
+.general-settings-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 12px 24px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border-soft);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.general-settings-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .2s ease, color .2s ease;
+}
+
+.general-settings-tab:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.general-settings-tab.active {
+    background: rgba(113, 135, 255, .16);
+    color: var(--accent-light);
+}
+
+.general-settings-tab svg {
+    width: 16px;
+    height: 16px;
+}
+
+
+/* ========================================
+   GENERAL SETTINGS CONTENT
+======================================== */
+
+.general-settings-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    gap: 16px;
+    padding: 24px 28px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.general-settings-panel[hidden] {
+    display: none;
+}
+
+
+/* ========================================
+   GENERAL SETTINGS CARDS
+======================================== */
+
+.general-settings-card {
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-card);
+}
+
+.general-settings-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.general-settings-card-title h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 15px;
+}
+
+
+/* ========================================
+   GENERAL SETTINGS FOOTER
+======================================== */
+
+.general-settings-footer {
+    padding: 14px 28px;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-align: right;
+}
+
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 600px) {
+    .general-settings-overlay {
+        padding: 12px;
+    }
+
+    .general-settings-modal {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+    }
+
+    .general-settings-header,
+    .general-settings-content {
+        padding: 20px;
+    }
+
+    .general-settings-tabs {
+        padding: 12px 20px;
+    }
+
+    .general-settings-footer {
+        padding: 14px 20px;
+    }
+}
+
+
+/* ========================================
+   NOTIFICATION SETTINGS
+======================================== */
+
+.notification-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+}
+
+/* ========================================
+   INTRO
+======================================== */
+
+.notification-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 4px 2px;
+}
+
+.notification-intro h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 19px;
+    font-weight: 650;
+}
+
+.notification-intro p {
+    margin: 6px 0 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* ========================================
+   GENERAL PREFERENCES
+======================================== */
+
+.notification-general-card {
+    overflow: hidden;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: linear-gradient(145deg, #151f35, #101827);
+}
+
+.notification-card-heading {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding-bottom: 17px;
+    border-bottom: 1px solid rgba(148, 163, 184, .12);
+}
+
+.notification-card-heading h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.notification-card-heading p {
+    margin: 4px 0 0;
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.notification-icon,
+.notification-category-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+}
+
+.notification-icon svg,
+.notification-category-icon svg {
+    width: 19px;
+    height: 19px;
+}
+
+.general-icon {
+    background: rgba(99, 130, 255, .13);
+    color: #8ca5ff;
+}
+
+.notification-general-options {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========================================
+   SECTION HEADINGS
+======================================== */
+
+.notification-section-heading h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.notification-section-heading p {
+    margin: 5px 0 0;
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+/* ========================================
+   CATEGORY GRID
+======================================== */
+
+.notification-categories {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+}
+
+.notification-category {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #111a2b;
+    transition: border-color .2s ease, background .2s ease;
+}
+
+.notification-category:hover {
+    border-color: rgba(116, 145, 255, .4);
+}
+
+.notification-category[open] {
+    grid-column: 1 / -1;
+    border-color: rgba(116, 145, 255, .42);
+    background: #121d30;
+}
+
+/* ========================================
+   CATEGORY HEADER
+======================================== */
+
+.notification-category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 82px;
+    padding: 15px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.notification-category-header::-webkit-details-marker {
+    display: none;
+}
+
+.notification-category-header::marker {
+    display: none;
+    content: "";
+}
+
+.notification-category-icon {
+    width: 42px;
+    height: 42px;
+}
+
+.device-icon {
+    color: #75aaff;
+    background: rgba(59, 130, 246, .13);
+}
+
+.fragrance-icon {
+    color: #b39aff;
+    background: rgba(139, 92, 246, .13);
+}
+
+.schedule-icon {
+    color: #f6c66d;
+    background: rgba(245, 158, 11, .12);
+}
+
+.firmware-icon {
+    color: #62d6ac;
+    background: rgba(16, 185, 129, .12);
+}
+
+.notification-category-info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.notification-category-info > span {
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.notification-category-info small {
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: 10px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+}
+
+.notification-category-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.notification-chevron {
+    width: 16px;
+    height: 16px;
+    transition: transform .2s ease;
+}
+
+.notification-category[open] .notification-chevron {
+    transform: rotate(180deg);
+}
+
+/* ========================================
+   CATEGORY CONTENT
+======================================== */
+
+.notification-category-content {
+    padding: 0 16px 10px;
+    border-top: 1px solid rgba(148, 163, 184, .12);
+    animation: notification-expand .2s ease;
+}
+
+@keyframes notification-expand {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   SETTING ROWS
+======================================== */
+
+.notification-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 65px;
+    padding: 12px 2px;
+    border-bottom: 1px solid rgba(148, 163, 184, .09);
+}
+
+.notification-row:last-child {
+    border-bottom: 0;
+}
+
+.notification-row-info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.notification-row-info span {
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 550;
+}
+
+.notification-row-info small {
+    color: var(--text-secondary);
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+/* ========================================
+   TOGGLES
+======================================== */
+
+.notification-toggle {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 40px;
+    height: 22px;
+    cursor: pointer;
+}
+
+.notification-toggle input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.notification-toggle-slider {
+    position: absolute;
+    inset: 0;
+    border: 1px solid #35445e;
+    border-radius: 20px;
+    background: #202c40;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.notification-toggle-slider::before {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #8491a6;
+    content: "";
+    transition: transform .2s ease, background .2s ease;
+}
+
+.notification-toggle input:checked + .notification-toggle-slider {
+    border-color: #6689ff;
+    background: #4568d8;
+}
+
+.notification-toggle input:checked + .notification-toggle-slider::before {
+    transform: translateX(18px);
+    background: #fff;
+}
+
+.notification-toggle input:focus-visible + .notification-toggle-slider {
+    outline: 2px solid #8ca5ff;
+    outline-offset: 3px;
+}
+
+.notification-toggle input:disabled + .notification-toggle-slider {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.notification-master-toggle {
+    width: 46px;
+    height: 25px;
+}
+
+.notification-master-toggle .notification-toggle-slider::before {
+    width: 19px;
+    height: 19px;
+}
+
+.notification-master-toggle input:checked + .notification-toggle-slider::before {
+    transform: translateX(21px);
+}
+
+/* ========================================
+   QUIET HOURS
+======================================== */
+
+.notification-quiet-settings {
+    display: flex;
+    gap: 12px;
+    padding: 0 2px 15px;
+}
+
+.notification-time-field {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.notification-time-field label {
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+.notification-time-field input {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    outline: none;
+    background: #0d1625;
+    color: var(--text-primary);
+    color-scheme: dark;
+    font-size: 12px;
+}
+
+.notification-time-field input:focus {
+    border-color: var(--accent);
+}
+
+/* ========================================
+   PREDICTION SLIDER
+======================================== */
+
+.notification-prediction-settings {
+    margin: 0 0 12px;
+    padding: 14px;
+    border: 1px solid rgba(116, 145, 255, .15);
+    border-radius: 9px;
+    background: rgba(59, 90, 160, .09);
+}
+
+.notification-slider-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.notification-slider-heading label {
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.notification-slider-heading strong {
+    color: #91aaff;
+    font-size: 12px;
+}
+
+#notification-prediction-days {
+    width: 100%;
+    height: 5px;
+    border-radius: 10px;
+    background: #34435e;
+    accent-color: #718fff;
+    cursor: pointer;
+}
+
+.notification-slider-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 7px;
+    color: var(--text-muted);
+    font-size: 9px;
+}
+
+/* ========================================
+   DEPENDENT SETTINGS
+======================================== */
+
+.notification-quiet-row:has(input:not(:checked)) + .notification-quiet-settings,
+.notification-prediction-row:has(input:not(:checked)) + .notification-prediction-settings {
+    display: none;
+}
+
+/* ========================================
+   DISABLED MASTER SETTINGS
+======================================== */
+
+.notification-settings.notifications-disabled .notification-general-card,
+.notification-settings.notifications-disabled .notification-categories {
+    opacity: .4;
+    pointer-events: none;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 700px) {
+    .notification-categories {
+        grid-template-columns: 1fr;
+    }
+
+    .notification-category[open] {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-settings {
+        gap: 16px;
+    }
+
+    .notification-general-card {
+        padding: 15px;
+    }
+
+    .notification-category-header {
+        min-height: 74px;
+        padding: 12px;
+    }
+
+    .notification-category-meta {
+        gap: 5px;
+    }
+
+    .notification-category-meta > span {
+        display: none;
+    }
+
+    .notification-category-content {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .notification-row-info small {
+        max-width: 240px;
+    }
+}
+
+.notification-general-card {
+    padding: 24px;
+}
+
+.notification-card-heading {
+    gap: 15px;
+    padding-bottom: 20px;
+}
+
+.notification-card-heading h4 {
+    font-size: 16px;
+}
+
+.notification-card-heading p {
+    font-size: 12px;
+}
+
+.notification-icon {
+    width: 46px;
+    height: 46px;
+}
+
+.notification-icon svg {
+    width: 21px;
+    height: 21px;
+}
+.notification-categories {
+    gap: 16px;
+}
+
+.notification-category-header {
+    min-height: 96px;
+    gap: 16px;
+    padding: 20px;
+}
+
+.notification-category-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+}
+
+.notification-category-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.notification-category-info > span {
+    font-size: 15px;
+}
+
+.notification-category-info small {
+    font-size: 12px;
+}
+
+.notification-category-meta {
+    font-size: 11px;
+    gap: 12px;
+}
+
+.notification-category-content {
+    padding: 4px 22px 14px;
+}
+
+.notification-row {
+    min-height: 76px;
+    padding: 16px 4px;
+}
+
+.notification-row-info {
+    gap: 6px;
+}
+
+.notification-row-info span {
+    font-size: 14px;
+}
+
+.notification-row-info small {
+    font-size: 11px;
+}
+.notification-intro h3 {
+    font-size: 22px;
+}
+
+.notification-intro p {
+    font-size: 13px;
+}
+
+.notification-section-heading h4 {
+    font-size: 16px;
+}
+
+.notification-section-heading p {
+    font-size: 12px;
+}
+.notification-toggle {
+    width: 44px;
+    height: 24px;
+}
+
+.notification-toggle-slider::before {
+    width: 18px;
+    height: 18px;
+}
+
+.notification-toggle input:checked + .notification-toggle-slider::before {
+    transform: translateX(20px);
+}

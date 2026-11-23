@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "GeurBot",
+        "description": "Voeg de GeurBot-integratie toe. Apparaten kunnen daarna vanuit het GeurBot-paneel worden ontdekt.",
+        "data": {
+          "scan_timeout": "Discovery-time-out (seconden)",
+          "notify_service": "Optionele meldingsservice (bijv. notify.mobile_app_telefoon)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "GeurBot is al geconfigureerd."
+    }
+  }
+}
