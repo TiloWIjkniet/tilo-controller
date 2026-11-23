@@ -36,4 +36,9 @@ class GeurBotCoordinator(DataUpdateCoordinator):
             fragrances = payload["fragrances"]
         else:
             fragrances = []
+        # Keep the shared registry record current for schedules, monitors and entities.
+        self.device["fragrances"] = fragrances
+        runtime = self.hass.data.get("geurbot", {})
+        for adder in runtime.get("entity_adders", {}).values():
+            adder(self)
         return {"online": True, "fragrances": fragrances, "raw": payload}

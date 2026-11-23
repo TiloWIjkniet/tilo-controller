@@ -9,9 +9,8 @@ from pathlib import Path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components import panel_custom
 
-from .const import DOMAIN, PLATFORMS, PANEL_TITLE, PANEL_ICON
+from .const import DOMAIN, PLATFORMS
 from .storage import GeurBotStore
 from .api import async_register_services
 from .coordinator import GeurBotCoordinator
@@ -72,12 +71,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def handle_device_found(device):
         await persist_devices()
         device_id = device["device_id"]
-        if device_id in runtime["coordinators"]:
-            return
-        coordinator = GeurBotCoordinator(hass, device)
-        runtime["coordinators"][device_id] = coordinator
+        coordinator = runtime["coordinators"].get(device_id)
+        if coordinator is None:
+            coordinator = GeurBotCoordinator(hass, device)
+            runtime["coordinators"][device_id] = coordinator
         await coordinator.async_refresh()
-        for platform, adder in runtime["entity_adders"].items():
+        for adder in runtime["entity_adders"].values():
             adder(coordinator)
     manager.on_device_found = handle_device_found
 
@@ -156,27 +155,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(stop_background_tasks)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    # Register the built frontend and sidebar panel.
+    # Serve the existing frontend for a standard Home Assistant Webpage dashboard.
     frontend_dir = Path(__file__).parent / "frontend"
-    if not hass.data.get(f"{DOMAIN}_panel_registered"):
+    if not hass.data.get(f"{DOMAIN}_static_registered"):
         try:
             await hass.http.async_register_static_paths([
                 StaticPathConfig("/geurbot_static", str(frontend_dir), False),
-                StaticPathConfig("/geurbot_panel", str(frontend_dir / "public"), False),
             ])
-            await panel_custom.async_register_panel(
-                hass,
-                webcomponent_name="ha-panel-geurbot",
-                frontend_url_path="geurbot",
-                sidebar_title=PANEL_TITLE,
-                sidebar_icon=PANEL_ICON,
-                module_url="/geurbot_panel/panel.js",
-                embed_iframe=False,
-                require_admin=False,
-            )
-            hass.data[f"{DOMAIN}_panel_registered"] = True
+            hass.data[f"{DOMAIN}_static_registered"] = True
         except (OSError, ValueError, RuntimeError) as err:
-            _LOGGER.warning("GeurBot frontend-paneel kon niet worden geregistreerd: %s", err)
+            _LOGGER.error("GeurBot frontend kon niet worden gepubliceerd: %s", err)
+            raise
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
