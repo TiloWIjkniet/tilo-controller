@@ -1,32 +1,46 @@
+console.log("[GeurBot Panel] panel.js wordt geladen");
 
 class GeurBotPanel extends HTMLElement {
   constructor() {
     super();
 
-    this.attachShadow({ mode: "open" });
+    console.log("[GeurBot Panel] Constructor gestart");
 
-    const style = document.createElement("style");
-    style.textContent = `
-      :host {
-        display: block;
-        height: 100%;
-      }
-    `;
+    try {
+      this.style.display = "block";
+      this.style.height = "100%";
 
-    this._hass = null;
+      this._hass = null;
 
-    this._iframe = document.createElement("iframe");
-    this._iframe.src = "/geurbot_static/index.html";
-    this._iframe.title = "GeurBot";
-    this._iframe.style.cssText =
-      "border:0;width:100%;height:100%;display:block;background:var(--primary-background-color)";
+      console.log("[GeurBot Panel] Iframe aanmaken");
 
-    this.shadowRoot.append(style, this._iframe);
+      this._iframe = document.createElement("iframe");
+      this._iframe.src = "/geurbot_static/index.html";
+      this._iframe.title = "GeurBot";
+      this._iframe.style.cssText =
+        "border:0;width:100%;height:100%;display:block;background:var(--primary-background-color)";
 
-    this._iframe.addEventListener("load", () => this._sendAuth());
+      this._iframe.addEventListener("load", () => {
+        console.log("[GeurBot Panel] Iframe geladen");
+        this._sendAuth();
+      });
+
+      this._iframe.addEventListener("error", (error) => {
+        console.error("[GeurBot Panel] Iframe fout:", error);
+      });
+
+      this.append(this._iframe);
+
+      console.log("[GeurBot Panel] Constructor succesvol afgerond");
+    } catch (error) {
+      console.error("[GeurBot Panel] Constructor mislukt:", error);
+      throw error;
+    }
   }
 
   set hass(value) {
+    console.log("[GeurBot Panel] hass ontvangen");
+
     this._hass = value;
     this._sendAuth();
   }
@@ -38,15 +52,28 @@ class GeurBotPanel extends HTMLElement {
   _sendAuth() {
     const token = this._hass?.auth?.data?.access_token;
 
-    if (token && this._iframe.contentWindow) {
-      this._iframe.contentWindow.postMessage(
-        { type: "geurbot-auth", token },
-        window.location.origin
-      );
+    if (!token) {
+      console.warn("[GeurBot Panel] Geen access token beschikbaar");
+      return;
     }
+
+    if (!this._iframe?.contentWindow) {
+      console.warn("[GeurBot Panel] Iframe window nog niet beschikbaar");
+      return;
+    }
+
+    console.log("[GeurBot Panel] Authenticatie naar iframe versturen");
+
+    this._iframe.contentWindow.postMessage(
+      { type: "geurbot-auth", token },
+      window.location.origin
+    );
   }
 }
 
 if (!customElements.get("ha-panel-geurbot")) {
+  console.log("[GeurBot Panel] Custom element registreren");
   customElements.define("ha-panel-geurbot", GeurBotPanel);
+} else {
+  console.warn("[GeurBot Panel] Custom element was al geregistreerd");
 }
