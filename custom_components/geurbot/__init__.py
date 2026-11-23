@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import json
+import hashlib
 from copy import deepcopy
 from pathlib import Path
 
@@ -156,16 +157,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(stop_background_tasks)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    # Serve the existing frontend and the panel wrapper from the integration.
+    # Serve the existing frontend and the panel module from dedicated static routes.
     frontend_dir = Path(__file__).parent / "frontend"
+    panel_file = frontend_dir / "panel.js"
+    if not panel_file.is_file():
+        raise FileNotFoundError(f"GeurBot panelbestand ontbreekt: {panel_file}")
+
+    panel_hash = hashlib.sha256(panel_file.read_bytes()).hexdigest()[:12]
+    panel_module_url = f"/geurbot_panel.js?v={panel_hash}"
+
     if not hass.data.get(f"{DOMAIN}_static_registered"):
         try:
             await hass.http.async_register_static_paths([
                 StaticPathConfig("/geurbot_static", str(frontend_dir), False),
+                StaticPathConfig("/geurbot_panel.js", str(panel_file), False),
             ])
             hass.data[f"{DOMAIN}_static_registered"] = True
         except (OSError, ValueError, RuntimeError) as err:
-            _LOGGER.error("GeurBot frontend kon niet worden gepubliceerd: %s", err)
+            _LOGGER.error("GeurBot frontend/paneelbestanden konden niet worden gepubliceerd: %s", err)
             raise
 
     # Register GeurBot as its own Home Assistant sidebar panel.
@@ -176,12 +185,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             frontend_url_path=DOMAIN,
             sidebar_title=PANEL_TITLE,
             sidebar_icon=PANEL_ICON,
-            module_url="/geurbot_static/panel.js",
+            module_url=panel_module_url,
             embed_iframe=False,
             require_admin=False,
         )
         hass.data[f"{DOMAIN}_panel_registered"] = True
-        _LOGGER.info("GeurBot-zijpaneel is geregistreerd.")
+        _LOGGER.info("GeurBot-zijpaneel geregistreerd via %s", panel_module_url)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
