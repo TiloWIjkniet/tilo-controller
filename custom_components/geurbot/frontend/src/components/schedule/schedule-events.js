@@ -1,7 +1,6 @@
 import { devices } from "../devices/device-list.js";
 import { updateWeekdays } from "./schedule-list.js";
 import { updateBackendDeviceFragrances } from "../../services/device-fragrance.js";
-import { devices } from "../devices/device-list.js";
 
 const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
