@@ -232,26 +232,17 @@ class GeurBotDevicesAddView(HomeAssistantView):
             )
 
         # Gebruik de interne URL als die is ingesteld.
-        # Anders gebruiken we de externe URL.
+        # Gebruik de ingestelde Home Assistant URL als die beschikbaar is.
         ha_url = (
-            hass.config.internal_url
-            or hass.config.external_url
+            hass.config.external_url
+            or hass.config.internal_url
         )
 
+        # Anders automatisch de URL van het inkomende verzoek gebruiken.
         if not ha_url:
-            return self.json(
-                {
-                    "success": False,
-                    "error": (
-                        "Geen Home Assistant URL ingesteld. "
-                        "Configureer een interne of externe URL."
-                    ),
-                },
-                status_code=500,
-            )
+            ha_url = f"{request.scheme}://{request.host}"
 
         ha_url = ha_url.rstrip("/")
-
         try:
             esp = EspClient(device)
 
