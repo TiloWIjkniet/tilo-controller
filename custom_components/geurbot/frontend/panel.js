@@ -1,8 +1,12 @@
+
 class GeurBotPanel extends HTMLElement {
     constructor() {
         super();
+
         this._hass = null;
         this._iframe = null;
+        this._resizeObserver = null;
+
         this.attachShadow({ mode: "open" });
     }
 
@@ -21,15 +25,18 @@ class GeurBotPanel extends HTMLElement {
         const style = document.createElement("style");
         style.textContent = `
             :host {
-                display: block;
-                width: 100%;
-                height: 100%;
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                min-height: 0 !important;
                 overflow: hidden;
             }
+
             iframe {
                 display: block;
                 width: 100%;
                 height: 100%;
+                min-height: 0;
                 border: 0;
                 background: var(--primary-background-color, #fff);
             }
@@ -42,6 +49,50 @@ class GeurBotPanel extends HTMLElement {
 
         this.shadowRoot.append(style, iframe);
         this._iframe = iframe;
+
+        this._fixPanelHeight();
+
+        this._resizeObserver = new ResizeObserver(() => {
+            this._fixPanelHeight();
+        });
+
+        this._resizeObserver.observe(this);
+    }
+
+    disconnectedCallback() {
+        this._resizeObserver?.disconnect();
+        this._resizeObserver = null;
+    }
+
+    _findElement(root, selector) {
+        if (!root) return null;
+
+        const found = root.querySelector?.(selector);
+        if (found) return found;
+
+        for (const element of root.querySelectorAll?.("*") ?? []) {
+            if (element.shadowRoot) {
+                const result = this._findElement(element.shadowRoot, selector);
+                if (result) return result;
+            }
+        }
+
+        return null;
+    }
+
+    _fixPanelHeight() {
+        const panel = this._findElement(
+            this.ownerDocument,
+            "ha-panel-custom"
+        );
+
+        if (!panel) {
+            console.warn("[GeurBot] ha-panel-custom niet gevonden");
+            return;
+        }
+
+        panel.style.setProperty("height", "100%", "important");
+        panel.style.setProperty("min-height", "0", "important");
     }
 
     _sendAuth() {
