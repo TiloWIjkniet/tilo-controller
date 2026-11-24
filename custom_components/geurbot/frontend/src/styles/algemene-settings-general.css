@@ -1110,3 +1110,55 @@
         min-height: 28px;
     }
 }
+
+
+
+.system-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.system-section {
+    padding: 18px;
+    border: 1px solid var(--divider-color, #444);
+    border-radius: 12px;
+}
+
+.system-section h3 {
+    margin: 0 0 8px;
+}
+
+.system-section p {
+    margin: 0 0 14px;
+    opacity: 0.8;
+}
+
+.system-section button {
+    cursor: pointer;
+}
+
+.system-danger {
+    border-color: var(--error-color, #d9534f);
+}
+
+#system-reset-confirmation {
+    margin-top: 18px;
+}
+
+#system-reset-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 8px 0 14px;
+}
+
+.system-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#system-action-message.error {
+    color: var(--error-color, #d9534f);
+}

@@ -1,7 +1,7 @@
 import { devices } from "../devices/device-list.js";
 import { updateWeekdays } from "./schedule-list.js";
 import { updateBackendDeviceFragrances } from "../../services/device-fragrance.js";
-
+import { devices } from "../devices/device-list.js";
 
 const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
@@ -800,15 +800,24 @@ function getEventStatus(event) {
 }
 
 function getScheduledSpraysPerWeek(fragranceMac) {
-    return scheduleEvents
-        .filter(event =>
-            String(event.deviceId) === String(selectedDeviceId) &&
-            event.fragranceMac === fragranceMac &&
-            event.id !== editingEventId
+    const device = devices.find(device =>
+        device.fragrances?.some(fragrance =>
+            fragrance.mac_address === fragranceMac
         )
-        .reduce((total, event) =>
-            total + (Number(event.sprays) || 0) * getEventDays(event).length, 0
-        );
+    );
+
+    if (!device) return 0;
+
+    const fragrance = device.fragrances.find(item =>
+        item.mac_address === fragranceMac
+    );
+
+    return (fragrance.schedule ?? []).reduce((total, event) => {
+        const days = Array.isArray(event.days) ? event.days.length : 7;
+        const sprays = Number(event.sprays) || 0;
+
+        return total + sprays * days;
+    }, 0);
 }
 
 function updateScheduleInfo() {

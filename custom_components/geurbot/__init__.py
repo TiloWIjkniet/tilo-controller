@@ -6,6 +6,7 @@ import json
 import hashlib
 from copy import deepcopy
 from pathlib import Path
+from backend.api.system_view import GeurBotSystemView
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -41,6 +42,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.http.register_view(GeurBotApiView())
     hass.http.register_view(GeurBotRootApiView())
     hass.http.register_view(GeurBotDevicesAddView())
+    hass.http.register_view(GeurBotSystemView())
+    
     return True
 
 
