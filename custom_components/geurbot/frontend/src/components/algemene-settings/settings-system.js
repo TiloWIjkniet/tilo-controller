@@ -1,4 +1,7 @@
 
+import { setupNotifications } from "./settings-notifications.js";
+
+
 const SYSTEM_API = "/api/geurbot-system";
 
 const initializedApps = new WeakSet();
