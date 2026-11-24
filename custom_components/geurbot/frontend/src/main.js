@@ -108,7 +108,7 @@ refreshNetworkStatus();
 refreshFirmwareStatus();
 updateFragranceIcons();
 
-setInterval(refreshNetworkStatus, 10000);
+setInterval(refreshNetworkStatus, 60000);
 setInterval(refreshFragranceStatus, 30000);
 
 let firmwareInterval = null;
@@ -137,7 +137,7 @@ async function pollFirmwareStatus() {
 
     firmwareInterval = setTimeout(
         pollFirmwareStatus,
-        updating || firmwareStartPending ? 2000 : 5 * 60 * 1000
+        updating || firmwareStartPending ? 2000 : 10 * 60 * 1000
     );
 }
     document.addEventListener("geurbot:firmware-update-started", () => {
