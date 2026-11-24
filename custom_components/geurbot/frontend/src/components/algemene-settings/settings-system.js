@@ -1,7 +1,4 @@
 
-import { setupNotifications } from "./settings-notifications.js";
-
-
 const SYSTEM_API = "/api/geurbot-system";
 
 const initializedApps = new WeakSet();
@@ -36,8 +33,13 @@ async function systemRequest(action, options = {}) {
         throw error;
     }
 
-    if (result && result.success === false) {
-        throw new Error(result.error || "De actie is mislukt");
+    if (result?.success === false) {
+        const error = new Error(
+            result.error || "De actie is mislukt"
+        );
+
+        error.result = result;
+        throw error;
     }
 
     return result;
@@ -68,6 +70,7 @@ export async function loadSystemStatus(app) {
     if (!element) return;
 
     element.textContent = "Status wordt opgehaald...";
+    element.dataset.state = "loading";
 
     try {
         const result = await systemRequest("status", {
@@ -75,8 +78,10 @@ export async function loadSystemStatus(app) {
             cache: "no-store"
         });
 
-        if (!result.loaded) {
-            throw new Error("De GeurBot-integratie is niet geladen");
+        if (!result?.loaded) {
+            throw new Error(
+                "De GeurBot-integratie is niet geladen"
+            );
         }
 
         const deviceCount = Number(result.device_count) || 0;
@@ -89,7 +94,10 @@ export async function loadSystemStatus(app) {
         element.dataset.state = "success";
 
     } catch (error) {
-        console.error("[SYSTEM] Status ophalen mislukt:", error);
+        console.error(
+            "[SYSTEM] Status ophalen mislukt:",
+            error
+        );
 
         element.textContent =
             `Status niet beschikbaar: ${error.message}`;
@@ -140,12 +148,16 @@ async function reloadSystem(app, button) {
 
         showSystemMessage(
             app,
-            result.message || "Herstart van de integratie is ingepland.",
+            result?.message ||
+                "Herstart van de integratie is ingepland.",
             "success"
         );
 
     } catch (error) {
-        console.error("[SYSTEM] Herstart mislukt:", error);
+        console.error(
+            "[SYSTEM] Herstart mislukt:",
+            error
+        );
 
         showSystemMessage(
             app,
@@ -172,6 +184,8 @@ async function downloadSystemBackup(app, button) {
         "info"
     );
 
+    let downloadUrl = null;
+
     try {
         const response = await fetch(`${SYSTEM_API}/backup`, {
             method: "GET",
@@ -187,7 +201,9 @@ async function downloadSystemBackup(app, button) {
 
             if (contentType.includes("application/json")) {
                 const result = await response.json();
-                errorMessage = result.error || errorMessage;
+
+                errorMessage =
+                    result.error || errorMessage;
             }
 
             throw new Error(errorMessage);
@@ -195,7 +211,8 @@ async function downloadSystemBackup(app, button) {
 
         const blob = await response.blob();
 
-        const downloadUrl = URL.createObjectURL(blob);
+        downloadUrl = URL.createObjectURL(blob);
+
         const link = document.createElement("a");
 
         link.href = downloadUrl;
@@ -205,8 +222,6 @@ async function downloadSystemBackup(app, button) {
         link.click();
         link.remove();
 
-        URL.revokeObjectURL(downloadUrl);
-
         showSystemMessage(
             app,
             "De GeurBot-back-up is gedownload.",
@@ -214,7 +229,10 @@ async function downloadSystemBackup(app, button) {
         );
 
     } catch (error) {
-        console.error("[SYSTEM] Back-up mislukt:", error);
+        console.error(
+            "[SYSTEM] Back-up mislukt:",
+            error
+        );
 
         showSystemMessage(
             app,
@@ -223,6 +241,10 @@ async function downloadSystemBackup(app, button) {
         );
 
     } finally {
+        if (downloadUrl) {
+            URL.revokeObjectURL(downloadUrl);
+        }
+
         button.disabled = false;
     }
 }
@@ -237,16 +259,23 @@ function openFactoryResetConfirmation(app) {
         "#system-reset-confirmation"
     );
 
-    const input = app.querySelector("#system-reset-input");
+    const input = app.querySelector(
+        "#system-reset-input"
+    );
+
     const confirmButton = app.querySelector(
         "#system-reset-confirm"
     );
 
-    if (!confirmation || !input || !confirmButton) return;
+    if (!confirmation || !input || !confirmButton) {
+        return;
+    }
 
     confirmation.hidden = false;
 
     input.value = "";
+    input.disabled = false;
+
     confirmButton.disabled = true;
 
     input.focus();
@@ -258,16 +287,23 @@ function closeFactoryResetConfirmation(app) {
         "#system-reset-confirmation"
     );
 
-    const input = app.querySelector("#system-reset-input");
+    const input = app.querySelector(
+        "#system-reset-input"
+    );
+
     const confirmButton = app.querySelector(
         "#system-reset-confirm"
     );
 
-    if (!confirmation || !input || !confirmButton) return;
+    if (!confirmation || !input || !confirmButton) {
+        return;
+    }
 
     confirmation.hidden = true;
 
     input.value = "";
+    input.disabled = false;
+
     confirmButton.disabled = true;
 }
 
@@ -277,7 +313,9 @@ function closeFactoryResetConfirmation(app) {
 // ==================================================
 
 function setupFactoryResetInput(app) {
-    const input = app.querySelector("#system-reset-input");
+    const input = app.querySelector(
+        "#system-reset-input"
+    );
 
     const confirmButton = app.querySelector(
         "#system-reset-confirm"
@@ -297,9 +335,14 @@ function setupFactoryResetInput(app) {
 // ==================================================
 
 async function executeFactoryReset(app, button) {
-    const input = app.querySelector("#system-reset-input");
+    const input = app.querySelector(
+        "#system-reset-input"
+    );
 
-    if (!input || input.value.trim().toUpperCase() !== "RESET") {
+    if (
+        !input ||
+        input.value.trim().toUpperCase() !== "RESET"
+    ) {
         showSystemMessage(
             app,
             "Typ RESET om de fabrieksreset te bevestigen.",
@@ -317,11 +360,11 @@ async function executeFactoryReset(app, button) {
 
     if (!confirmed) return;
 
-    button.disabled = true;
-
     const cancelButton = app.querySelector(
         "#system-reset-cancel"
     );
+
+    button.disabled = true;
 
     if (cancelButton) {
         cancelButton.disabled = true;
@@ -351,12 +394,14 @@ async function executeFactoryReset(app, button) {
         showSystemMessage(
             app,
             `Fabrieksreset geslaagd. ${
-                result.unpaired_devices ?? 0
+                result?.unpaired_devices ?? 0
             } ESP32-apparaten zijn ontkoppeld. De integratie wordt herstart.`,
             "success"
         );
 
-        const status = app.querySelector("#geurbot-system-status");
+        const status = app.querySelector(
+            "#geurbot-system-status"
+        );
 
         if (status) {
             status.textContent =
@@ -366,14 +411,21 @@ async function executeFactoryReset(app, button) {
         }
 
     } catch (error) {
-        console.error("[SYSTEM] Fabrieksreset mislukt:", error);
+        console.error(
+            "[SYSTEM] Fabrieksreset mislukt:",
+            error
+        );
 
-        let message = `Fabrieksreset mislukt: ${error.message}`;
+        let message =
+            `Fabrieksreset mislukt: ${error.message}`;
 
         const failedDevices =
             error.result?.failed_devices;
 
-        if (Array.isArray(failedDevices) && failedDevices.length > 0) {
+        if (
+            Array.isArray(failedDevices) &&
+            failedDevices.length > 0
+        ) {
             message += "\n\nNiet ontkoppelde apparaten:";
 
             failedDevices.forEach(device => {
@@ -385,7 +437,11 @@ async function executeFactoryReset(app, button) {
                 "\n\nDe lokale configuratie is behouden.";
         }
 
-        showSystemMessage(app, message, "error");
+        showSystemMessage(
+            app,
+            message,
+            "error"
+        );
 
     } finally {
         button.disabled = false;
@@ -405,13 +461,16 @@ async function executeFactoryReset(app, button) {
 
 export function setupSystemSettings(app) {
     if (!app) {
-        console.error("[SYSTEM] App-element ontbreekt");
+        console.error(
+            "[SYSTEM] App-element ontbreekt"
+        );
+
         return;
     }
 
-    if (initializedApps.has(app)) return;
-
-    initializedApps.add(app);
+    if (initializedApps.has(app)) {
+        return;
+    }
 
     const refreshButton = app.querySelector(
         "#system-refresh-status"
@@ -439,19 +498,28 @@ export function setupSystemSettings(app) {
 
     if (refreshButton) {
         refreshButton.addEventListener("click", () => {
-            void refreshSystemStatus(app, refreshButton);
+            void refreshSystemStatus(
+                app,
+                refreshButton
+            );
         });
     }
 
     if (reloadButton) {
         reloadButton.addEventListener("click", () => {
-            void reloadSystem(app, reloadButton);
+            void reloadSystem(
+                app,
+                reloadButton
+            );
         });
     }
 
     if (backupButton) {
         backupButton.addEventListener("click", () => {
-            void downloadSystemBackup(app, backupButton);
+            void downloadSystemBackup(
+                app,
+                backupButton
+            );
         });
     }
 
@@ -471,14 +539,21 @@ export function setupSystemSettings(app) {
 
     if (confirmButton) {
         confirmButton.addEventListener("click", () => {
-            void executeFactoryReset(app, confirmButton);
+            void executeFactoryReset(
+                app,
+                confirmButton
+            );
         });
     }
 
     setupFactoryResetInput(app);
 
+    initializedApps.add(app);
+
     // Status direct ophalen bij initialisatie.
     void loadSystemStatus(app);
 
-    console.info("[SYSTEM] Systeembeheer geïnitialiseerd");
+    console.info(
+        "[SYSTEM] Systeembeheer geïnitialiseerd"
+    );
 }

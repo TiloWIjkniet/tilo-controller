@@ -14,8 +14,10 @@ export function createSystemSettingsTemplate() {
                 </div>
             </div>
 
+
             <!-- INTEGRATIESTATUS -->
             <section class="system-settings-card">
+
                 <div class="system-settings-card-heading">
                     <div>
                         <h4>Integratiestatus</h4>
@@ -29,8 +31,10 @@ export function createSystemSettingsTemplate() {
                         type="button"
                         class="system-action-button"
                         id="system-refresh-status">
+
                         <i data-lucide="refresh-cw"></i>
                         Vernieuwen
+
                     </button>
                 </div>
 
@@ -39,12 +43,17 @@ export function createSystemSettingsTemplate() {
                     id="geurbot-system-status"
                     role="status"
                     aria-live="polite">
+
                     Status wordt nog niet opgehaald.
+
                 </div>
+
             </section>
+
 
             <!-- INTEGRATIE HERSTARTEN -->
             <section class="system-settings-card">
+
                 <div class="system-settings-card-heading">
                     <div>
                         <h4>Integratie herstarten</h4>
@@ -59,13 +68,18 @@ export function createSystemSettingsTemplate() {
                     type="button"
                     class="system-action-button"
                     id="system-reload">
+
                     <i data-lucide="rotate-cw"></i>
                     Integratie herstarten
+
                 </button>
+
             </section>
+
 
             <!-- BACK-UP -->
             <section class="system-settings-card">
+
                 <div class="system-settings-card-heading">
                     <div>
                         <h4>Back-up</h4>
@@ -80,13 +94,18 @@ export function createSystemSettingsTemplate() {
                     type="button"
                     class="system-action-button"
                     id="system-backup">
+
                     <i data-lucide="download"></i>
                     Back-up downloaden
+
                 </button>
+
             </section>
+
 
             <!-- FABRIEKSRESET -->
             <section class="system-settings-card system-danger-card">
+
                 <div class="system-settings-card-heading">
                     <div>
                         <h4>Fabrieksinstellingen</h4>
@@ -101,9 +120,12 @@ export function createSystemSettingsTemplate() {
                     type="button"
                     class="system-action-button system-danger-button"
                     id="system-factory-reset">
+
                     <i data-lucide="alert-triangle"></i>
                     Fabrieksreset
+
                 </button>
+
 
                 <!-- BEVESTIGING -->
                 <div
@@ -112,17 +134,23 @@ export function createSystemSettingsTemplate() {
                     hidden>
 
                     <div class="system-reset-warning">
+
                         <i data-lucide="alert-circle"></i>
 
                         <div>
-                            <strong>Let op: deze actie is definitief.</strong>
+                            <strong>
+                                Let op: deze actie is definitief.
+                            </strong>
+
                             <p>
                                 Alle gekoppelde ESP32-apparaten worden
                                 op afstand ontkoppeld. Daarna worden de
                                 lokale GeurBot-gegevens verwijderd.
                             </p>
                         </div>
+
                     </div>
+
 
                     <label for="system-reset-input">
                         Typ RESET om de fabrieksreset te bevestigen.
@@ -136,12 +164,16 @@ export function createSystemSettingsTemplate() {
                         spellcheck="false"
                         placeholder="Typ RESET">
 
+
                     <div class="system-reset-actions">
+
                         <button
                             type="button"
                             class="system-action-button"
                             id="system-reset-cancel">
+
                             Annuleren
+
                         </button>
 
                         <button
@@ -149,12 +181,18 @@ export function createSystemSettingsTemplate() {
                             class="system-action-button system-danger-button"
                             id="system-reset-confirm"
                             disabled>
+
                             <i data-lucide="trash-2"></i>
                             Fabrieksreset uitvoeren
+
                         </button>
+
                     </div>
+
                 </div>
+
             </section>
+
 
             <!-- ACTIEMELDINGEN -->
             <div
