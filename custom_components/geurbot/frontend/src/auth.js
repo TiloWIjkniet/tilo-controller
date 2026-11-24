@@ -1,17 +1,20 @@
 
-// Authentication bridge between Home Assistant and GeurBot.
+// Home Assistant authenticatie voor de GeurBot-frontend.
+
 let accessToken = null;
 
-const isEmbedded = window.parent !== window;
 const homeAssistantOrigin = window.location.origin;
+const isEmbedded = window.parent !== window;
 
+// Wacht totdat het Home Assistant-token ontvangen is.
 export const geurbotAuthReady = new Promise((resolve) => {
     if (!isEmbedded) {
+        // Ontwikkelomgeving zonder Home Assistant.
         resolve(true);
         return;
     }
 
-    window.addEventListener("message", (event) => {
+    const handleAuthMessage = (event) => {
         if (
             event.source !== window.parent ||
             event.origin !== homeAssistantOrigin ||
@@ -22,14 +25,21 @@ export const geurbotAuthReady = new Promise((resolve) => {
             return;
         }
 
-        // Always accept the newest token from Home Assistant.
+        // Vervang altijd het oude token door het nieuwste token.
         accessToken = event.data.token;
+
+        console.log("[GeurBot Auth] Home Assistant-token ontvangen.");
+
         resolve(true);
-    });
+    };
+
+    window.addEventListener("message", handleAuthMessage);
 });
 
+// Bewaar de oorspronkelijke fetch-functie.
 const originalFetch = window.fetch.bind(window);
 
+// Voeg automatisch authenticatie toe aan Home Assistant-aanvragen.
 window.fetch = (input, init = {}) => {
     const requestUrl = input instanceof Request
         ? input.url
@@ -37,7 +47,7 @@ window.fetch = (input, init = {}) => {
 
     const url = new URL(requestUrl, window.location.href);
 
-    // Preserve headers from both Request and fetch options.
+    // Behoud headers uit zowel Request als fetch-opties.
     const headers = new Headers(
         input instanceof Request ? input.headers : undefined
     );
@@ -46,16 +56,23 @@ window.fetch = (input, init = {}) => {
         headers.set(key, value);
     });
 
-    // Only attach the Home Assistant token to same-origin requests.
-    if (url.origin === homeAssistantOrigin && accessToken) {
-        headers.set("Authorization", `Bearer ${accessToken}`);
+    const fetchOptions = {
+        ...init,
+        headers
+    };
+
+    // Alleen Home Assistant-aanvragen voorzien van het HA-token.
+    if (url.origin === homeAssistantOrigin) {
+        if (accessToken) {
+            headers.set(
+                "Authorization",
+                `Bearer ${accessToken}`
+            );
+        }
+
+        fetchOptions.credentials = "same-origin";
     }
 
-    return originalFetch(input, {
-        ...init,
-        headers,
-        credentials: url.origin === homeAssistantOrigin
-            ? "same-origin"
-            : init.credentials
-    });
+    return originalFetch(input, fetchOptions);
 };
+ 

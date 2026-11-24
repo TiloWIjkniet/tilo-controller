@@ -10,8 +10,10 @@ class GeurBotPanel extends HTMLElement {
         this.attachShadow({ mode: "open" });
     }
 
+    // Home Assistant levert hier zijn actuele frontend-object aan.
     set hass(hass) {
         this._hass = hass;
+        console.log("[GeurBot] hass bijgewerkt");
         this._sendAuth();
     }
 
@@ -23,6 +25,7 @@ class GeurBotPanel extends HTMLElement {
         if (this._iframe) return;
 
         const style = document.createElement("style");
+
         style.textContent = `
             :host {
                 display: block !important;
@@ -43,9 +46,13 @@ class GeurBotPanel extends HTMLElement {
         `;
 
         const iframe = document.createElement("iframe");
+
         iframe.title = "GeurBot";
         iframe.src = "/geurbot_static/index.html";
-        iframe.addEventListener("load", () => this._sendAuth());
+
+        iframe.addEventListener("load", () => {
+            this._sendAuth();
+        });
 
         this.shadowRoot.append(style, iframe);
         this._iframe = iframe;
@@ -64,22 +71,29 @@ class GeurBotPanel extends HTMLElement {
         this._resizeObserver = null;
     }
 
+    // Zoekt ook binnen Shadow DOM-elementen.
     _findElement(root, selector) {
         if (!root) return null;
 
         const found = root.querySelector?.(selector);
+
         if (found) return found;
 
         for (const element of root.querySelectorAll?.("*") ?? []) {
-            if (element.shadowRoot) {
-                const result = this._findElement(element.shadowRoot, selector);
-                if (result) return result;
-            }
+            if (!element.shadowRoot) continue;
+
+            const result = this._findElement(
+                element.shadowRoot,
+                selector
+            );
+
+            if (result) return result;
         }
 
         return null;
     }
 
+    // Zorgt dat het Home Assistant-paneel de volledige hoogte gebruikt.
     _fixPanelHeight() {
         const panel = this._findElement(
             this.ownerDocument,
@@ -87,7 +101,9 @@ class GeurBotPanel extends HTMLElement {
         );
 
         if (!panel) {
-            console.warn("[GeurBot] ha-panel-custom niet gevonden");
+            console.warn(
+                "[GeurBot] ha-panel-custom niet gevonden"
+            );
             return;
         }
 
@@ -95,17 +111,31 @@ class GeurBotPanel extends HTMLElement {
         panel.style.setProperty("min-height", "0", "important");
     }
 
+    // Stuurt het nieuwste beschikbare Home Assistant-token naar de iframe.
     _sendAuth() {
         const token = this._hass?.auth?.data?.access_token;
-        if (!token || !this._iframe?.contentWindow) return;
+
+        if (
+            typeof token !== "string" ||
+            !token ||
+            !this._iframe?.contentWindow
+        ) {
+            return;
+        }
 
         this._iframe.contentWindow.postMessage(
-            { type: "geurbot-auth", token },
+            {
+                type: "geurbot-auth",
+                token
+            },
             window.location.origin
         );
     }
 }
 
 if (!customElements.get("ha-panel-geurbot")) {
-    customElements.define("ha-panel-geurbot", GeurBotPanel);
+    customElements.define(
+        "ha-panel-geurbot",
+        GeurBotPanel
+    );
 }
