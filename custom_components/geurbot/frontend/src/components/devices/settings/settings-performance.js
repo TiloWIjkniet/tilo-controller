@@ -1153,7 +1153,7 @@ function renderDashboard(content, result, selected, minutes, wifiHours, uptimeHo
             </div>
 
             ${hardwareAvailable
-                ? createUptimeHistoryChart(uptimeHistory, wifiHours, uptimeSeconds)
+                ? createUptimeHistoryChart(uptimeHistory, uptimeHours)
                 : `<p class="performance-empty">Uptimegeschiedenis niet beschikbaar.</p>`
             }
         </section>

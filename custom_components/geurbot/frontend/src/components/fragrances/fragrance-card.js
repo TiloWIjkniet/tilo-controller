@@ -1,6 +1,7 @@
 import {
     deleteBackendDeviceFragrance
 } from "../../services/device-fragrance.js";
+import { devices } from "../devices/device-list.js";
 
 
 function getScheduledSpraysPerWeek(fragranceMac) {

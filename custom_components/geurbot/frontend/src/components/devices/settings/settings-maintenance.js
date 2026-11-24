@@ -1,3 +1,4 @@
+
 import {
     restartDevice,
     unpairDevice,
@@ -54,6 +55,7 @@ export function createMaintenanceTemplate() {
 export function setupMaintenanceSettings({ overlay, getSelectedDevice }) {
     const existing = maintenanceInstances.get(overlay);
     if (existing) return existing;
+
     const restartButton = overlay.querySelector("#maintenance-restart");
     const unpairButton = overlay.querySelector("#maintenance-unpair");
     const resetButton = overlay.querySelector("#maintenance-factory-reset");
@@ -61,93 +63,219 @@ export function setupMaintenanceSettings({ overlay, getSelectedDevice }) {
 
     let busy = false;
 
+    // ==================================================
+    // FEEDBACKMELDING
+    // ==================================================
 
+    function showFeedback(title, message, type = "success") {
+        document.querySelector(".fragrance-feedback")?.remove();
 
-    function showMaintenanceConfirm({title,message,confirmText,onConfirm}) {
-        const overlay = document.createElement("div");
-        overlay.className = "maintenance-confirm-overlay";
+        const icons = {
+            success: "✓",
+            error: "!",
+            loading: "↻"
+        };
 
-        overlay.innerHTML = `
-            <div class="maintenance-confirm">
-                <div class="maintenance-confirm-icon">⚠️</div>
-                <h3>${title}</h3>
-                <p>${message}</p>
+        const feedback = document.createElement("div");
+        feedback.className = `fragrance-feedback ${type}`;
 
-                <div class="maintenance-confirm-actions">
-                    <button class="maintenance-confirm-cancel" type="button">
-                        Annuleren
-                    </button>
-                    <button class="maintenance-confirm-submit" type="button">
-                        ${confirmText}
-                    </button>
-                </div>
+        feedback.innerHTML = `
+            <div class="fragrance-feedback-icon">
+                ${icons[type] || "!"}
+            </div>
+
+            <div class="fragrance-feedback-content">
+                <strong></strong>
+                <span></span>
             </div>
         `;
 
-        document.body.append(overlay);
+        feedback.querySelector("strong").textContent = title;
+        feedback.querySelector("span").textContent = message;
 
-        const close = () => overlay.remove();
+        document.body.append(feedback);
 
-        overlay.querySelector(".maintenance-confirm-cancel")
-            .addEventListener("click", close);
+        let timeout = null;
 
-        overlay.querySelector(".maintenance-confirm-submit")
-            .addEventListener("click", () => {
+        if (type !== "loading") {
+            timeout = setTimeout(() => feedback.remove(), 4000);
+        }
+
+        return {
+            remove() {
+                if (timeout) clearTimeout(timeout);
+                feedback.remove();
+            }
+        };
+    }
+
+    // ==================================================
+    // BEVESTIGINGSPOP-UP
+    // ==================================================
+
+    function showMaintenanceConfirm({
+        title,
+        message,
+        confirmText,
+        onConfirm
+    }) {
+        const confirmOverlay = document.createElement("div");
+        confirmOverlay.className = "maintenance-confirm-overlay";
+
+        const confirmBox = document.createElement("div");
+        confirmBox.className = "maintenance-confirm";
+
+        const icon = document.createElement("div");
+        icon.className = "maintenance-confirm-icon";
+        icon.textContent = "⚠️";
+
+        const heading = document.createElement("h3");
+        heading.textContent = title;
+
+        const description = document.createElement("p");
+        description.textContent = message;
+
+        const actions = document.createElement("div");
+        actions.className = "maintenance-confirm-actions";
+
+        const cancelButton = document.createElement("button");
+        cancelButton.className = "maintenance-confirm-cancel";
+        cancelButton.type = "button";
+        cancelButton.textContent = "Annuleren";
+
+        const submitButton = document.createElement("button");
+        submitButton.className = "maintenance-confirm-submit";
+        submitButton.type = "button";
+        submitButton.textContent = confirmText;
+
+        actions.append(cancelButton, submitButton);
+        confirmBox.append(icon, heading, description, actions);
+        confirmOverlay.appendChild(confirmBox);
+
+        document.body.append(confirmOverlay);
+
+        const close = () => confirmOverlay.remove();
+
+        cancelButton.addEventListener("click", close);
+
+        submitButton.addEventListener("click", () => {
+            close();
+            onConfirm();
+        });
+
+        confirmOverlay.addEventListener("click", event => {
+            if (event.target === confirmOverlay) {
                 close();
-                onConfirm();
-            });
-
-        overlay.addEventListener("click", event => {
-            if (event.target === overlay) close();
+            }
         });
     }
 
-    
+    // ==================================================
+    // STATUSMELDING
+    // ==================================================
+
     function setStatus(message, type = "info") {
         statusElement.textContent = message;
         statusElement.className = `maintenance-status ${type}`;
         statusElement.hidden = false;
     }
 
+    // ==================================================
+    // BEZIG-STATUS
+    // ==================================================
+
     function setBusy(value) {
         busy = value;
 
-        [restartButton, unpairButton, resetButton].forEach(button => {
+        [
+            restartButton,
+            unpairButton,
+            resetButton
+        ].forEach(button => {
             button.disabled = value;
         });
     }
 
-        async function executeAction(action, successMessage, removeDevice = false) {
+    // ==================================================
+    // ONDERHOUDSACTIE UITVOEREN
+    // ==================================================
+
+    async function executeAction(action, successMessage, removeDevice = false) {
         const device = getSelectedDevice();
 
         if (!device || busy) return;
 
         setBusy(true);
+
         setStatus("Bezig met uitvoeren...", "loading");
+
+        const actionTitle = removeDevice
+            ? "Apparaatinstellingen wijzigen"
+            : "Apparaat herstarten";
+
+        const loadingFeedback = showFeedback(
+            actionTitle,
+            "De opdracht wordt naar de GeurBot verstuurd...",
+            "loading"
+        );
 
         try {
             await action(device.id);
 
             if (removeDevice) {
-                document.dispatchEvent(new CustomEvent("geurbot:device-removed", {
-                    detail: { deviceId: device.id }
-                }));
+                document.dispatchEvent(
+                    new CustomEvent("geurbot:device-removed", {
+                        detail: {
+                            deviceId: device.id
+                        }
+                    })
+                );
             }
 
             setStatus(successMessage, "success");
+
+            loadingFeedback.remove();
+
+            showFeedback(
+                "Actie uitgevoerd",
+                successMessage,
+                "success"
+            );
+
         } catch (error) {
             console.error("Onderhoudsactie mislukt:", error);
-            setStatus(error.message || "De actie is mislukt.", "error");
+
+            const errorMessage =
+                error.message || "De actie is mislukt.";
+
+            setStatus(errorMessage, "error");
+
+            loadingFeedback.remove();
+
+            showFeedback(
+                "Actie mislukt",
+                errorMessage,
+                "error"
+            );
+
         } finally {
             setBusy(false);
         }
     }
 
+    // ==================================================
+    // APPARAAT HERSTARTEN
+    // ==================================================
+
     restartButton.addEventListener("click", () => {
         showMaintenanceConfirm({
             title: "GeurBot herstarten",
-            message: "Weet je zeker dat je de GeurBot opnieuw wilt opstarten?",
+
+            message:
+                "Weet je zeker dat je de GeurBot opnieuw wilt opstarten?",
+
             confirmText: "Herstarten",
+
             onConfirm: () => executeAction(
                 restartDevice,
                 "Het herstartverzoek is verstuurd. De GeurBot start opnieuw op."
@@ -155,11 +283,19 @@ export function setupMaintenanceSettings({ overlay, getSelectedDevice }) {
         });
     });
 
+    // ==================================================
+    // HOME ASSISTANT ONTKOPPELEN
+    // ==================================================
+
     unpairButton.addEventListener("click", () => {
         showMaintenanceConfirm({
             title: "Home Assistant ontkoppelen",
-            message: "Weet je zeker dat je de GeurBot wilt ontkoppelen van Home Assistant? Je Wi-Fi-instellingen blijven behouden.",
+
+            message:
+                "Weet je zeker dat je de GeurBot wilt ontkoppelen van Home Assistant? Je Wi-Fi-instellingen blijven behouden.",
+
             confirmText: "Ontkoppelen",
+
             onConfirm: () => executeAction(
                 unpairDevice,
                 "De Home Assistant-koppeling is verwijderd.",
@@ -168,11 +304,19 @@ export function setupMaintenanceSettings({ overlay, getSelectedDevice }) {
         });
     });
 
+    // ==================================================
+    // FABRIEKSRESET
+    // ==================================================
+
     resetButton.addEventListener("click", () => {
         showMaintenanceConfirm({
             title: "Fabrieksinstellingen herstellen",
-            message: "LET OP: hiermee worden de Wi-Fi-instellingen, Home Assistant-koppeling en geschiedenis verwijderd. Dit kan niet ongedaan worden gemaakt.",
+
+            message:
+                "LET OP: hiermee worden de Wi-Fi-instellingen, Home Assistant-koppeling en geschiedenis verwijderd. Dit kan niet ongedaan worden gemaakt.",
+
             confirmText: "Fabrieksreset uitvoeren",
+
             onConfirm: () => executeAction(
                 factoryResetDevice,
                 "De fabrieksreset is gestart.",
@@ -180,6 +324,10 @@ export function setupMaintenanceSettings({ overlay, getSelectedDevice }) {
             )
         });
     });
+
+    // ==================================================
+    // RESET
+    // ==================================================
 
     function reset() {
         if (busy) return;
@@ -189,6 +337,7 @@ export function setupMaintenanceSettings({ overlay, getSelectedDevice }) {
     }
 
     const instance = { reset };
+
     maintenanceInstances.set(overlay, instance);
 
     return instance;

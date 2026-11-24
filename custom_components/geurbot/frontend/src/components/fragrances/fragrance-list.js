@@ -43,7 +43,7 @@ function setDeviceOffline(app, deviceId, unreachable) {
     if (!device) return;
 
     device.unreachable = unreachable;
-
+    notifyScheduleFragranceUpdated(deviceId);
     if (String(selectedDevice?.id) !== String(deviceId))
         return;
 
@@ -70,6 +70,18 @@ function setDeviceOffline(app, deviceId, unreachable) {
     }
 
     renderFragrances(app);
+}
+
+function notifyScheduleFragranceUpdated(deviceId, fragranceMac = null) {
+    document.dispatchEvent(new CustomEvent(
+        "geurbot:fragrance-updated",
+        {
+            detail: {
+                deviceId,
+                fragranceMac
+            }
+        }
+    ));
 }
 
 function updateDeviceOfflineState(app, device) {
@@ -291,7 +303,7 @@ app.addEventListener("device-selected", async event => {
 
         // Netwerkstatus opslaan op het apparaat.
         device.unreachable = unreachable === true;
-
+        notifyScheduleFragranceUpdated(deviceId);
         const header = app.querySelector(".fragrance-header");
         if (!header) return;
 
@@ -680,6 +692,8 @@ function setupFragranceActions(app) {
 
                 await refreshFragrances(app, deviceId);
 
+                notifyScheduleFragranceUpdated(deviceId);
+
             } catch (error) {
                 console.error("Fragrance toggle failed:", error);
 
@@ -825,7 +839,7 @@ async function refreshFragrances(app, deviceId) {
         }
 
         device.fragrances = updatedFragrances;
-
+        notifyScheduleFragranceUpdated(deviceId);
        
 
         try 

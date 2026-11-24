@@ -12,8 +12,59 @@ import {
     renameFragrance
 } from "../../../services/device-fragrance.js";
 
-
 import { formatUptime } from "./settings-utils.js";
+
+/* ========================================
+   FEEDBACK MELDINGEN
+======================================== */
+
+function showSettingsFeedback(title, message, type = "success") {
+    document.querySelector(".fragrance-feedback")?.remove();
+
+    const icons = {
+        success: "✓",
+        error: "!",
+        loading: "↻"
+    };
+
+    const feedback = document.createElement("div");
+    feedback.className = `fragrance-feedback ${type}`;
+
+    feedback.innerHTML = `
+        <div class="fragrance-feedback-icon">
+            ${icons[type] || "!"}
+        </div>
+
+        <div class="fragrance-feedback-content">
+            <strong></strong>
+            <span></span>
+        </div>
+    `;
+
+    feedback.querySelector("strong").textContent = title;
+    feedback.querySelector("span").textContent = message;
+
+    document.body.append(feedback);
+
+    let timeout = null;
+
+    if (type !== "loading") {
+        timeout = setTimeout(() => feedback.remove(), 4000);
+    }
+
+    return {
+        remove() {
+            if (timeout)
+                clearTimeout(timeout);
+
+            feedback.remove();
+        }
+    };
+}
+
+/* ========================================
+   TEMPLATE
+======================================== */
 
 export function createDevicesTemplate() {
     return `
@@ -312,6 +363,10 @@ export function createDevicesTemplate() {
         </section>
     `;
 }
+
+/* ========================================
+   DEVICE SETTINGS
+======================================== */
 
 export function setupDevicesSettings({ overlay, getSelectedDevice }) {
     const container = overlay.querySelector("#settings-fragrances");
@@ -685,79 +740,79 @@ export function setupDevicesSettings({ overlay, getSelectedDevice }) {
     // SPRAYGESCHIEDENIS POPUP
     // ==================================================
 
-async function showHistory() {
-    const fragrance = getSelectedFragrance();
-    const device = getSelectedDevice();
+    async function showHistory() {
+        const fragrance = getSelectedFragrance();
+        const device = getSelectedDevice();
 
-    if (!fragrance || !device || device.unreachable) return;
+        if (!fragrance || !device || device.unreachable) return;
 
-    const modal = document.createElement("div");
-    modal.className = "fragrance-history-modal";
+        const modal = document.createElement("div");
+        modal.className = "fragrance-history-modal";
 
-    modal.innerHTML = `
-        <div class="fragrance-history-dialog">
-            <div class="fragrance-history-header">
-                <h3>Spraygeschiedenis</h3>
-                <button type="button" data-close-history>Sluiten</button>
-            </div>
-
-            <p>${escapeHtml(fragrance.name)}</p>
-
-            <div data-spray-history class="fragrance-settings-empty">
-                Geschiedenis ophalen...
-            </div>
-        </div>
-    `;
-
-    modal.addEventListener("click", event => {
-        if (event.target === modal || event.target.closest("[data-close-history]"))
-            modal.remove();
-    });
-
-    document.body.appendChild(modal);
-
-    try {
-        const result = await fetchFragranceSprayLog(
-            device.id,
-            fragrance.mac_address
-        );
-
-        if (!modal.isConnected) return;
-
-        const history = result.spray_log ?? [];
-
-        const historyContainer = modal.querySelector("[data-spray-history]");
-
-        if (!history.length) {
-            historyContainer.textContent = "Er zijn nog geen sprays geregistreerd.";
-            return;
-        }
-
-        historyContainer.className = "";
-
-        historyContainer.innerHTML = history.map(entry => {
-            const timestamp = Number(entry.timestamp ?? 0);
-
-            const date = timestamp
-                ? new Date(timestamp * 1000).toLocaleString("nl-NL")
-                : "Onbekend tijdstip";
-
-            return `
-                <div class="fragrance-settings-stat">
-                    <span>${escapeHtml(date)}</span>
-                    <strong>Spray uitgevoerd</strong>
+        modal.innerHTML = `
+            <div class="fragrance-history-dialog">
+                <div class="fragrance-history-header">
+                    <h3>Spraygeschiedenis</h3>
+                    <button type="button" data-close-history>Sluiten</button>
                 </div>
-            `;
-        }).join("");
-    } catch (error) {
-        console.error("Spraygeschiedenis ophalen mislukt:", error);
 
-        if (modal.isConnected) {
-            modal.querySelector("[data-spray-history]").textContent =
-                "De spraygeschiedenis kon niet worden opgehaald.";
+                <p>${escapeHtml(fragrance.name)}</p>
+
+                <div data-spray-history class="fragrance-settings-empty">
+                    Geschiedenis ophalen...
+                </div>
+            </div>
+        `;
+
+        modal.addEventListener("click", event => {
+            if (event.target === modal || event.target.closest("[data-close-history]"))
+                modal.remove();
+        });
+
+        document.body.appendChild(modal);
+
+        try {
+            const result = await fetchFragranceSprayLog(
+                device.id,
+                fragrance.mac_address
+            );
+
+            if (!modal.isConnected) return;
+
+            const history = result.spray_log ?? [];
+
+            const historyContainer = modal.querySelector("[data-spray-history]");
+
+            if (!history.length) {
+                historyContainer.textContent = "Er zijn nog geen sprays geregistreerd.";
+                return;
+            }
+
+            historyContainer.className = "";
+
+            historyContainer.innerHTML = history.map(entry => {
+                const timestamp = Number(entry.timestamp ?? 0);
+
+                const date = timestamp
+                    ? new Date(timestamp * 1000).toLocaleString("nl-NL")
+                    : "Onbekend tijdstip";
+
+                return `
+                    <div class="fragrance-settings-stat">
+                        <span>${escapeHtml(date)}</span>
+                        <strong>Spray uitgevoerd</strong>
+                    </div>
+                `;
+            }).join("");
+        } catch (error) {
+            console.error("Spraygeschiedenis ophalen mislukt:", error);
+
+            if (modal.isConnected) {
+                modal.querySelector("[data-spray-history]").textContent =
+                    "De spraygeschiedenis kon niet worden opgehaald.";
+            }
         }
     }
-}
 
     // ==================================================
     // GEGEVENS OPHALEN
@@ -766,6 +821,7 @@ async function showHistory() {
     async function loadFragranceData(mac) {
         const device = getSelectedDevice();
         const fragrance = fragrances.find(item => item.mac_address === mac);
+
         if (
             !device ||
             device.unreachable ||
@@ -787,6 +843,7 @@ async function showHistory() {
             fetchFragranceFirmwareVersion(device.id, mac),
             fetchFragranceEmptyBottleValue(device.id, mac)
         ]);
+
         if (mac !== selectedMac) return;
 
         const [general, total, uptimeResult, firmwareResult, emptyValueResult] = results;
@@ -799,18 +856,32 @@ async function showHistory() {
                 fragrances[index] = { ...fragrances[index], ...data };
         }
 
-    if (emptyValueResult.status === "fulfilled") {
-        const value = emptyValueResult.value.empty_bottle_value;
+        if (total.status === "fulfilled") {
+            const value = total.value.total_sprays ?? total.value.total ?? 0;
 
-        const fragrance = getSelectedFragrance();
-        if (fragrance)
-            fragrance.empty_bottle_value = value;
+            if (totalSprays)
+                totalSprays.textContent = value;
 
-        const emptyValueElement = detail.querySelector("[data-empty-bottle-value]");
-        if (emptyValueElement)
-            emptyValueElement.textContent = value;
-        } else {
+            const selected = getSelectedFragrance();
+
+            if (selected)
+                selected.total_sprays = value;
+        } else if (totalSprays) {
             totalSprays.textContent = "Niet beschikbaar";
+        }
+
+        if (emptyValueResult.status === "fulfilled") {
+            const value = emptyValueResult.value.empty_bottle_value;
+
+            const selected = getSelectedFragrance();
+
+            if (selected)
+                selected.empty_bottle_value = value;
+
+            const emptyValueElement = detail.querySelector("[data-empty-bottle-value]");
+
+            if (emptyValueElement)
+                emptyValueElement.textContent = value;
         }
 
         if (uptimeResult.status === "fulfilled") {
@@ -921,13 +992,12 @@ async function showHistory() {
             renderLayout();
 
             const device = getSelectedDevice();
+            const fragrance = getSelectedFragrance();
 
-        const fragrance = getSelectedFragrance();
-
-        if (!device?.unreachable && !fragrance?.unreachable) {
-            await loadFragranceData(selectedMac);
-            startUptimeCounter();
-        }
+            if (!device?.unreachable && !fragrance?.unreachable) {
+                await loadFragranceData(selectedMac);
+                startUptimeCounter();
+            }
 
             return;
         }
@@ -947,21 +1017,49 @@ async function showHistory() {
             return;
         }
 
-       if (device.unreachable || fragrance.unreachable) {
-        alert(
-            device.unreachable
-                ? "Dit apparaat is niet bereikbaar. Instellingen kunnen niet worden aangepast."
-                : "Deze geur is verloren. Instellingen kunnen niet worden aangepast."
-        );
+        if (device.unreachable || fragrance.unreachable) {
+            showSettingsFeedback(
+                "Niet beschikbaar",
+                device.unreachable
+                    ? "Dit apparaat is niet bereikbaar. Instellingen kunnen niet worden aangepast."
+                    : "Deze geur is verloren. Instellingen kunnen niet worden aangepast.",
+                "error"
+            );
 
             return;
         }
 
+        // ==================================================
+        // GEGEVENS VERVERSEN
+        // ==================================================
+
         if (action === "refresh") {
             actionButton.disabled = true;
 
+            const feedback = showSettingsFeedback(
+                "Gegevens verversen",
+                "De gegevens worden opnieuw opgehaald...",
+                "loading"
+            );
+
             try {
                 await loadFragranceData(selectedMac);
+
+                feedback.remove();
+
+                showSettingsFeedback(
+                    "Gegevens bijgewerkt",
+                    "De geurinstellingen zijn vernieuwd.",
+                    "success"
+                );
+            } catch (error) {
+                feedback.remove();
+
+                showSettingsFeedback(
+                    "Verversen mislukt",
+                    error.message || "De gegevens konden niet worden opgehaald.",
+                    "error"
+                );
             } finally {
                 actionButton.disabled = false;
             }
@@ -969,13 +1067,42 @@ async function showHistory() {
             return;
         }
 
+        // ==================================================
+        // NAAM OPSLAAN
+        // ==================================================
+
         if (action === "save-name") {
             const input = container.querySelector("#fragrance-name-input");
             const name = input.value.trim();
 
-            if (!name || name === fragrance.name) return;
+            if (!name) {
+                showSettingsFeedback(
+                    "Naam ontbreekt",
+                    "Vul eerst een naam in.",
+                    "error"
+                );
+
+                input.focus();
+                return;
+            }
+
+            if (name === fragrance.name) {
+                showSettingsFeedback(
+                    "Geen wijzigingen",
+                    "De naam is niet veranderd.",
+                    "error"
+                );
+
+                return;
+            }
 
             actionButton.disabled = true;
+
+            const feedback = showSettingsFeedback(
+                "Naam opslaan",
+                "De nieuwe geurnaam wordt opgeslagen...",
+                "loading"
+            );
 
             try {
                 await renameFragrance(device.id, selectedMac, name);
@@ -986,13 +1113,33 @@ async function showHistory() {
                     .find(card => card.dataset.fragranceId === selectedMac);
 
                 const heading = dashboardCard?.querySelector("h3");
-                if (heading) heading.textContent = name;
+
+                if (heading)
+                    heading.textContent = name;
 
                 renderLayout();
+
                 await loadFragranceData(selectedMac);
+
+                feedback.remove();
+
+                showSettingsFeedback(
+                    "Naam opgeslagen",
+                    `De geur heet nu ${name}.`,
+                    "success"
+                );
+
             } catch (error) {
+                feedback.remove();
+
                 console.error("Naam wijzigen mislukt:", error);
-                alert("De naam kon niet worden gewijzigd.");
+
+                showSettingsFeedback(
+                    "Naam wijzigen mislukt",
+                    error.message || "De naam kon niet worden gewijzigd.",
+                    "error"
+                );
+
             } finally {
                 actionButton.disabled = false;
             }
@@ -1000,13 +1147,31 @@ async function showHistory() {
             return;
         }
 
+        // ==================================================
+        // GESCHAT AANTAL SPRAYS OPSLAAN
+        // ==================================================
+
         if (action === "save-estimated") {
             const slider = container.querySelector("[data-estimated-slider]");
             const value = Number(slider.value);
 
-            if (!Number.isInteger(value) || value < 1) return;
+            if (!Number.isInteger(value) || value < 1) {
+                showSettingsFeedback(
+                    "Ongeldige waarde",
+                    "Het aantal sprays moet minimaal 1 zijn.",
+                    "error"
+                );
+
+                return;
+            }
 
             actionButton.disabled = true;
+
+            const feedback = showSettingsFeedback(
+                "Verbruik opslaan",
+                "Het geschatte aantal sprays wordt opgeslagen...",
+                "loading"
+            );
 
             try {
                 await setFragranceEstimatedSprays(
@@ -1021,26 +1186,62 @@ async function showHistory() {
                     container.querySelector("#fragrance-settings-detail")
                 );
 
-              //  console.log("Geschat aantal sprays opgeslagen:", value);
+                feedback.remove();
+
+                showSettingsFeedback(
+                    "Verbruik opgeslagen",
+                    `Het geschatte aantal is ingesteld op ${value} sprays.`,
+                    "success"
+                );
+
             } catch (error) {
+                feedback.remove();
+
                 console.error("Geschat aantal sprays opslaan mislukt:", error);
-                alert("Het geschatte aantal sprays kon niet worden opgeslagen.");
+
+                showSettingsFeedback(
+                    "Opslaan mislukt",
+                    error.message || "Het geschatte aantal sprays kon niet worden opgeslagen.",
+                    "error"
+                );
+
             } finally {
                 actionButton.disabled = false;
             }
 
             return;
         }
+
+        // ==================================================
+        // THRESHOLD OPSLAAN
+        // ==================================================
+
         if (action === "save-threshold") {
             const confirmed = await showThresholdWarning();
-            if (!confirmed) return;
+
+            if (!confirmed)
+                return;
 
             const slider = container.querySelector("[data-empty-threshold-slider]");
             const value = Number(slider.value);
 
-            if (!Number.isInteger(value) || value < 0) return;
+            if (!Number.isInteger(value) || value < 0) {
+                showSettingsFeedback(
+                    "Ongeldige waarde",
+                    "De threshold moet minimaal 0 zijn.",
+                    "error"
+                );
+
+                return;
+            }
 
             actionButton.disabled = true;
+
+            const feedback = showSettingsFeedback(
+                "Threshold opslaan",
+                "De lege-fles-threshold wordt opgeslagen...",
+                "loading"
+            );
 
             try {
                 await setFragranceEmptyBottleThreshold(
@@ -1051,10 +1252,25 @@ async function showHistory() {
 
                 fragrance.empty_bottle_threshold = value;
 
-             //   console.log("Lege-fles-threshold opgeslagen:", value);
+                feedback.remove();
+
+                showSettingsFeedback(
+                    "Threshold opgeslagen",
+                    `De lege-fles-threshold is ingesteld op ${value}.`,
+                    "success"
+                );
+
             } catch (error) {
+                feedback.remove();
+
                 console.error("Threshold opslaan mislukt:", error);
-                alert("De lege-fles-threshold kon niet worden opgeslagen.");
+
+                showSettingsFeedback(
+                    "Opslaan mislukt",
+                    error.message || "De lege-fles-threshold kon niet worden opgeslagen.",
+                    "error"
+                );
+
             } finally {
                 actionButton.disabled = false;
             }

@@ -11,6 +11,48 @@ let selectedDeviceId = null;
 let selectedScheduleDay = (new Date().getDay() + 6) % 7;
 let selectedScheduleView = "week";
 
+
+function showFragranceFeedback(title, message, type = "success") {
+    document.querySelector(".fragrance-feedback")?.remove();
+
+    const icons = {
+        success: "✓",
+        error: "!",
+        loading: "↻"
+    };
+
+    const feedback = document.createElement("div");
+    feedback.className = `fragrance-feedback ${type}`;
+
+    feedback.innerHTML = `
+        <div class="fragrance-feedback-icon">
+            ${icons[type] || "!"}
+        </div>
+        <div class="fragrance-feedback-content">
+            <strong></strong>
+            <span></span>
+        </div>
+    `;
+
+    feedback.querySelector("strong").textContent = title;
+    feedback.querySelector("span").textContent = message;
+
+    document.body.append(feedback);
+
+    let timeout = null;
+
+    if (type !== "loading") {
+        timeout = setTimeout(() => feedback.remove(), 4000);
+    }
+
+    return {
+        remove() {
+            if (timeout) clearTimeout(timeout);
+            feedback.remove();
+        }
+    };
+}
+
 function getDevice(deviceId) {
     return devices.find(device => String(device.id) === String(deviceId));
 }
@@ -655,16 +697,47 @@ function closeScheduleModal() {
     editingEventId = null;
 }
 
-    async function deleteScheduleEvent(eventId = editingEventId) {
-        if (!eventId) return;
+async function deleteScheduleEvent(eventId = editingEventId) {
+    if (!eventId) return;
 
-        scheduleEvents = scheduleEvents.filter(item => item.id !== eventId);
+    const previousEvents = [...scheduleEvents];
 
+    const loadingFeedback = showFragranceFeedback(
+        "Planning verwijderen",
+        "De spraybeurt wordt verwijderd...",
+        "loading"
+    );
+
+    scheduleEvents = scheduleEvents.filter(item => item.id !== eventId);
+
+    try {
         await saveScheduleEvents();
+
+        loadingFeedback.remove();
+
+        showFragranceFeedback(
+            "Planning verwijderd",
+            "De spraybeurt is succesvol verwijderd.",
+            "success"
+        );
 
         closeScheduleModal();
         renderScheduleEvents();
+
+    } catch (error) {
+        scheduleEvents = previousEvents;
+
+        loadingFeedback.remove();
+
+        showFragranceFeedback(
+            "Verwijderen mislukt",
+            error.message || "De spraybeurt kon niet worden verwijderd.",
+            "error"
+        );
+
+        renderScheduleEvents();
     }
+}
 
 function toggleAllScheduleDays() {
     const checkboxes = [...document.querySelectorAll('[name="schedule-days"]')];
@@ -692,6 +765,26 @@ export function initializeScheduleEvents() {
     app?.addEventListener("device-selected", event => {
         updateSelectedDevice(event.detail);
     });
+
+document.addEventListener("geurbot:fragrance-updated", event => {
+    const { deviceId } = event.detail;
+
+    // Alleen de agenda van het geselecteerde apparaat bijwerken.
+    if (String(deviceId) !== String(selectedDeviceId))
+        return;
+
+    renderScheduleEvents();
+
+    // Als de planningsmodal openstaat, ook de geurlijst verversen.
+    const modal = document.getElementById("schedule-modal");
+
+    if (modal && !modal.hidden) {
+        const selectedMac = document.getElementById("schedule-fragrance")?.value;
+
+        populateFragrances(selectedDeviceId, selectedMac);
+        updateScheduleInfo();
+    }
+});
 
     document.addEventListener("click", event => {
         const addButton = event.target.closest('[data-action="add-schedule-event"]');
@@ -754,46 +847,94 @@ export function initializeScheduleEvents() {
         checkbox.addEventListener("change", updateScheduleInfo);
     });
 
-    form.addEventListener("submit", async event => {
-        event.preventDefault();
+form.addEventListener("submit", async event => {
+    event.preventDefault();
 
-        const device = getDevice(selectedDeviceId);
-        const fragranceMac = document.getElementById("schedule-fragrance").value;
-        const time = `${document.getElementById("schedule-hours").value}:${document.getElementById("schedule-minutes").value}`;
-        const sprays = Number(document.getElementById("schedule-sprays").value);
-        const days = [...document.querySelectorAll('[name="schedule-days"]:checked')]
-            .map(checkbox => Number(checkbox.value));
+    const device = getDevice(selectedDeviceId);
+    const fragranceMac = document.getElementById("schedule-fragrance").value;
+    const time = `${document.getElementById("schedule-hours").value}:${document.getElementById("schedule-minutes").value}`;
+    const sprays = Number(document.getElementById("schedule-sprays").value);
 
-        const fragrance = device?.fragrances?.find(item =>
-            item.mac_address === fragranceMac
+    const days = [...document.querySelectorAll('[name="schedule-days"]:checked')]
+        .map(checkbox => Number(checkbox.value));
+
+    const fragrance = device?.fragrances?.find(item =>
+        item.mac_address === fragranceMac
+    );
+
+    if (!device || !fragrance || !time || sprays < 1 || days.length === 0) {
+        showFragranceFeedback(
+            "Controleer de planning",
+            "Selecteer een geur en minimaal één dag.",
+            "error"
         );
+        return;
+    }
 
-        if (!device || !fragrance || !time || sprays < 1 || days.length === 0) return;
+    const previousEvents = [...scheduleEvents];
+    const isEditing = Boolean(editingEventId);
 
-        const eventData = {
-            id: editingEventId ?? generateScheduleEventId(),
-            deviceId: String(device.id),
-            deviceName: device.name,
-            fragranceMac,
-            fragranceName: fragrance.name,
-            time,
-            sprays,
-            days
-        };
+    const eventData = {
+        id: editingEventId ?? generateScheduleEventId(),
+        deviceId: String(device.id),
+        deviceName: device.name,
+        fragranceMac,
+        fragranceName: fragrance.name,
+        time,
+        sprays,
+        days
+    };
 
-        if (editingEventId) {
-            scheduleEvents = scheduleEvents.map(item =>
-                item.id === editingEventId ? eventData : item
-            );
-        } else {
-            scheduleEvents.push(eventData);
-        }
+    if (isEditing) {
+        scheduleEvents = scheduleEvents.map(item =>
+            item.id === editingEventId ? eventData : item
+        );
+    } else {
+        scheduleEvents.push(eventData);
+    }
 
+    const loadingFeedback = showFragranceFeedback(
+        isEditing ? "Planning aanpassen" : "Planning opslaan",
+        "De spraybeurt wordt opgeslagen...",
+        "loading"
+    );
+
+    const saveButton = form.querySelector(".schedule-save-button");
+    if (saveButton) saveButton.disabled = true;
+
+    try {
         await saveScheduleEvents(device.id);
+
+        loadingFeedback.remove();
+
+        showFragranceFeedback(
+            isEditing ? "Planning aangepast" : "Planning opgeslagen",
+            isEditing
+                ? "De spraybeurt is succesvol aangepast."
+                : "De spraybeurt is succesvol ingepland.",
+            "success"
+        );
 
         closeScheduleModal();
         renderScheduleEvents();
-    });
+
+    } catch (error) {
+        scheduleEvents = previousEvents;
+
+        loadingFeedback.remove();
+
+        showFragranceFeedback(
+            "Opslaan mislukt",
+            error.message || "De planning kon niet worden opgeslagen.",
+            "error"
+        );
+
+        renderScheduleEvents();
+
+    } finally {
+        if (saveButton) saveButton.disabled = false;
+    }
+});
 
     updateScheduleView();
 
