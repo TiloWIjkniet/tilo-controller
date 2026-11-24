@@ -90,13 +90,7 @@ export function createGeneralSettingsTemplate() {
                         ${createNotificationsTemplate()}
                     </div>
 
-                    <div
-                        class="settings-panel"
-                        role="tabpanel"
-                        data-general-panel="system"
-                    >
-                        ${createSystemSettingsTemplate()}
-                    </div>
+           
 
                 </div>
 
@@ -111,3 +105,12 @@ export function createGeneralSettingsTemplate() {
         </div>
     `;
 }
+
+
+        //  <div
+        //                 class="settings-panel"
+        //                 role="tabpanel"
+        //                 data-general-panel="system"
+        //             >
+        //                 ${createSystemSettingsTemplate()}
+        //             </div>

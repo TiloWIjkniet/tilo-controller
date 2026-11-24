@@ -223,42 +223,78 @@
    TOGGLE
 ======================================== */
 
+/* ========================================
+   TOGGLE
+======================================== */
+
 .fragrance-toggle {
     position: relative;
+    display: inline-flex;
+    align-items: center;
     flex-shrink: 0;
-    width: 42px;
-    height: 23px;
-    padding: 0;
+
+    width: 48px;
+    height: 28px;
+    padding: 3px;
+
     border: 1px solid var(--border);
-    border-radius: 20px;
+    border-radius: 999px;
+
     background: #454d5d;
     cursor: pointer;
-    transition: background .2s ease, border-color .2s ease;
+
+    transition:
+        background .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
 }
 
+/* INGESCHAKELD */
 .fragrance-toggle.enabled {
     background: #287b56;
     border-color: #39956c;
 }
 
+/* RONDE SCHAKELAAR */
 .fragrance-toggle-knob {
     position: absolute;
-    top: 3px;
+    top: 50%;
     left: 3px;
-    width: 15px;
-    height: 15px;
+
+    width: 20px;
+    height: 20px;
+
     border-radius: 50%;
-    background: white;
-    transition: transform .2s ease;
+    background: #ffffff;
+
+    transform: translateY(-50%);
+
+    box-shadow: 0 1px 4px #00000040;
+
+    transition:
+        transform .25s cubic-bezier(.4, 0, .2, 1);
 }
 
+/* KNOP NAAR RECHTS */
 .fragrance-toggle.enabled .fragrance-toggle-knob {
-    transform: translateX(19px);
+    transform: translate(19px, -50%);
 }
 
+/* HOVER */
+.fragrance-toggle:not(:disabled):hover {
+    box-shadow: 0 0 0 3px #ffffff12;
+}
+
+/* UITGESCHAKELD */
 .fragrance-toggle:disabled {
     opacity: .4;
     cursor: not-allowed;
+}
+
+/* FOCUS */
+.fragrance-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 
 /* ========================================
@@ -966,20 +1002,6 @@
     .fragrance-mac {
         font-size: 10px;
         overflow-wrap: anywhere;
-    }
-
-    .fragrance-toggle {
-        width: 44px;
-        height: 25px;
-    }
-
-    .fragrance-toggle-knob {
-        width: 17px;
-        height: 17px;
-    }
-
-    .fragrance-toggle.enabled .fragrance-toggle-knob {
-        transform: translateX(19px);
     }
 
     /* Header acties */

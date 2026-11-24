@@ -2,25 +2,34 @@ import {
     deleteBackendDeviceFragrance
 } from "../../services/device-fragrance.js";
 
+
 function getScheduledSpraysPerWeek(fragranceMac) {
-    let scheduleEvents = [];
+    const normalizedMac = String(fragranceMac).toUpperCase();
 
-    try {
-        scheduleEvents = JSON.parse(
-            localStorage.getItem("geurbot-schedule-events") || "[]"
-        );
-    } catch {
+    const device = devices.find(device =>
+        device.fragrances?.some(fragrance =>
+            String(fragrance.mac_address).toUpperCase() === normalizedMac
+        )
+    );
+
+    if (!device) return 0;
+
+    const fragrance = device.fragrances.find(fragrance =>
+        String(fragrance.mac_address).toUpperCase() === normalizedMac
+    );
+
+    if (!Array.isArray(fragrance.schedule))
         return 0;
-    }
 
-    return scheduleEvents
-        .filter(event => event.fragranceMac === fragranceMac)
-        .reduce((total, event) => {
-            const days = Array.isArray(event.days) ? event.days.length : 7;
-            const sprays = Number(event.sprays) || 0;
+    return fragrance.schedule.reduce((total, event) => {
+        const days = Array.isArray(event.days)
+            ? event.days.length
+            : 7;
 
-            return total + sprays * days;
-        }, 0);
+        const sprays = Number(event.sprays) || 0;
+
+        return total + sprays * days;
+    }, 0);
 }
 
 
@@ -92,13 +101,19 @@ export function createFragranceCard(fragrance, expanded = false) {
         if (remaining === 0) {
             emptyDate = new Date();
         } else {
-            const weeklySprays = getScheduledSpraysPerWeek(fragrance.mac_address);
+            const weeklySprays = getScheduledSpraysPerWeek(
+                fragrance.mac_address
+            );
 
             if (weeklySprays > 0) {
-                const daysRemaining = Math.ceil((remaining / weeklySprays) * 7);
+                const daysRemaining = Math.ceil(
+                    (remaining / weeklySprays) * 7
+                );
 
                 emptyDate = new Date();
-                emptyDate.setDate(emptyDate.getDate() + daysRemaining);
+                emptyDate.setDate(
+                    emptyDate.getDate() + daysRemaining
+                );
             }
         }
     }
@@ -184,7 +199,7 @@ export function createFragranceCard(fragrance, expanded = false) {
                         <div class="fragrance-stat">
                             <span>Verwacht leeg op</span>
                             <strong>${emptyDate
-                            ? emptyDate.toLocaleDateString("nl-NL", {
+                            ? emptyDate.toLocaaleDateString("nl-NL", {
                                 day: "numeric",
                                 month: "long",
                                 year: "numeric"
