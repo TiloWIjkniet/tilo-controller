@@ -82,3 +82,7 @@ class DeviceManager:
         ]
 
         return len(device["fragrances"]) < original_count
+
+    async def async_save(self):
+        if self.on_devices_changed:
+            await self.on_devices_changed()

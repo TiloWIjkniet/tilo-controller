@@ -1,9 +1,9 @@
-
 import { API } from "./api-config.js";
 
 export async function scanDevices() {
     const response = await fetch(API.discovery, {
-        method: "POST"
+        method: "POST",
+        credentials: "same-origin"
     });
 
     if (!response.ok) {

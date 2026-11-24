@@ -340,10 +340,12 @@ let notificationSaveQueue = Promise.resolve();
 // ==================================================
 // INSTELLINGEN OPHALEN (GET)
 // ==================================================
-
 export async function loadNotificationSettings() {
     try {
-        const response = await fetch("/api/notifications");
+        const response = await fetch("/api/notifications", {
+            method: "GET",
+            credentials: "same-origin"
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -406,6 +408,7 @@ async function saveNotificationSettings() {
     notificationSaveQueue = notificationSaveQueue.then(async () => {
         const response = await fetch("/api/notifications", {
             method: "PUT",
+            credentials: "same-origin",
             headers: {
                 "Content-Type": "application/json"
             },

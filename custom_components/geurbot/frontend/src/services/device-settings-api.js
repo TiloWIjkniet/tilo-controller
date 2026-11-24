@@ -1,8 +1,9 @@
-
 const API_BASE = "/api/geurbot/devices";
 
 async function requestJson(url) {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        credentials: "same-origin"
+    });
 
     if (!response.ok) {
         const message = await response.text();
@@ -24,7 +25,6 @@ export function fetchDeviceFirmwareInfo(deviceId) {
     );
 }
 
-
 export function fetchDeviceDiagnostics(deviceId, endpoint) {
     const allowedEndpoints = ["uptime", "memory", "storage", "reset"];
 
@@ -41,7 +41,10 @@ export function fetchDeviceDiagnostics(deviceId, endpoint) {
 
 export async function fetchDevicePerformance(deviceId) {
     const response = await fetch(
-        `/api/geurbot/devices/${encodeURIComponent(deviceId)}/performance`
+        `/api/geurbot/devices/${encodeURIComponent(deviceId)}/performance`,
+        {
+            credentials: "same-origin"
+        }
     );
 
     const result = await response.json();
@@ -53,11 +56,14 @@ export async function fetchDevicePerformance(deviceId) {
     return result;
 }
 
-
 async function postDeviceAction(deviceId, action) {
     const url = `${API_BASE}/${encodeURIComponent(deviceId)}/${action}`;
 
-    const response = await fetch(url, { method: "POST" });
+    const response = await fetch(url, {
+        method: "POST",
+        credentials: "same-origin"
+    });
+
     const text = await response.text();
 
     let result;
@@ -80,7 +86,6 @@ async function postDeviceAction(deviceId, action) {
 
     return result;
 }
-
 
 export function restartDevice(deviceId) {
     return postDeviceAction(deviceId, "restart");

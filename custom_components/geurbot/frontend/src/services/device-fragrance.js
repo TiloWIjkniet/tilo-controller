@@ -1,8 +1,10 @@
-
 async function requestFragranceApi(deviceId, endpoint, data = null, method = null) {
     const options = {
         method: method ?? (data === null ? "GET" : "POST"),
-        headers: { "Content-Type": "application/json" }
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json"
+        }
     };
 
     if (data !== null)
@@ -117,8 +119,6 @@ export async function fetchFragranceSprayLog(deviceId, macAddress) {
     );
 }
 
-
-
 export async function updateBackendDeviceFragrances(deviceId, fragrances) {
     console.log(`[BACKEND] Geuren opslaan voor ${deviceId}:`, fragrances);
 
@@ -126,6 +126,7 @@ export async function updateBackendDeviceFragrances(deviceId, fragrances) {
         `/api/geurbot/devices/${encodeURIComponent(deviceId)}/fragrance/backend/update`,
         {
             method: "POST",
+            credentials: "same-origin",
             headers: {
                 "Content-Type": "application/json"
             },
@@ -157,13 +158,15 @@ export async function updateBackendDeviceFragrances(deviceId, fragrances) {
     return result;
 }
 
-
 export async function deleteBackendDeviceFragrance(deviceId, macAddress) {
     console.log(`[BACKEND] Geur verwijderen: ${macAddress}`);
 
     const response = await fetch(
         `/api/geurbot/devices/${encodeURIComponent(deviceId)}/fragrance/backend/${encodeURIComponent(macAddress)}`,
-        { method: "DELETE" }
+        {
+            method: "DELETE",
+            credentials: "same-origin"
+        }
     );
 
     const result = await response.json();

@@ -1,7 +1,10 @@
 export async function addDiscoveredDevice(deviceId, name, hostname, pairingCode) {
     const response = await fetch("/api/devices/add", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify({
             device_id: deviceId,
             name,

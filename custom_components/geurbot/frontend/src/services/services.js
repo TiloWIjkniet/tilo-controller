@@ -1,10 +1,12 @@
-
 const API_BASE = "/api/geurbot/devices";
 
 async function requestJson(deviceId, endpoint) {
     const url = `${API_BASE}/${encodeURIComponent(deviceId)}${endpoint}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        credentials: "same-origin"
+    });
+
     const raw = await response.text();
 
     let data;

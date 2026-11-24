@@ -159,7 +159,10 @@ document.addEventListener("click", async event => {
     try {
         const response = await fetch(
             `/api/geurbot/devices/${encodeURIComponent(deviceId)}/firmware/esp/update`,
-            { method: "POST" }
+            {
+                method: "POST",
+                credentials: "same-origin"
+            }
         );
 
         const result = await response.json();
@@ -168,8 +171,6 @@ document.addEventListener("click", async event => {
             throw new Error(result.message || result.error || "Firmware-update starten mislukt");
 
         button.textContent = "Update gestart";
-
-     
 
     } catch (error) {
         console.error("[FIRMWARE] Update mislukt:", error);

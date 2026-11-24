@@ -1,4 +1,3 @@
-
 const API_BASE = "/api/geurbot/devices";
 
 export async function sendDeviceApiRequest(deviceId, request) {
@@ -9,6 +8,7 @@ export async function sendDeviceApiRequest(deviceId, request) {
     try {
         response = await fetch(url, {
             method: "POST",
+            credentials: "same-origin",
             headers: {
                 "Content-Type": "application/json"
             },
@@ -43,6 +43,41 @@ export async function sendDeviceApiRequest(deviceId, request) {
         error.headers = headers;
 
         throw error;
+    }
+
+    return result;
+}
+
+export async function addDiscoveredDevice(deviceId, name, hostname, pairingCode) {
+    const response = await fetch("/api/devices/add", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            device_id: deviceId,
+            name,
+            hostname,
+            pairing_code: pairingCode
+        })
+    });
+
+    const raw = await response.text();
+
+    console.log("HTTP status:", response.status);
+    console.log("Raw response:", JSON.stringify(raw));
+
+    let result;
+
+    try {
+        result = JSON.parse(raw);
+    } catch (error) {
+        throw new Error(`Ongeldige backend-response: ${raw}`);
+    }
+
+    if (!response.ok || !result.success) {
+        throw new Error(result.error || "Apparaat koppelen mislukt.");
     }
 
     return result;

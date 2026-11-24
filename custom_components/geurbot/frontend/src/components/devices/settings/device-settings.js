@@ -109,7 +109,10 @@ async function saveDeviceName() {
     try {
         const response = await fetch(`/api/geurbot/devices/${encodeURIComponent(selectedDevice.id)}/name`, {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({ name })
         });
 
