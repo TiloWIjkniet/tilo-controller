@@ -281,7 +281,7 @@ export async function refreshDevices() {
                 ...newFragrances.map(fragrance => ({
                     ...oldByMac.get(fragrance.mac_address),
                     ...fragrance,
-                    unreachable: false
+                    unreachable: fragrance.unreachable ?? false
                 })),
 
                 ...oldFragrances
@@ -291,7 +291,6 @@ export async function refreshDevices() {
                         unreachable: true
                     }))
             ];
-
             // Frontend bijwerken.
             device.fragrances = updatedFragrances;
             device.status = status;

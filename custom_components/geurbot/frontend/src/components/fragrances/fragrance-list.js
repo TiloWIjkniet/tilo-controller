@@ -826,12 +826,12 @@ async function refreshFragrances(app, deviceId) {
 
         device.fragrances = updatedFragrances;
 
-        console.log("[FRAGRANCES] Volledige lijst die wordt opgeslagen:", device.fragrances);
+       
 
         try 
         {
             await updateBackendDeviceFragrances(device.id, device.fragrances);
-            console.log("[FRAGRANCES] Volledige lijst opgeslagen in backend");
+           
         } catch (error) 
         {
             console.error("[FRAGRANCES] Backend opslaan mislukt:", error);
