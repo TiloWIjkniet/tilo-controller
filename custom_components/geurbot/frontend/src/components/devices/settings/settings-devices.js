@@ -453,7 +453,7 @@ export function setupDevicesSettings({ overlay, getSelectedDevice }) {
 
                     <input type="range"
                            min="1"
-                           max="2000"
+                           max="500"
                            step="1"
                            value="${estimated}"
                            data-estimated-slider

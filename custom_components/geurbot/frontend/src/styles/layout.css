@@ -160,3 +160,105 @@
     word-break: normal;
     overflow-wrap: break-word;
 }
+
+
+/* ========================================
+   Dashboard - Responsive / Mobile
+======================================== */
+
+@media (max-width: 900px) {
+
+    #app,
+    .dashboard {
+        width: 100%;
+        min-width: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    .dashboard {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Headers onder elkaar */
+    .dashboard-headers {
+        display: none;
+    }
+
+    /* Dashboardkolommen onder elkaar */
+    .dashboard-content {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+    }
+
+    .sidebar,
+    .content,
+    .extra-panel {
+        width: 100%;
+        min-width: 0;
+        min-height: auto;
+        height: auto;
+        padding: 16px;
+        box-sizing: border-box;
+        overflow: visible;
+    }
+
+    .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border-soft);
+    }
+
+    .content {
+        overflow: visible;
+    }
+
+    .extra-panel {
+        overflow: visible;
+    }
+
+    /* Panel headers */
+    .panel-header {
+        min-height: 0;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .panel-header-title h2 {
+        font-size: 21px;
+    }
+
+    .panel-header-title p {
+        font-size: 13px;
+    }
+
+    /* Kolominhoud */
+    .device-list,
+    .device-items,
+    .extra-content {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* Kleine telefoons */
+@media (max-width: 480px) {
+
+    .sidebar,
+    .content,
+    .extra-panel {
+        padding: 12px;
+    }
+
+    .panel-header {
+        padding: 14px;
+        border-radius: 10px;
+    }
+
+    .panel-header-title h2 {
+        font-size: 19px;
+    }
+}

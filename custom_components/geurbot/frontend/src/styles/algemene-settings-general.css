@@ -155,31 +155,6 @@
    RESPONSIVE
 ======================================== */
 
-@media (max-width: 600px) {
-    .general-settings-overlay {
-        padding: 12px;
-    }
-
-    .general-settings-modal {
-        width: 100%;
-        height: 100%;
-        max-width: none;
-        max-height: none;
-    }
-
-    .general-settings-header,
-    .general-settings-content {
-        padding: 20px;
-    }
-
-    .general-settings-tabs {
-        padding: 12px 20px;
-    }
-
-    .general-settings-footer {
-        padding: 14px 20px;
-    }
-}
 
 
 /* ========================================
@@ -660,47 +635,7 @@
    RESPONSIVE
 ======================================== */
 
-@media (max-width: 700px) {
-    .notification-categories {
-        grid-template-columns: 1fr;
-    }
 
-    .notification-category[open] {
-        grid-column: auto;
-    }
-}
-
-@media (max-width: 480px) {
-    .notification-settings {
-        gap: 16px;
-    }
-
-    .notification-general-card {
-        padding: 15px;
-    }
-
-    .notification-category-header {
-        min-height: 74px;
-        padding: 12px;
-    }
-
-    .notification-category-meta {
-        gap: 5px;
-    }
-
-    .notification-category-meta > span {
-        display: none;
-    }
-
-    .notification-category-content {
-        padding-right: 12px;
-        padding-left: 12px;
-    }
-
-    .notification-row-info small {
-        max-width: 240px;
-    }
-}
 
 .notification-general-card {
     padding: 24px;
@@ -809,4 +744,369 @@
 
 .notification-toggle input:checked + .notification-toggle-slider::before {
     transform: translateX(20px);
+}
+
+
+/* ========================================
+   MOBILE RESPONSIVE - GENERAL SETTINGS
+======================================== */
+
+@media (max-width: 700px) {
+
+    /* MODAL */
+
+    .general-settings-overlay {
+        padding: 0;
+        align-items: stretch;
+    }
+
+    .general-settings-modal {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        border: 0;
+        border-radius: 0;
+    }
+
+    /* HEADER */
+
+    .general-settings-header {
+        padding: 20px 18px 16px;
+        gap: 10px;
+    }
+
+    /* TABS */
+
+    .general-settings-tabs {
+        gap: 6px;
+        padding: 10px 14px;
+        scrollbar-width: none;
+    }
+
+    .general-settings-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .general-settings-tab {
+        padding: 10px 13px;
+        font-size: 12px;
+        border-radius: 7px;
+    }
+
+    .general-settings-tab svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    /* CONTENT */
+
+    .general-settings-content {
+        padding: 16px;
+        gap: 14px;
+        overscroll-behavior: contain;
+    }
+
+    .general-settings-card {
+        padding: 16px;
+        border-radius: 10px;
+    }
+
+    /* FOOTER */
+
+    .general-settings-footer {
+        padding: 12px 16px;
+        font-size: 10px;
+    }
+
+    /* NOTIFICATIONS */
+
+    .notification-settings {
+        gap: 18px;
+    }
+
+    .notification-intro {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .notification-intro h3 {
+        font-size: 19px;
+    }
+
+    .notification-intro p {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    /* GENERAL CARD */
+
+    .notification-general-card {
+        padding: 17px;
+        border-radius: 11px;
+    }
+
+    .notification-card-heading {
+        gap: 12px;
+        padding-bottom: 16px;
+    }
+
+    .notification-card-heading h4 {
+        font-size: 14px;
+    }
+
+    .notification-card-heading p {
+        font-size: 11px;
+        line-height: 1.4;
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .notification-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    /* CATEGORY GRID */
+
+    .notification-categories {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .notification-category {
+        border-radius: 10px;
+    }
+
+    .notification-category[open] {
+        grid-column: auto;
+    }
+
+    /* CATEGORY HEADER */
+
+    .notification-category-header {
+        min-height: 76px;
+        gap: 12px;
+        padding: 13px;
+    }
+
+    .notification-category-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+    }
+
+    .notification-category-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    .notification-category-info {
+        gap: 4px;
+    }
+
+    .notification-category-info > span {
+        font-size: 13px;
+    }
+
+    .notification-category-info small {
+        font-size: 10px;
+        line-height: 1.4;
+    }
+
+    .notification-category-meta {
+        gap: 6px;
+        font-size: 10px;
+    }
+
+    .notification-chevron {
+        width: 15px;
+        height: 15px;
+    }
+
+    /* CATEGORY CONTENT */
+
+    .notification-category-content {
+        padding: 4px 13px 10px;
+    }
+
+    /* SETTING ROWS */
+
+    .notification-row {
+        min-height: 66px;
+        gap: 12px;
+        padding: 12px 0;
+    }
+
+    .notification-row-info {
+        gap: 4px;
+    }
+
+    .notification-row-info span {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    .notification-row-info small {
+        max-width: 100%;
+        font-size: 10px;
+        line-height: 1.45;
+    }
+
+    /* TOGGLES */
+
+    .notification-toggle {
+        width: 42px;
+        height: 23px;
+    }
+
+    .notification-toggle-slider::before {
+        width: 17px;
+        height: 17px;
+    }
+
+    .notification-toggle input:checked + .notification-toggle-slider::before {
+        transform: translateX(19px);
+    }
+
+    .notification-master-toggle {
+        width: 44px;
+        height: 24px;
+    }
+
+    .notification-master-toggle .notification-toggle-slider::before {
+        width: 18px;
+        height: 18px;
+    }
+
+    .notification-master-toggle input:checked + .notification-toggle-slider::before {
+        transform: translateX(20px);
+    }
+
+    /* QUIET HOURS */
+
+    .notification-quiet-settings {
+        gap: 10px;
+        padding: 0 0 12px;
+    }
+
+    .notification-time-field {
+        min-width: 0;
+    }
+
+    .notification-time-field label {
+        font-size: 10px;
+    }
+
+    .notification-time-field input {
+        box-sizing: border-box;
+        min-width: 0;
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+
+    /* PREDICTION */
+
+    .notification-prediction-settings {
+        padding: 12px;
+    }
+
+    .notification-slider-heading label {
+        font-size: 10px;
+    }
+
+    /* SECTION HEADINGS */
+
+    .notification-section-heading h4 {
+        font-size: 14px;
+    }
+
+    .notification-section-heading p {
+        font-size: 11px;
+        line-height: 1.4;
+    }
+}
+
+
+/* ========================================
+   SMALL PHONES
+======================================== */
+
+@media (max-width: 380px) {
+
+    .general-settings-header {
+        padding: 16px 14px;
+    }
+
+    .general-settings-content {
+        padding: 12px;
+    }
+
+    .general-settings-tabs {
+        padding: 9px 12px;
+    }
+
+    .general-settings-tab {
+        gap: 6px;
+        padding: 9px 11px;
+        font-size: 11px;
+    }
+
+    .notification-category-header {
+        gap: 10px;
+        padding: 11px;
+    }
+
+    .notification-category-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .notification-category-info > span {
+        font-size: 12px;
+    }
+
+    .notification-category-info small {
+        font-size: 9px;
+    }
+
+    .notification-row {
+        gap: 8px;
+    }
+
+    .notification-row-info span {
+        font-size: 11px;
+    }
+
+    .notification-row-info small {
+        font-size: 9px;
+    }
+
+    .notification-general-card {
+        padding: 14px;
+    }
+}
+
+
+/* ========================================
+   TOUCH DEVICES
+======================================== */
+
+@media (hover: none) and (pointer: coarse) {
+
+    .notification-category-header {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .general-settings-tab {
+        min-height: 42px;
+    }
+
+    .notification-toggle {
+        min-width: 44px;
+        min-height: 28px;
+    }
 }

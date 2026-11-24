@@ -78,3 +78,89 @@ p {
     overflow-wrap: break-word;
     word-break: normal;
 }
+
+
+/* ========================================
+   Global - Responsive improvements
+======================================== */
+
+html {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+}
+
+/* Voorkom dat flex- en grid-elementen buiten beeld vallen */
+* {
+    min-width: 0;
+}
+
+/* Afbeeldingen blijven binnen hun container */
+img,
+svg,
+video,
+canvas {
+    max-width: 100%;
+}
+
+/* Betere bediening op touchscreens */
+button,
+input,
+select,
+textarea {
+    max-width: 100%;
+    font-size: 16px;
+}
+
+/* Voorkom dat knoppen en inputs te klein worden */
+button {
+    min-height: 40px;
+    touch-action: manipulation;
+}
+
+/* Betere leesbaarheid op kleine schermen */
+@media (max-width: 600px) {
+
+    h1 {
+        font-size: clamp(22px, 6vw, 30px);
+    }
+
+    h2 {
+        font-size: clamp(19px, 5vw, 25px);
+    }
+
+    h3 {
+        font-size: clamp(16px, 4vw, 20px);
+    }
+
+    p {
+        line-height: 1.5;
+    }
+
+    .eyebrow {
+        font-size: 9px;
+        letter-spacing: .12em;
+    }
+}
+
+/* Voorkom storende animaties voor gebruikers die dit uitzetten */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

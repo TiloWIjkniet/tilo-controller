@@ -1176,3 +1176,343 @@
         max-width: calc(100vw - 40px);
     }
 }
+
+/* ========================================
+   SCHEDULE - MOBILE RESPONSIVE
+======================================== */
+
+@media (max-width: 800px) {
+
+    .extra-panel {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .schedule-content {
+        min-height: 0;
+        overflow: visible;
+    }
+
+    /* Toolbar */
+    .schedule-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .schedule-view-toolbar {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .schedule-view-toggle {
+        max-width: 100%;
+    }
+
+    .schedule-day-tabs {
+        max-width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    /* Tijdlijn */
+    .schedule-timeline {
+        width: 100%;
+        max-width: 100%;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .schedule-timeline-inner {
+        min-width: 770px;
+    }
+
+    /* Weekweergave */
+    .schedule-weekdays {
+        min-width: 770px;
+    }
+
+    .schedule-week-grid {
+        min-width: 770px;
+    }
+
+    /* Evenementen */
+    .schedule-event-card {
+        padding: 5px 24px 5px 7px;
+    }
+
+    .schedule-event-card strong {
+        font-size: 10px;
+    }
+
+    .schedule-event-card span {
+        font-size: 9px;
+    }
+
+    /* Clusterdetails */
+    .schedule-cluster-details {
+        position: fixed;
+        left: 50%;
+        right: auto;
+        bottom: 16px;
+        top: auto;
+        transform: translateX(-50%);
+        width: calc(100vw - 32px);
+        max-width: 420px;
+        max-height: 60dvh;
+        z-index: 1100;
+    }
+
+    .schedule-cluster-item {
+        gap: 8px;
+    }
+
+    .schedule-cluster-item button {
+        min-height: 34px;
+    }
+}
+
+/* ========================================
+   SCHEDULE - SMALL PHONES
+======================================== */
+
+@media (max-width: 480px) {
+
+    .schedule-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .schedule-add-button {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .schedule-view-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .schedule-view-toggle {
+        width: 100%;
+    }
+
+    .schedule-view-button {
+        flex: 1;
+        min-height: 40px;
+    }
+
+    .schedule-day-tabs {
+        width: 100%;
+    }
+
+    .schedule-weekday {
+        min-width: 38px;
+        padding: 8px 4px;
+        font-size: 11px;
+    }
+
+    /* Dagweergave */
+    .schedule-content.day-view .schedule-timeline-inner {
+        min-width: 360px;
+    }
+
+    /* Tijdlijn */
+    .schedule-timeline-inner {
+        min-width: 770px;
+    }
+
+    .schedule-hour {
+        font-size: 10px;
+    }
+
+    .schedule-event-card {
+        min-height: 34px;
+        padding: 4px 22px 4px 6px;
+        gap: 2px;
+    }
+
+    .schedule-event-card strong {
+        font-size: 9px;
+    }
+
+    .schedule-event-card span {
+        font-size: 8px;
+    }
+
+    /* Huidige tijd */
+    .schedule-current-time-label {
+        font-size: 9px;
+    }
+
+    /* Clusterdetails */
+    .schedule-cluster-details {
+        width: calc(100vw - 24px);
+        max-height: 65dvh;
+        bottom: 12px;
+        padding: 12px;
+    }
+
+    .schedule-cluster-item {
+        grid-template-columns: 8px minmax(0, 1fr) auto;
+    }
+
+    .schedule-cluster-item button {
+        grid-column: 2 / -1;
+        justify-self: end;
+    }
+
+    /* Modal */
+    .schedule-modal-overlay {
+        position: fixed;
+        inset: 0;
+        align-items: stretch;
+        justify-content: stretch;
+        padding: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .schedule-modal {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: none;
+        max-height: none;
+        min-height: 100%;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        overflow: visible;
+    }
+
+    .schedule-modal-main {
+        flex: 1 0 auto;
+        padding: 18px 16px;
+        overflow: visible;
+    }
+
+    .schedule-modal-header {
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .schedule-modal-header h2 {
+        font-size: 19px;
+    }
+
+    .schedule-modal input,
+    .schedule-modal select {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    /* Formulieracties */
+    .schedule-modal-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .schedule-modal-actions button {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px;
+    }
+
+    .schedule-remove-button {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        margin-right: 0;
+    }
+
+    /* Tijdselectie */
+    .schedule-time-select {
+        gap: 6px;
+    }
+
+    .schedule-time-select select {
+        min-width: 0;
+    }
+
+    /* Dagen */
+    .schedule-day-options {
+        gap: 4px;
+    }
+
+    .schedule-day-option span {
+        padding: 10px 2px;
+        font-size: 11px;
+    }
+
+    /* Geurinformatie */
+    .schedule-fragrance-info {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 12px;
+    }
+
+    /* Informatiepaneel */
+    .schedule-info-panel {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+    }
+
+    .schedule-info-panel.open {
+        flex: 0 0 auto;
+        min-height: 180px;
+        padding: 16px;
+        border-top: 1px solid var(--border-soft);
+        border-left: 0;
+    }
+
+    .schedule-info-content {
+        padding-top: 14px;
+    }
+
+    .schedule-info-stock > strong {
+        font-size: 24px;
+    }
+
+    .schedule-more-info {
+        min-height: 44px;
+    }
+}
+
+/* ========================================
+   EXTRA SMALL PHONES
+======================================== */
+
+@media (max-width: 360px) {
+
+    .schedule-modal-main {
+        padding: 14px 12px;
+    }
+
+    .schedule-modal-actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .schedule-remove-button {
+        grid-column: auto;
+        grid-row: auto;
+    }
+
+    .schedule-fragrance-info {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .schedule-day-option span {
+        font-size: 10px;
+    }
+
+    .schedule-cluster-item {
+        grid-template-columns: 8px minmax(0, 1fr);
+    }
+
+    .schedule-cluster-item button {
+        grid-column: 2;
+    }
+}

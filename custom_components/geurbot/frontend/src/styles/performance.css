@@ -411,3 +411,225 @@
         flex-direction: column;
     }
 }
+
+/* ========================================
+   PERFORMANCE DASHBOARD - MOBILE
+======================================== */
+
+@media (max-width: 800px) {
+
+    .performance-dashboard {
+        width: 100%;
+        gap: 16px;
+    }
+
+    /* Header */
+    .performance-header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .performance-live {
+        margin-top: 4px;
+    }
+
+    /* Summary */
+    .performance-summary {
+        gap: 10px;
+    }
+
+    .performance-metric,
+    .performance-chart-card {
+        padding: 13px;
+    }
+
+    .performance-metric strong {
+        font-size: 16px;
+    }
+
+    /* Sections */
+    .performance-section {
+        padding: 14px;
+    }
+
+    /* Grafieken */
+    .performance-chart-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .performance-chart-card {
+        width: 100%;
+    }
+
+    .performance-chart-legend {
+        gap: 10px;
+    }
+
+    /* Filters */
+    .performance-filters {
+        padding: 12px;
+    }
+
+    .performance-filter-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .performance-filter-actions {
+        flex-wrap: wrap;
+    }
+
+    .performance-filter-actions button {
+        flex: 1 1 auto;
+        min-height: 38px;
+    }
+
+    /* Systeeminformatie */
+    .performance-system-grid,
+    .performance-wifi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Status */
+    .performance-status-item {
+        flex: 1 1 120px;
+        min-width: 0;
+        padding: 10px;
+    }
+}
+
+/* ========================================
+   SMALL PHONES
+======================================== */
+
+@media (max-width: 480px) {
+
+    .performance-dashboard {
+        gap: 12px;
+    }
+
+    .performance-header,
+    .performance-section-heading {
+        gap: 8px;
+    }
+
+    .performance-header {
+        flex-direction: column;
+    }
+
+    .performance-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .performance-metric {
+        padding: 11px;
+    }
+
+    .performance-metric span {
+        font-size: 11px;
+    }
+
+    .performance-metric strong {
+        font-size: 15px;
+        margin: 6px 0 3px;
+    }
+
+    .performance-metric small {
+        font-size: 9px;
+    }
+
+    .performance-section {
+        padding: 11px;
+        border-radius: 10px;
+    }
+
+    .performance-chart-card {
+        padding: 12px;
+    }
+
+    /* Balkgrafieken */
+    .performance-bar-row {
+        grid-template-columns: minmax(65px, 0.8fr) minmax(0, 2fr) auto;
+        gap: 7px;
+        font-size: 10px;
+    }
+
+    /* Legenda */
+    .performance-chart-legend {
+        gap: 8px;
+    }
+
+    .performance-legend-item {
+        font-size: 10px;
+    }
+
+    /* Tabellen */
+    .performance-table-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .performance-table {
+        min-width: 520px;
+        font-size: 11px;
+    }
+
+    .performance-table th,
+    .performance-table td {
+        padding: 9px 8px;
+    }
+
+    /* Filters */
+    .performance-filter-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .performance-filter-actions button {
+        width: 100%;
+        padding: 8px;
+    }
+
+    /* Systeeminformatie */
+    .performance-system-grid,
+    .performance-wifi-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* Tijdselectie */
+    #performance-time-range {
+        width: 100%;
+        min-height: 42px;
+    }
+
+    /* Status */
+    .performance-status-item {
+        flex: 1 1 calc(50% - 10px);
+    }
+}
+
+/* ========================================
+   EXTRA SMALL PHONES
+======================================== */
+
+@media (max-width: 360px) {
+
+    .performance-summary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .performance-metric {
+        padding: 12px;
+    }
+
+    .performance-bar-row {
+        grid-template-columns: minmax(55px, 0.8fr) minmax(0, 1.5fr) auto;
+        gap: 5px;
+        font-size: 9px;
+    }
+
+    .performance-status-item {
+        flex-basis: 100%;
+    }
+}
