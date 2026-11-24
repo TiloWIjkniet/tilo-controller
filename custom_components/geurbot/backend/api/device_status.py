@@ -669,6 +669,7 @@ async def update_backend_device_fragrances(request, device_manager):
             return web.json_response({"success": False, "error": "Invalid fragrances"}, status=400)
 
         device_manager.update_device_fragrances(device_id, fragrances)
+        await device_manager.async_save()
 
         return web.json_response({"success": True})
 
@@ -693,7 +694,7 @@ async def delete_backend_device_fragrance(request, device_manager):
                 "success": False,
                 "error": "Device or fragrance not found"
             }, status=404)
-
+        await device_manager.async_save()
         print(f"[FRAGRANCES] Geur {mac_address} verwijderd")
 
         return web.json_response({"success": True})

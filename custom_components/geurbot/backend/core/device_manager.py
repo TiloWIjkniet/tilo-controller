@@ -8,6 +8,7 @@ class DeviceManager:
     def __init__(self):
         self.registry = DeviceRegistry()
         self.on_device_found = None
+        self.on_devices_changed = None
 
    
     async def scan(self, timeout=10):

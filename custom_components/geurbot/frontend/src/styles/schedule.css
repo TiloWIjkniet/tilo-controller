@@ -1183,12 +1183,6 @@
 
 @media (max-width: 800px) {
 
-    .extra-panel {
-        height: auto;
-        min-height: 0;
-        overflow: visible;
-    }
-
     .schedule-content {
         min-height: 0;
         overflow: visible;
@@ -1515,4 +1509,26 @@
     .schedule-cluster-item button {
         grid-column: 2;
     }
+}
+
+/* Fragrance list - height correction */
+
+.extra-panel {
+    min-width: 0;
+    min-height: 0;
+}
+
+.fragrance-list {
+    display: block;
+    flex: 1 1 0;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.fragrance-items {
+    width: 100%;
+    min-width: 0;
 }
