@@ -23,7 +23,9 @@ class DeviceManager:
 
             if existing:
                 for key, value in existing.items():
-                    if key not in device or device[key] is None:
+                    if key == "fragrances":
+                        device[key] = value
+                    elif key not in device or device[key] is None:
                         device[key] = value
 
             registered_device = self.registry.add(device)
