@@ -1541,7 +1541,7 @@ export function setupPerformanceSettings({ overlay, getSelectedDevice }) {
                 throw new Error(result?.error ?? "Prestaties ophalen mislukt.");
             }
 
-            console.log("Performance API:", result);
+            //console.log("Performance API:", result);
 
             const previousNames = new Set(selectedEndpoints);
             const newNames = Object.keys(result.endpoints ?? {});

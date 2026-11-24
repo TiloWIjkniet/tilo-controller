@@ -213,7 +213,7 @@ export async function loadDevices() {
             throw new Error("Could not retrieve devices");
 
         const result = await response.json();
-        console.log("[DEVICES] Backend devices ontvangen:", result.devices);
+        //console.log("[DEVICES] Backend devices ontvangen:", result.devices);
 
         if (!result.success)
             throw new Error("Could not load devices");

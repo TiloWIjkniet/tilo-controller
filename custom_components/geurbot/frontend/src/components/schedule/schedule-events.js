@@ -33,7 +33,6 @@ function loadScheduleEvents() {
         )
     );
 
-    console.log("[SCHEDULE] Planningen geladen:", scheduleEvents);
 }
 
 async function saveScheduleEvents(deviceId = selectedDeviceId) {
@@ -57,7 +56,6 @@ async function saveScheduleEvents(deviceId = selectedDeviceId) {
 
     try {
         await updateBackendDeviceFragrances(device.id, device.fragrances);
-        console.log(`[SCHEDULE] Planning opgeslagen voor ${device.name}:`, device.fragrances);
     } catch (error) {
         console.error("[SCHEDULE] Opslaan mislukt:", error);
     }

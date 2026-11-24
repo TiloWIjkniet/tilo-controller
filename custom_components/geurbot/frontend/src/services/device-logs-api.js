@@ -22,7 +22,6 @@ async function requestJson(deviceId, endpoint, method = "GET") {
         throw new Error(`API HTTP ${response.status}: ${raw}`);
     }
 
-    console.log(`Logs request ${method} ${url}:`, data);
 
     return data;
 }

@@ -6,7 +6,7 @@ from ..api.manager import get_data
 from ..notification.notifications import send_notification, notification_manager
 from ..api.notification_settings import load_settings
 
-CHECK_INTERVAL = 10
+CHECK_INTERVAL = 60
 
 
 class FragranceMonitor:

@@ -34,8 +34,6 @@ export function fetchDeviceDiagnostics(deviceId, endpoint) {
 
     const url = `${API_BASE}/${encodeURIComponent(deviceId)}/diagnostics/${endpoint}`;
 
-    console.log("Diagnostics API URL:", url);
-
     return requestJson(url);
 }
 

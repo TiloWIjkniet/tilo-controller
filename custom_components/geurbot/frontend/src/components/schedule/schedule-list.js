@@ -196,9 +196,4 @@ export function updateWeekdays() {
 
     const isDayView = content.classList.contains("day-view");
     weekdays.hidden = isDayView;
-
-    console.log("Update weekdays:", {
-        view: isDayView ? "day" : "week",
-        hidden: weekdays.hidden
-    });
 }

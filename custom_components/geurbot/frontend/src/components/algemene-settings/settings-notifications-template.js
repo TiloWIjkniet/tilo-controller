@@ -387,8 +387,6 @@ export async function loadNotificationSettings() {
             }
         };
 
-        console.log("[NOTIFICATIONS] Settings loaded");
-
         return structuredClone(notificationSettings);
 
     } catch (error) {
@@ -418,8 +416,6 @@ async function saveNotificationSettings() {
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-
-        console.log("[NOTIFICATIONS] Settings saved");
     });
 
     try {
@@ -443,8 +439,6 @@ export function updateNotificationSettings(path, value) {
     }
 
     target[keys[keys.length - 1]] = value;
-
-    console.log("[NOTIFICATIONS] Settings updated:", path, value);
 
     return saveNotificationSettings();
 }
@@ -515,7 +509,6 @@ export async function setupNotifications(app) {
         applyNotificationSettings(settings, app);
         setupNotificationListeners(app);
 
-        console.log("[NOTIFICATIONS] Initialized");
     } catch (error) {
         console.error("[NOTIFICATIONS] Initialization failed:", error);
     }

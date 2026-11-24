@@ -48,7 +48,6 @@ function selectCard(app, card) {
         return;
     }
 
-    console.log("Geselecteerde GeurBot:", device);
     
     app.dispatchEvent(new CustomEvent("device-selected", {
         detail: device
