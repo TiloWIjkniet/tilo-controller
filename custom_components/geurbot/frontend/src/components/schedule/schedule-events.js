@@ -55,9 +55,18 @@ async function saveScheduleEvents(deviceId = selectedDeviceId) {
     });
 
     try {
-        await updateBackendDeviceFragrances(device.id, device.fragrances);
+        const result = await updateBackendDeviceFragrances(
+            device.id,
+            device.fragrances
+        );
+
+        if (!result.success) {
+            throw new Error(result.error || "Planning opslaan mislukt");
+        }
+
     } catch (error) {
         console.error("[SCHEDULE] Opslaan mislukt:", error);
+        throw error;
     }
 }
 

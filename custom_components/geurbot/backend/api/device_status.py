@@ -59,12 +59,6 @@ async def get_device_fragrance_status(request, device_manager):
 
     return web.json_response(result["data"])
 
-async def get_device_fragrances(request, device_manager):
-    return await _proxy_fragrance_request(
-        request, device_manager, "GET",
-        "/api/device/fragrances/get-all"
-    )
-
 async def get_device_diagnostics(request, device_manager):
 
     print("DIAGNOSTICS ROUTE AANGEROEPEN")
@@ -636,10 +630,54 @@ async def get_device_fragrances(request, device_manager):
             status=502
         )
 
-    device_manager.update_device_fragrances(device_id, fragrances)
+    # Bewaar bestaande Home Assistant-gegevens per MAC-adres.
+    existing_fragrances = {
+        fragrance["mac_address"]: fragrance
+        for fragrance in device.get("fragrances", [])
+        if isinstance(fragrance, dict) and fragrance.get("mac_address")
+    }
+
+    updated_fragrances = []
+    returned_mac_addresses = set()
+
+    for fragrance in fragrances:
+        if not isinstance(fragrance, dict):
+            continue
+
+        mac_address = fragrance.get("mac_address")
+
+        if not mac_address:
+            updated_fragrances.append(fragrance)
+            continue
+
+        returned_mac_addresses.add(mac_address)
+
+        existing = existing_fragrances.get(mac_address, {})
+
+        # ESP-gegevens combineren met bestaande Home Assistant-gegevens.
+        updated_fragrance = {
+            **existing,
+            **fragrance
+        }
+
+        # Backend-eigen gegevens behouden.
+        for key in ("schedule", "unreachable"):
+            if key in existing:
+                updated_fragrance[key] = existing[key]
+
+        updated_fragrances.append(updated_fragrance)
+
+    # Behoud geuren die niet door de ESP zijn teruggestuurd.
+    for mac_address, fragrance in existing_fragrances.items():
+        if mac_address not in returned_mac_addresses:
+            updated_fragrances.append(fragrance)
+
+    device_manager.update_device_fragrances(
+        device_id,
+        updated_fragrances
+    )
 
     return web.json_response(data)
-
 
 async def get_backend_device_fragrances(request, device_manager):
     device_id = request.match_info["device_id"]

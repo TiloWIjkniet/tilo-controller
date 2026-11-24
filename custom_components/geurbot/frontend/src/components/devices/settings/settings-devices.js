@@ -1021,7 +1021,7 @@ async function showHistory() {
                     container.querySelector("#fragrance-settings-detail")
                 );
 
-                console.log("Geschat aantal sprays opgeslagen:", value);
+              //  console.log("Geschat aantal sprays opgeslagen:", value);
             } catch (error) {
                 console.error("Geschat aantal sprays opslaan mislukt:", error);
                 alert("Het geschatte aantal sprays kon niet worden opgeslagen.");
@@ -1051,7 +1051,7 @@ async function showHistory() {
 
                 fragrance.empty_bottle_threshold = value;
 
-                console.log("Lege-fles-threshold opgeslagen:", value);
+             //   console.log("Lege-fles-threshold opgeslagen:", value);
             } catch (error) {
                 console.error("Threshold opslaan mislukt:", error);
                 alert("De lege-fles-threshold kon niet worden opgeslagen.");

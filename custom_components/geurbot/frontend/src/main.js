@@ -141,9 +141,8 @@ async function pollFirmwareStatus() {
         updating || firmwareStartPending ? 2000 : 5 * 60 * 1000
     );
 }
-
-document.addEventListener("geurbot:firmware-update-started", () => {
-    console.log("[FIRMWARE] Update gestart");
+    document.addEventListener("geurbot:firmware-update-started", () => {
+  
 
     firmwareStartPending = true;
     clearTimeout(firmwareInterval);
