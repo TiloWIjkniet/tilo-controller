@@ -172,12 +172,6 @@ def setup_device_routes(app, device_manager):
         "/api/geurbot/devices/{device_id}/fragrance/status",
         lambda request: get_device_fragrance_status(request, device_manager)
     )
-
-    app.router.add_get(
-        "/api/geurbot/devices/{device_id}/fragrance/get-all",
-        lambda request: get_device_fragrances(request, device_manager)
-    )
-
     app.router.add_post(
         "/api/geurbot/devices/{device_id}/fragrance/get",
         lambda request: get_device_fragrance(request, device_manager)
@@ -243,10 +237,6 @@ def setup_device_routes(app, device_manager):
         lambda request: get_device_fragrance_status(request, device_manager)
     )
 
-    app.router.add_get(
-        "/api/geurbot/devices/{device_id}/fragrance/get-all",
-        lambda request: get_device_fragrances(request, device_manager)
-    )
 
     app.router.add_post(
         "/api/geurbot/devices/{device_id}/fragrance/get",

@@ -37,8 +37,45 @@ class GeurBotCoordinator(DataUpdateCoordinator):
         else:
             fragrances = []
         # Keep the shared registry record current for schedules, monitors and entities.
-        self.device["fragrances"] = fragrances
-        runtime = self.hass.data.get("geurbot", {})
-        for adder in runtime.get("entity_adders", {}).values():
-            adder(self)
-        return {"online": True, "fragrances": fragrances, "raw": payload}
+        # Merge ESP data with existing Home Assistant fragrance data.
+        existing_fragrances = {
+            fragrance["mac_address"]: fragrance
+            for fragrance in self.device.get("fragrances", [])
+            if isinstance(fragrance, dict) and fragrance.get("mac_address")
+        }
+
+        updated_fragrances = []
+        returned_mac_addresses = set()
+
+        for fragrance in fragrances:
+            if not isinstance(fragrance, dict):
+                continue
+
+            mac_address = fragrance.get("mac_address")
+
+            if not mac_address:
+                updated_fragrances.append(fragrance)
+                continue
+
+            returned_mac_addresses.add(mac_address)
+
+            existing = existing_fragrances.get(mac_address, {})
+
+            updated_fragrance = {
+                **existing,
+                **fragrance
+            }
+
+            # Preserve Home Assistant-managed values.
+            for key in ("schedule", "unreachable"):
+                if key in existing:
+                    updated_fragrance[key] = existing[key]
+
+            updated_fragrances.append(updated_fragrance)
+
+        # Keep fragrances that are no longer returned by the ESP.
+        for mac_address, fragrance in existing_fragrances.items():
+            if mac_address not in returned_mac_addresses:
+                updated_fragrances.append(fragrance)
+
+        self.device["fragrances"] = updated_fragrances

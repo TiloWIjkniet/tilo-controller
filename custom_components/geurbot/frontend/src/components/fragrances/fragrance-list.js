@@ -772,6 +772,7 @@ function setupFragranceActions(app) {
 ======================================== */
 
 
+
 async function refreshFragrances(app, deviceId) {
     const device = getDevice(deviceId);
 
@@ -811,7 +812,7 @@ async function refreshFragrances(app, deviceId) {
             return {
                 ...oldFragrance,
                 ...newFragrance,
-                unreachable: false
+                unreachable: newFragrance.unreachable ?? false
             };
         });
 
@@ -819,18 +820,18 @@ async function refreshFragrances(app, deviceId) {
         for (const fragrance of newFragranceMap.values()) {
             updatedFragrances.push({
                 ...fragrance,
-                unreachable: false
+                unreachable: fragrance.unreachable ?? false
             });
         }
 
         device.fragrances = updatedFragrances;
 
-     
+        console.log("[FRAGRANCES] Volledige lijst die wordt opgeslagen:", device.fragrances);
 
         try 
         {
             await updateBackendDeviceFragrances(device.id, device.fragrances);
-
+            console.log("[FRAGRANCES] Volledige lijst opgeslagen in backend");
         } catch (error) 
         {
             console.error("[FRAGRANCES] Backend opslaan mislukt:", error);

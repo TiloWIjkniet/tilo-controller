@@ -595,6 +595,7 @@ async def start_firmware_update(request, device_manager):
         status=result.get("status") or 202
     )
 
+
 async def get_device_fragrances(request, device_manager):
     device_id = request.match_info["device_id"]
     device = device_manager.get_device(device_id)
@@ -661,15 +662,17 @@ async def get_device_fragrances(request, device_manager):
         }
 
         # Backend-eigen gegevens behouden.
-        for key in ("schedule", "unreachable"):
-            if key in existing:
-                updated_fragrance[key] = existing[key]
+        if "schedule" in existing:
+            updated_fragrance["schedule"] = existing["schedule"]
+
+        updated_fragrance["unreachable"] = False
 
         updated_fragrances.append(updated_fragrance)
-
     # Behoud geuren die niet door de ESP zijn teruggestuurd.
     for mac_address, fragrance in existing_fragrances.items():
         if mac_address not in returned_mac_addresses:
+            fragrance = dict(fragrance)
+            fragrance["unreachable"] = True
             updated_fragrances.append(fragrance)
 
     device_manager.update_device_fragrances(
@@ -677,7 +680,11 @@ async def get_device_fragrances(request, device_manager):
         updated_fragrances
     )
 
-    return web.json_response(data)
+    return web.json_response({
+    "success": True,
+    "fragrances": updated_fragrances
+}   )
+
 
 async def get_backend_device_fragrances(request, device_manager):
     device_id = request.match_info["device_id"]
