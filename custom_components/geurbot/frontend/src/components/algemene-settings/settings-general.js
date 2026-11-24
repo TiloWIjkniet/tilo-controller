@@ -1,6 +1,6 @@
 
 import { setupSystemSettings } from "./settings-system.js";
-import { setupNotifications } from "./settings-notifications.js";
+import { setupNotifications } from "./settings-notifications-template.js";
 
 export function setupGeneralSettings(app) {
     const overlay = app.querySelector("#general-settings-overlay");
