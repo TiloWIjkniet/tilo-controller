@@ -93,6 +93,11 @@ class GeurBotPanel extends HTMLElement {
 
         panel.style.setProperty("height", "100%", "important");
         panel.style.setProperty("min-height", "0", "important");
+
+        console.log(
+            "[GeurBot] Paneelhoogte:",
+            panel.getBoundingClientRect().height
+        );
     }
 
     _sendAuth() {

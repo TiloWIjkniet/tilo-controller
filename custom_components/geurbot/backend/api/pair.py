@@ -1,85 +1,69 @@
-
+import os
 import secrets
+
+from aiohttp import web
 
 from ..communication.esp_client import EspClient
 
 
-async def add_discovered_device(device_manager, device_id, name, ha_url, ha_token):
-    if not device_id or not name:
-        return {"success": False, "error": "Missing required fields"}, 400
+async def add_discovered_device(request, device_manager):
+    try:
+        data = await request.json()
+        device_id = data.get("device_id")
+        name = data.get("name")
 
-    if not ha_url or not ha_token:
-        return {"success": False, "error": "Home Assistant configuration missing"}, 500
+        if not device_id or not name:
+            return web.json_response({"success": False, "error": "Missing required fields"}, status=400)
 
-    device = device_manager.get_device(device_id)
+        device = device_manager.get_device(device_id)
 
-    if not device:
-        return {"success": False, "error": "Device not found"}, 404
+        if not device:
+            return web.json_response({"success": False, "error": "Device not found"}, status=404)
 
-    esp = EspClient(device)
+        # ha_url = os.getenv("GEURBOT_HOME_ASSISTANT_URL")
+        # ha_token = os.getenv("GEURBOT_ACCESS_TOKEN")
 
-    pairing_result = await esp.request("POST", "/api/security/pairing/open")
+        ha_url = os.getenv("GEURBOT_HOME_ASSISTANT_URL")
+        ha_token = os.getenv("GEURBOT_ACCESS_TOKEN")
 
-    if not pairing_result["success"]:
-        return {
-            "success": False,
-            "error": "Could not open pairing window on ESP",
-            "details": pairing_result.get("data") or pairing_result.get("error")
-        }, 502
+        if not ha_url or not ha_token:
+            return web.json_response({"success": False, "error": "Home Assistant configuration missing"}, status=500)
 
-    pairing_data = pairing_result.get("data") or {}
-    pairing_code = pairing_data.get("pairing_code")
+        esp = EspClient(device)
 
-    if not pairing_code:
-        return {"success": False, "error": "No pairing code received from ESP"}, 502
+        pairing_result = await esp.request("POST", "/api/security/pairing/open")
 
-    client_id = secrets.token_hex(16)
+        if not pairing_result["success"]:
+            return web.json_response({"success": False, "error": "Could not open pairing window on ESP", "details": pairing_result.get("error") or pairing_result.get("data")}, status=502)
 
-    result = await esp.request(
-        "POST",
-        "/api/security/pair",
-        data={
-            "client_id": client_id,
-            "pairing_code": pairing_code,
-            "home_assistant_url": ha_url,
-            "access_token": ha_token
-        }
-    )
+        pairing_data = pairing_result.get("data") or {}
+        pairing_code = pairing_data.get("pairing_code")
 
-    if not result["success"]:
-        return {
-            "success": False,
-            "error": (result.get("data") or {}).get("error")
-                     or result.get("error")
-                     or "Pairing failed",
-            "status": result.get("status")
-        }, 502
+        if not pairing_code:
+            return web.json_response({"success": False, "error": "No pairing code received from ESP", "details": pairing_data}, status=502)
 
-    response_data = result.get("data") or {}
+        client_id = secrets.token_hex(16)
 
-    if (
-        not response_data.get("success")
-        or not response_data.get("token")
-        or response_data.get("client_id") != client_id
-    ):
-        return {
-            "success": False,
-            "error": "Invalid pairing response from ESP"
-        }, 502
+        result = await esp.request("POST", "/api/security/pair", data={"client_id": client_id, "pairing_code": pairing_code, "home_assistant_url": ha_url, "access_token": ha_token})
 
-    device["name"] = name.strip()
-    device["client_id"] = client_id
-    device["token"] = response_data["token"]
-    device["paired"] = True
+        if not result["success"]:
+            return web.json_response({"success": False, "error": result.get("data", {}).get("error") or result.get("error") or "Pairing failed", "status": result.get("status")}, status=502)
 
-    device_manager.registry.add(device)
+        response_data = result.get("data") or {}
 
-    return {
-        "success": True,
-        "device": {
-            "device_id": device_id,
-            "name": device["name"],
-            "hostname": device.get("hostname"),
-            "paired": True
-        }
-    }, 200
+        if not response_data.get("success") or not response_data.get("token"):
+            return web.json_response({"success": False, "error": "Invalid pairing response from ESP", "details": response_data}, status=502)
+
+        device["name"] = name
+        device["hostname"] = device.get("hostname")
+        device["client_id"] = response_data["client_id"]
+        device["token"] = response_data["token"]
+        device["paired"] = True
+
+        device_manager.registry.add(device)
+
+        return web.json_response({"success": True, "device": { "device_id": device_id, "name": name, "hostname": device["hostname"], "paired": True }})
+
+    except Exception as error:
+        print("Pairing mislukt:", type(error).__name__)
+        return web.json_response({"success": False, "error": str(error)}, status=500)

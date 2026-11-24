@@ -11,13 +11,8 @@ from .const import DOMAIN
 from .backend.api import device_status
 from .backend.api.api_terminal import api_terminal_request
 from .backend.api.notification_settings import DEFAULT_NOTIFICATION_SETTINGS, merge_settings, validate_settings
-from .backend.api.pair import add_discovered_device
-from .const import GEURBOT_STATIC_TOKEN
 
 
-
-
-GEURBOT_STATIC_TOKEN = "GeurBot-Static-Token-2026-:)LOL"
 class RequestShim:
     """Expose the small aiohttp request interface used by legacy handlers."""
     def __init__(self, request, match_info):
@@ -156,51 +151,22 @@ class GeurBotRootApiView(HomeAssistantView):
             return self.json({"success": False, "error": str(err)}, status_code=400)
 
 
-
 class GeurBotDevicesAddView(HomeAssistantView):
     url = "/api/devices/add"
     name = "api:geurbot:devices:add"
     requires_auth = True
 
     async def post(self, request):
-        hass = request.app[KEY_HASS]
-        runtime = hass.data.get(DOMAIN)
-
-        if not runtime:
-            return self.json(
-                {"success": False, "error": "GeurBot niet geladen"},
-                status_code=503
-            )
-
-        try:
-            data = await request.json()
-        except (ValueError, TypeError):
-            return self.json(
-                {"success": False, "error": "Ongeldige JSON"},
-                status_code=400
-            )
-
-        device_id = data.get("device_id")
-        name = data.get("name")
-
-        # Gebruik de interne URL zodat de ESP32 Home Assistant kan bereiken.
-        ha_url = (
-            hass.config.internal_url
-            or hass.config.external_url
-            or str(request.url.origin())
-        )
-
-        result, status = await add_discovered_device(
-            runtime["device_manager"],
-            device_id,
-            name,
-            ha_url,
-            GEURBOT_STATIC_TOKEN
-        )
-
-        if status == 200:
-            await runtime["store"].async_save_devices(
-                runtime["device_manager"].get_devices()
-            )
-
-        return self.json(result, status_code=status)
+        runtime = request.app[KEY_HASS].data.get(DOMAIN)
+        if not runtime: return self.json({"success": False, "error": "GeurBot niet geladen"}, status_code=503)
+        try: data = await request.json()
+        except ValueError: return self.json({"success": False, "error": "Ongeldige JSON"}, status_code=400)
+        device_id, name = data.get("device_id"), data.get("name")
+        device = runtime["device_manager"].get_device(device_id) if device_id else None
+        if not device: return self.json({"success": False, "error": "Apparaat niet gevonden"}, status_code=404)
+        # Pairing handshake needs a real HA callback credential. Never use the
+        # placeholder token that was hardcoded in the old standalone server.
+        return self.json({
+            "success": False,
+            "error": "Pairing is nog niet beschikbaar: de oude server gebruikte een hardcoded placeholder-token. De ESP32 API blijft ongewijzigd; configureer eerst de callback-authenticatie.",
+        }, status_code=501)
