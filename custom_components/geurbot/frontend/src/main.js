@@ -14,7 +14,7 @@ import { startScheduleClock } from "./components/schedule/schedule-list.js";
 import { initializeScheduleEvents } from "./components/schedule/schedule-events.js";
 import { fetchDeviceFirmwareInfo } from "./services/services.js";
 import { setupGeneralSettings } from "./components/algemene-settings/settings-general.js";
-import { setupNotifications } from "./components/algemene-settings/settings-notifications-template.js";
+
 
 const authReady = await geurbotAuthReady;
 if (!authReady) {
@@ -35,7 +35,6 @@ setupDiscoveryModal(app);
 setupFragranceSelection(app);
 setupDeviceSettings(app);
 setupGeneralSettings(app);
-await setupNotifications(app);
 
 function refreshNetworkStatus() {
     app.querySelectorAll(".device-card").forEach(card => {

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from urllib.parse import unquote
+import secrets
 
+from .backend.communication.esp_client import EspClient
 from aiohttp import web
 from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
 from homeassistant.helpers import device_registry as dr
@@ -151,22 +153,233 @@ class GeurBotRootApiView(HomeAssistantView):
             return self.json({"success": False, "error": str(err)}, status_code=400)
 
 
+
 class GeurBotDevicesAddView(HomeAssistantView):
+    """Pair a discovered GeurBot device with Home Assistant."""
+
     url = "/api/devices/add"
     name = "api:geurbot:devices:add"
     requires_auth = True
 
     async def post(self, request):
-        runtime = request.app[KEY_HASS].data.get(DOMAIN)
-        if not runtime: return self.json({"success": False, "error": "GeurBot niet geladen"}, status_code=503)
-        try: data = await request.json()
-        except ValueError: return self.json({"success": False, "error": "Ongeldige JSON"}, status_code=400)
-        device_id, name = data.get("device_id"), data.get("name")
-        device = runtime["device_manager"].get_device(device_id) if device_id else None
-        if not device: return self.json({"success": False, "error": "Apparaat niet gevonden"}, status_code=404)
-        # Pairing handshake needs a real HA callback credential. Never use the
-        # placeholder token that was hardcoded in the old standalone server.
-        return self.json({
-            "success": False,
-            "error": "Pairing is nog niet beschikbaar: de oude server gebruikte een hardcoded placeholder-token. De ESP32 API blijft ongewijzigd; configureer eerst de callback-authenticatie.",
-        }, status_code=501)
+        hass = request.app[KEY_HASS]
+        runtime = hass.data.get(DOMAIN)
+
+        if not runtime:
+            return self.json(
+                {"success": False, "error": "GeurBot niet geladen"},
+                status_code=503,
+            )
+
+        try:
+            data = await request.json()
+        except (ValueError, TypeError):
+            return self.json(
+                {"success": False, "error": "Ongeldige JSON"},
+                status_code=400,
+            )
+
+        if not isinstance(data, dict):
+            return self.json(
+                {"success": False, "error": "Ongeldige gegevens"},
+                status_code=400,
+            )
+
+        device_id = data.get("device_id")
+        name = data.get("name")
+
+        if not isinstance(device_id, str) or not device_id.strip():
+            return self.json(
+                {"success": False, "error": "Device ID ontbreekt"},
+                status_code=400,
+            )
+
+        if not isinstance(name, str) or not name.strip():
+            return self.json(
+                {"success": False, "error": "Apparaatnaam ontbreekt"},
+                status_code=400,
+            )
+
+        manager = runtime["device_manager"]
+        device = manager.get_device(device_id)
+
+        if not device:
+            return self.json(
+                {"success": False, "error": "Apparaat niet gevonden"},
+                status_code=404,
+            )
+
+        # Home Assistant-authenticatie wordt door requires_auth=True
+        # gecontroleerd. Gebruik hetzelfde token voor ESP32-callbacks.
+        authorization = request.headers.get("Authorization", "")
+        parts = authorization.split(None, 1)
+
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            return self.json(
+                {
+                    "success": False,
+                    "error": "Home Assistant access token ontbreekt",
+                },
+                status_code=401,
+            )
+
+        ha_token = parts[1].strip()
+
+        if not ha_token:
+            return self.json(
+                {"success": False, "error": "Ongeldig access token"},
+                status_code=401,
+            )
+
+        # Gebruik de interne URL als die is ingesteld.
+        # Anders gebruiken we de externe URL.
+        ha_url = (
+            hass.config.internal_url
+            or hass.config.external_url
+        )
+
+        if not ha_url:
+            return self.json(
+                {
+                    "success": False,
+                    "error": (
+                        "Geen Home Assistant URL ingesteld. "
+                        "Configureer een interne of externe URL."
+                    ),
+                },
+                status_code=500,
+            )
+
+        ha_url = ha_url.rstrip("/")
+
+        try:
+            esp = EspClient(device)
+
+            # Stap 1: pairingvenster openen op de ESP32.
+            open_result = await esp.request(
+                "POST",
+                "/api/security/pairing/open",
+            )
+
+            if not open_result.get("success"):
+                return self.json(
+                    {
+                        "success": False,
+                        "error": "Pairingvenster openen op ESP32 mislukt",
+                        "details": open_result.get("error")
+                        or open_result.get("data"),
+                    },
+                    status_code=502,
+                )
+
+            pairing_data = open_result.get("data") or {}
+            pairing_code = pairing_data.get("pairing_code")
+
+            if not pairing_code:
+                return self.json(
+                    {
+                        "success": False,
+                        "error": "ESP32 heeft geen pairingcode teruggegeven",
+                        "details": pairing_data,
+                    },
+                    status_code=502,
+                )
+
+            # Stap 2: unieke client-ID genereren.
+            client_id = secrets.token_hex(16)
+
+            # Stap 3: pairing uitvoeren.
+            pair_result = await esp.request(
+                "POST",
+                "/api/security/pair",
+                data={
+                    "client_id": client_id,
+                    "pairing_code": pairing_code,
+                    "home_assistant_url": ha_url,
+                    "access_token": ha_token,
+                },
+            )
+
+            if not pair_result.get("success"):
+                pair_data = pair_result.get("data") or {}
+
+                return self.json(
+                    {
+                        "success": False,
+                        "error": (
+                            pair_data.get("error")
+                            or pair_result.get("error")
+                            or "Pairing met ESP32 mislukt"
+                        ),
+                        "details": pair_data,
+                        "esp_status": pair_result.get("status"),
+                    },
+                    status_code=502,
+                )
+
+            response_data = pair_result.get("data") or {}
+
+            esp_client_id = response_data.get("client_id")
+            esp_token = response_data.get("token")
+
+            if (
+                response_data.get("success") is not True
+                or not isinstance(esp_client_id, str)
+                or not esp_client_id
+                or not isinstance(esp_token, str)
+                or not esp_token
+            ):
+                return self.json(
+                    {
+                        "success": False,
+                        "error": "Ongeldig pairingantwoord van ESP32",
+                        "details": response_data,
+                    },
+                    status_code=502,
+                )
+
+            # Stap 4: credentials en apparaatnaam opslaan.
+            device["name"] = name.strip()
+            device["client_id"] = esp_client_id
+            device["token"] = esp_token
+            device["paired"] = True
+
+            manager.registry.add(device)
+
+            # Stap 5: onmiddellijk persistent opslaan.
+            await runtime["store"].async_save_devices(
+                manager.get_devices()
+            )
+
+            # Bestaande coordinator indien aanwezig bijwerken.
+            coordinator = runtime["coordinators"].get(device_id)
+
+            if coordinator:
+                await coordinator.async_refresh()
+
+            return self.json(
+                {
+                    "success": True,
+                    "device": {
+                        "device_id": device_id,
+                        "name": device["name"],
+                        "hostname": device.get("hostname"),
+                        "ip": device.get("ip"),
+                        "paired": True,
+                    },
+                }
+            )
+
+        except Exception as err:
+            _LOGGER.exception(
+                "Pairing met GeurBot %s mislukt",
+                device_id,
+            )
+
+            return self.json(
+                {
+                    "success": False,
+                    "error": str(err),
+                },
+                status_code=500,
+            )
