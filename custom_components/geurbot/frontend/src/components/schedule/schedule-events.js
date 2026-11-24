@@ -34,34 +34,53 @@ function loadScheduleEvents() {
 
 }
 
+
 async function saveScheduleEvents(deviceId = selectedDeviceId) {
     const device = getDevice(deviceId);
 
-    if (!device) return;
+    if (!device) {
+        throw new Error("Geen apparaat geselecteerd");
+    }
 
-    device.fragrances.forEach(fragrance => {
-        fragrance.schedule = scheduleEvents
+    if (!Array.isArray(device.fragrances)) {
+        throw new Error("De geurgegevens van dit apparaat ontbreken");
+    }
+
+    // Maak eerst een kopie, zodat we de bestaande gegevens
+    // niet aanpassen voordat de opslag gelukt is.
+    const updatedFragrances = device.fragrances.map(fragrance => ({
+        ...fragrance,
+        schedule: scheduleEvents
             .filter(event =>
                 String(event.deviceId) === String(device.id) &&
-                event.fragranceMac === fragrance.mac_address
+                String(event.fragranceMac) === String(fragrance.mac_address)
             )
             .map(({ id, time, sprays, days }) => ({
                 id,
                 time,
                 sprays,
-                days
-            }));
-    });
+                days: [...days]
+            }))
+    }));
 
     try {
         const result = await updateBackendDeviceFragrances(
             device.id,
-            device.fragrances
+            updatedFragrances
         );
 
-        if (!result.success) {
-            throw new Error(result.error || "Planning opslaan mislukt");
+        if (!result || result.success !== true) {
+            throw new Error(
+                result?.error || "Backend heeft de planning niet opgeslagen"
+            );
         }
+
+        // Pas de lokale gegevens pas aan na succesvolle opslag.
+        device.fragrances = updatedFragrances;
+
+        console.info("[SCHEDULE] Planning succesvol opgeslagen");
+
+        return true;
 
     } catch (error) {
         console.error("[SCHEDULE] Opslaan mislukt:", error);
@@ -195,7 +214,17 @@ function populateFragrances(deviceId, selectedMac = "") {
 
     if (selectedMac) select.value = selectedMac;
 }
+function generateScheduleEventId() {
+    if (globalThis.crypto?.randomUUID) {
+        return globalThis.crypto.randomUUID();
+    }
 
+    // Fallback voor browsers zonder randomUUID().
+    return "schedule-" +
+        Date.now().toString(36) +
+        "-" +
+        Math.random().toString(36).substring(2, 12);
+}
 function getFragranceColor(name) {
     const normalized = (name || "").trim().toLowerCase();
     let hash = 0;
@@ -742,7 +771,7 @@ export function initializeScheduleEvents() {
         if (!device || !fragrance || !time || sprays < 1 || days.length === 0) return;
 
         const eventData = {
-            id: editingEventId ?? crypto.randomUUID(),
+            id: editingEventId ?? generateScheduleEventId(),
             deviceId: String(device.id),
             deviceName: device.name,
             fragranceMac,

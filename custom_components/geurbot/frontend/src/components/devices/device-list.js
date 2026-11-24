@@ -148,7 +148,7 @@ export function renderDevices(container) {
 // APPARAAT VOLLEDIG VERWIJDEREN
 // ==================================================
 
-export function removeDeviceFromDashboard(deviceId) {
+export async function removeDeviceFromDashboard(deviceId) {
     if (!deviceId) return;
 
     const id = String(deviceId);
@@ -197,6 +197,8 @@ export function removeDeviceFromDashboard(deviceId) {
         detail: { deviceId: id }
     }));
 }
+
+
 
 // ==================================================
 // APPARATEN OPHALEN

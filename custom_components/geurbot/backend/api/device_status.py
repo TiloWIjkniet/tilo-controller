@@ -260,6 +260,7 @@ async def restart_device(request, device_manager):
     return web.json_response(result["data"])
 
 
+
 async def unpair_device(request, device_manager):
     device_id = request.match_info["device_id"]
     device = device_manager.get_device(device_id)
@@ -296,8 +297,18 @@ async def unpair_device(request, device_manager):
             status=502
         )
 
+    # Verwijderen uit de RAM van Home Assistant.
     device_manager.remove_device(device_id)
-    return web.json_response(result["data"])
+
+    # Wijziging opslaan in de persistente opslag.
+    await device_manager.async_save()
+
+    print(f"[DEVICES] Apparaat {device_id} ontkoppeld en verwijderd.")
+
+    return web.json_response({
+        "success": True,
+        "message": "Device successfully unpaired and removed"
+    })
 
 
 async def factory_reset_device(request, device_manager):
@@ -335,7 +346,15 @@ async def factory_reset_device(request, device_manager):
             },
             status=502
         )
+
+    # Verwijderen uit de RAM van Home Assistant.
     device_manager.remove_device(device_id)
+
+    # Wijziging opslaan in de persistente opslag.
+    await device_manager.async_save()
+
+    print(f"[DEVICES] Apparaat {device_id} factory reset en verwijderd.")
+
     return web.json_response(
         result["data"],
         status=result.get("status") or 200
