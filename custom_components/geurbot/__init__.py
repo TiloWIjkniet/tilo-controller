@@ -6,7 +6,7 @@ import json
 import hashlib
 from copy import deepcopy
 from pathlib import Path
-from backend.api.system_view import GeurBotSystemView
+
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -24,6 +24,8 @@ from .backend.api.notification_settings import (
     merge_settings,
     validate_settings,
 )
+
+from .backend.api.system_view import GeurBotSystemView
 from .backend.notification.notifications import notification_manager
 from .backend.automations.fragrance_monitor import FragranceMonitor
 from .backend.automations.schedule_runner import ScheduleRunner

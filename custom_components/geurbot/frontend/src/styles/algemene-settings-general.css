@@ -1162,3 +1162,15 @@
 #system-action-message.error {
     color: var(--error-color, #d9534f);
 }
+
+.settings-panel {
+    display: none;
+}
+
+.settings-panel.active {
+    display: block;
+}
+
+.settings-tab.active {
+    /* Je bestaande actieve tab styling */
+}
