@@ -1,4 +1,3 @@
-
 class GeurBotPanel extends HTMLElement {
     constructor() {
         super();
@@ -6,6 +5,7 @@ class GeurBotPanel extends HTMLElement {
         this._hass = null;
         this._iframe = null;
         this._resizeObserver = null;
+        this._lastSentToken = null; // Hier toevoegen
 
         this.attachShadow({ mode: "open" });
     }
@@ -123,6 +123,13 @@ class GeurBotPanel extends HTMLElement {
             return;
         }
 
+        // Voorkom dat hetzelfde token steeds opnieuw wordt verstuurd.
+        if (token === this._lastSentToken) {
+            return;
+        }
+
+        this._lastSentToken = token;
+
         this._iframe.contentWindow.postMessage(
             {
                 type: "geurbot-auth",
@@ -130,6 +137,8 @@ class GeurBotPanel extends HTMLElement {
             },
             window.location.origin
         );
+
+        console.log("[GeurBot] Nieuw authenticatietoken verstuurd");
     }
 }
 
