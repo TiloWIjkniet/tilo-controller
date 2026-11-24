@@ -274,7 +274,6 @@ app.addEventListener("click", async event => {
 
         selectedDevice.fragrances = device.fragrances;
 
-        console.log(`[FRAGRANCES] Geur ${macAddress} verwijderd uit frontend`);
 
         renderFragrances(app);
 

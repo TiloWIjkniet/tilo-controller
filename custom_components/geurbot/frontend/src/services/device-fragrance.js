@@ -120,7 +120,7 @@ export async function fetchFragranceSprayLog(deviceId, macAddress) {
 }
 
 export async function updateBackendDeviceFragrances(deviceId, fragrances) {
-    console.log(`[BACKEND] Geuren opslaan voor ${deviceId}:`, fragrances);
+
 
     const response = await fetch(
         `/api/geurbot/devices/${encodeURIComponent(deviceId)}/fragrance/backend/update`,
@@ -136,8 +136,6 @@ export async function updateBackendDeviceFragrances(deviceId, fragrances) {
 
     const rawResponse = await response.text();
 
-    console.log("[BACKEND] HTTP status:", response.status);
-    console.log("[BACKEND] Ruwe response:", rawResponse);
 
     let result;
 
@@ -153,13 +151,11 @@ export async function updateBackendDeviceFragrances(deviceId, fragrances) {
         throw new Error(result.error || "Backend fragrances opslaan mislukt");
     }
 
-    console.log(`[BACKEND] Geuren succesvol opgeslagen voor ${deviceId}:`, result);
 
     return result;
 }
 
 export async function deleteBackendDeviceFragrance(deviceId, macAddress) {
-    console.log(`[BACKEND] Geur verwijderen: ${macAddress}`);
 
     const response = await fetch(
         `/api/geurbot/devices/${encodeURIComponent(deviceId)}/fragrance/backend/${encodeURIComponent(macAddress)}`,
@@ -174,7 +170,6 @@ export async function deleteBackendDeviceFragrance(deviceId, macAddress) {
     if (!response.ok)
         throw new Error(result.error || "Geur verwijderen mislukt");
 
-    console.log(`[BACKEND] Geur ${macAddress} verwijderd`);
 
     return result;
 }
