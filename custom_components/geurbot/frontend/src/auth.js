@@ -1,78 +1,137 @@
 
-// Home Assistant authenticatie voor de GeurBot-frontend.
+ // Home Assistant-authenticatie voor de GeurBot-frontend.
 
 let accessToken = null;
 
 const homeAssistantOrigin = window.location.origin;
 const isEmbedded = window.parent !== window;
 
-// Wacht totdat het Home Assistant-token ontvangen is.
+let resolveAuthReady;
+
 export const geurbotAuthReady = new Promise((resolve) => {
+    resolveAuthReady = resolve;
+
     if (!isEmbedded) {
         // Ontwikkelomgeving zonder Home Assistant.
         resolve(true);
+    }
+});
+
+function requestAuthToken() {
+    if (!isEmbedded) return;
+
+    window.parent.postMessage(
+        {
+            type: "geurbot-auth-request"
+        },
+        homeAssistantOrigin
+    );
+}
+
+function handleAuthMessage(event) {
+    if (
+        event.source !== window.parent ||
+        event.origin !== homeAssistantOrigin ||
+        event.data?.type !== "geurbot-auth" ||
+        typeof event.data.token !== "string" ||
+        !event.data.token
+    ) {
         return;
     }
 
-    const handleAuthMessage = (event) => {
-        if (
-            event.source !== window.parent ||
-            event.origin !== homeAssistantOrigin ||
-            event.data?.type !== "geurbot-auth" ||
-            typeof event.data.token !== "string" ||
-            !event.data.token
-        ) {
-            return;
-        }
+    // Het actuele token altijd overschrijven.
 
-        // Vervang altijd het oude token door het nieuwste token.
-        accessToken = event.data.token;
+    accessToken = event.data.token;
 
-        console.log("[GeurBot Auth] Home Assistant-token ontvangen.");
+    console.log("[GeurBot Auth] Token ontvangen door iframe:", {
+    lengte: accessToken.length,
+    laatsteTekens: accessToken.slice(-6)});
 
-        resolve(true);
-    };
 
+    resolveAuthReady(true);
+}
+
+if (isEmbedded) {
     window.addEventListener("message", handleAuthMessage);
-});
+
+    // Vraag expliciet om het actuele token.
+    requestAuthToken();
+}
 
 // Bewaar de oorspronkelijke fetch-functie.
+
+console.log("[GeurBot Auth] Token gebruikt voor request:", {
+    lengte: accessToken?.length,
+    laatsteTekens: accessToken?.slice(-6),
+    url: url.pathname
+});
 const originalFetch = window.fetch.bind(window);
 
-// Voeg automatisch authenticatie toe aan Home Assistant-aanvragen.
-window.fetch = (input, init = {}) => {
+// Authenticatie toevoegen aan Home Assistant-aanvragen.
+window.fetch = async (input, init = {}) => {
     const requestUrl = input instanceof Request
         ? input.url
         : String(input);
 
     const url = new URL(requestUrl, window.location.href);
 
-    // Behoud headers uit zowel Request als fetch-opties.
+    // Andere origins niet aanpassen.
+    if (url.origin !== homeAssistantOrigin) {
+        return originalFetch(input, init);
+    }
+
+    // Headers uit de bestaande Request behouden.
     const headers = new Headers(
-        input instanceof Request ? input.headers : undefined
+        input instanceof Request
+            ? input.headers
+            : undefined
     );
 
-    new Headers(init.headers).forEach((value, key) => {
-        headers.set(key, value);
-    });
+    // Headers uit fetch-opties overnemen.
+    if (init.headers) {
+        new Headers(init.headers).forEach((value, key) => {
+            headers.set(key, value);
+        });
+    }
+
+    // Alleen het HA-token toevoegen als het beschikbaar is.
+    if (accessToken) {
+        headers.set(
+            "Authorization",
+            `Bearer ${accessToken}`
+        );
+    } else {
+        console.warn(
+            "[GeurBot Auth] HA-token ontbreekt voor:",
+            url.pathname
+        );
+    }
 
     const fetchOptions = {
         ...init,
-        headers
+        headers,
+        credentials: init.credentials ?? "same-origin"
     };
 
-    // Alleen Home Assistant-aanvragen voorzien van het HA-token.
-    if (url.origin === homeAssistantOrigin) {
-        if (accessToken) {
-            headers.set(
-                "Authorization",
-                `Bearer ${accessToken}`
-            );
-        }
+    const response = await originalFetch(
+        input,
+        fetchOptions
+    );
 
-        fetchOptions.credentials = "same-origin";
+    // Veilige diagnostiek, zonder token te loggen.
+    if (
+        response.status === 401 ||
+        response.status === 403
+    ) {
+        console.error(
+            "[GeurBot Auth] HTTP-authenticatiefout:",
+            {
+                status: response.status,
+                url: url.pathname,
+                tokenAvailable: Boolean(accessToken)
+            }
+        );
     }
 
-    return originalFetch(input, fetchOptions);
+    return response;
 };
- 

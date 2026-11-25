@@ -105,11 +105,10 @@ async function refreshFragranceStatus() {
 initializeScheduleEvents();
 startScheduleClock();
 refreshNetworkStatus();
-refreshFirmwareStatus();
 updateFragranceIcons();
 
-setInterval(refreshNetworkStatus, 60000);
-setInterval(refreshFragranceStatus, 30000);
+setInterval(refreshNetworkStatus, 60 * 1000);
+setInterval(refreshFragranceStatus, 30 * 1000);
 
 let firmwareInterval = null;
 let firmwarePolling = false;
