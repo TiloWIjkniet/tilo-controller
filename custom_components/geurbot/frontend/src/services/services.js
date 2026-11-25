@@ -1,10 +1,15 @@
 const API_BASE = "/api/geurbot/devices";
 
+
 async function requestJson(deviceId, endpoint) {
     const url = `${API_BASE}/${encodeURIComponent(deviceId)}${endpoint}`;
 
     const response = await fetch(url, {
-        credentials: "same-origin"
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+            "Accept": "application/json"
+        }
     });
 
     const raw = await response.text();
@@ -14,15 +19,20 @@ async function requestJson(deviceId, endpoint) {
     try {
         data = raw ? JSON.parse(raw) : {};
     } catch {
-        throw new Error(`Ongeldige JSON van ${url}: ${raw}`);
+        throw new Error(
+            `Ongeldige JSON van ${url}: HTTP ${response.status}: ${raw}`
+        );
     }
 
     if (!response.ok) {
-        throw new Error(`API HTTP ${response.status}: ${raw}`);
+        throw new Error(
+            `API HTTP ${response.status}: ${data.message || data.error || raw}`
+        );
     }
 
     return data;
 }
+
 
 export function fetchDeviceNetworkStatus(deviceId) {
     return requestJson(deviceId, "/network/status");

@@ -13,7 +13,7 @@ class GeurBotPanel extends HTMLElement {
     // Home Assistant levert hier zijn actuele frontend-object aan.
     set hass(hass) {
         this._hass = hass;
-        console.log("[GeurBot] hass bijgewerkt");
+      //  console.log("[GeurBot] hass bijgewerkt");
         this._sendAuth();
     }
 
