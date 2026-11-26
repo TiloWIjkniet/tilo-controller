@@ -540,7 +540,7 @@ notification_manager = NotificationManager()
 # HOME ASSISTANT NOTIFICATIES VERZENDEN
 # ==================================================
 
-async def send_ha_notification(
+async def  send_notification(
     hass,
     notification_type,
     title,
@@ -569,13 +569,14 @@ async def send_ha_notification(
                 "notify",
                 "send_message",
                 {
-                    "entity_id": entity_id,
                     "title": title,
                     "message": message
                 },
+                target={
+                    "entity_id": entity_id
+                },
                 blocking=True
             )
-
             successful_destinations.append(entity_id)
 
         except Exception as error:

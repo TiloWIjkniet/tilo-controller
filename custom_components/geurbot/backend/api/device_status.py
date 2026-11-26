@@ -41,26 +41,6 @@ async def get_firmware_info(request, device_manager):
     return web.json_response(result["data"])
 
 
-async def get_device_fragrance_status(request, device_manager):
-    device_id = request.match_info["device_id"]
-    device = device_manager.get_device(device_id)
-
-    if not device:
-        return web.json_response(
-            {"success": False, "error": "Device not found"},
-            status=404
-        )
-
-    result = await get_data(device, "/api/device/modules-health")
-
-    if not result["success"]:
-        return web.json_response(
-            {"success": False, "error": result.get("error") or "Could not retrieve device status"},
-            status=502
-        )
-
-    return web.json_response(result["data"])
-
 async def get_device_diagnostics(request, device_manager):
 
     print("DIAGNOSTICS ROUTE AANGEROEPEN")
