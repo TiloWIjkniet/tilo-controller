@@ -415,13 +415,6 @@ def create_app(hass):
         update_notification_settings
     )
 
-    app.router.add_get(
-        "/api/notifications/targets",
-        get_notification_targets_api
-    )
-    return app
-
-
 print("[DEBUG] update_backend_device_fragrances:", update_backend_device_fragrances)
 if __name__ == "__main__":
     web.run_app(create_app(), host="127.0.0.1", port=8000)

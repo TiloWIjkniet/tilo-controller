@@ -33,7 +33,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 from .backend.communication.esp_client import set_shared_session
-from .views import GeurBotApiView, GeurBotRootApiView, GeurBotDevicesAddView
+from .views import GeurBotApiView, GeurBotRootApiView, GeurBotDevicesAddView, GeurBotNotificationTargetsView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.http.register_view(GeurBotRootApiView())
     hass.http.register_view(GeurBotDevicesAddView())
     hass.http.register_view(GeurBotSystemView())
-    
+    hass.http.register_view(GeurBotNotificationTargetsView())
     return True
 
 

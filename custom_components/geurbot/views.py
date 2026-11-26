@@ -13,7 +13,7 @@ from .const import DOMAIN
 from .backend.api import device_status
 from .backend.api.api_terminal import api_terminal_request
 from .backend.api.notification_settings import DEFAULT_NOTIFICATION_SETTINGS, merge_settings, validate_settings
-
+from .backend.notification.notification_targets import get_notification_targets
 
 class RequestShim:
     """Expose the small aiohttp request interface used by legacy handlers."""
@@ -152,7 +152,22 @@ class GeurBotRootApiView(HomeAssistantView):
         except (ValueError, TypeError, KeyError) as err:
             return self.json({"success": False, "error": str(err)}, status_code=400)
 
+class GeurBotNotificationTargetsView(HomeAssistantView):
+    """Return available Home Assistant notification targets."""
 
+    url = "/api/notifications/targets"
+    name = "api:geurbot:notification_targets"
+    requires_auth = True
+
+    async def get(self, request):
+        hass = request.app[KEY_HASS]
+
+        targets = await get_notification_targets(hass)
+
+        return self.json({
+            "success": True,
+            "targets": targets
+        })
 
 class GeurBotDevicesAddView(HomeAssistantView):
     """Pair a discovered GeurBot device with Home Assistant."""
