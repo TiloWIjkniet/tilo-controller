@@ -471,19 +471,36 @@ class NotificationManager:
                 + message
             )
 
+      
         # ----------------------------------------------
         # VERZENDEN
         # ----------------------------------------------
 
         if self.handler:
             try:
-                await self.handler(
+                result = await self.handler(
                     notification_type=notification_type,
                     title=group["title"],
                     message=message,
                     device_id=group["device_id"],
                     details=group["details"]
                 )
+
+                if result is False:
+                    print(
+                        "[NOTIFICATIONS] Niet alle bestemmingen "
+                        "hebben de melding ontvangen"
+                    )
+
+                    async with self.lock:
+                        key = (
+                            notification_type,
+                            group["device_id"]
+                        )
+
+                        self.pending[key] = group
+
+                    return
 
             except Exception as error:
                 print(
@@ -502,18 +519,9 @@ class NotificationManager:
                 return
 
         else:
-            print("\n========== NOTIFICATION ==========")
-            print(f"Type: {notification_type}")
-            print(f"Titel: {group['title']}")
-            print(f"Bericht:\n{message}")
-            print(f"Apparaat: {group['device_id']}")
-            print(f"Details: {group['details']}")
-            print("==================================\n")
-
             print(
                 "[NOTIFICATIONS] Geen notificatie-handler ingesteld"
             )
-
             return
 
         # ----------------------------------------------
@@ -529,6 +537,7 @@ class NotificationManager:
         await self._persist_state()
 
 
+
 # ==================================================
 # GLOBALE NOTIFICATION MANAGER
 # ==================================================
@@ -540,7 +549,13 @@ notification_manager = NotificationManager()
 # HOME ASSISTANT NOTIFICATIES VERZENDEN
 # ==================================================
 
-async def  send_notification(
+
+
+# ==================================================
+# HOME ASSISTANT NOTIFICATIES VERZENDEN
+# ==================================================
+
+async def send_notification(
     hass,
     notification_type,
     title,
@@ -548,36 +563,84 @@ async def  send_notification(
     device_id=None,
     details=None
 ):
-    """Send notification to all selected Home Assistant targets."""
+    """Send a notification to all selected HA targets."""
 
     settings = load_settings()
 
     destinations = settings.get("destinations", [])
 
-    notification_id = (
-        f"geurbot_{notification_type.replace('.', '_')}_"
-        f"{device_id or 'general'}"
-    )
+    if not destinations:
+        print(
+            "[NOTIFICATIONS] Geen bestemmingen geselecteerd"
+        )
+        return False
 
     successful_destinations = []
     failed_destinations = []
 
     for entity_id in destinations:
 
+        if not isinstance(entity_id, str):
+            failed_destinations.append(str(entity_id))
+            continue
+
+        if not entity_id.startswith("notify."):
+            failed_destinations.append(entity_id)
+            continue
+
         try:
-            await hass.services.async_call(
-                "notify",
-                "send_message",
-                {
-                    "title": title,
-                    "message": message
-                },
-                target={
-                    "entity_id": entity_id
-                },
-                blocking=True
-            )
+            # ------------------------------------------
+            # MODERNE NOTIFY-ENTITEIT
+            # ------------------------------------------
+
+            state = hass.states.get(entity_id)
+
+            if state is not None:
+                await hass.services.async_call(
+                    "notify",
+                    "send_message",
+                    {
+                        "title": title,
+                        "message": message
+                    },
+                    target={
+                        "entity_id": entity_id
+                    },
+                    blocking=True
+                )
+
+            # ------------------------------------------
+            # OUDE NOTIFY-SERVICE
+            # ------------------------------------------
+
+            else:
+                service_name = entity_id.removeprefix(
+                    "notify."
+                )
+
+                if not hass.services.has_service(
+                    "notify",
+                    service_name
+                ):
+                    raise RuntimeError(
+                        f"Notify-service bestaat niet: {service_name}"
+                    )
+
+                await hass.services.async_call(
+                    "notify",
+                    service_name,
+                    {
+                        "title": title,
+                        "message": message
+                    },
+                    blocking=True
+                )
+
             successful_destinations.append(entity_id)
+
+            print(
+                f"[NOTIFICATIONS] Verzonden naar {entity_id}"
+            )
 
         except Exception as error:
             failed_destinations.append(entity_id)
@@ -588,38 +651,25 @@ async def  send_notification(
             )
 
     # ----------------------------------------------
-    # MINSTENS ÉÉN BESTEMMING GELUKT
+    # RESULTAAT
     # ----------------------------------------------
+
+    if failed_destinations:
+        print(
+            "[NOTIFICATIONS] Mislukte bestemmingen:",
+            ", ".join(failed_destinations)
+        )
 
     if successful_destinations:
         print(
-            "[NOTIFICATIONS] Verstuurd naar:",
+            "[NOTIFICATIONS] Succesvol verzonden:",
             ", ".join(successful_destinations)
         )
 
-        if failed_destinations:
-            print(
-                "[NOTIFICATIONS] Niet gelukt voor:",
-                ", ".join(failed_destinations)
-            )
+    # Alleen True als iedere geselecteerde bestemming
+    # succesvol een bericht heeft ontvangen.
 
-        return
-
-    # ----------------------------------------------
-    # FALLBACK
-    # ----------------------------------------------
-
-    await hass.services.async_call(
-        "persistent_notification",
-        "create",
-        {
-            "title": title,
-            "message": message,
-            "notification_id": notification_id
-        },
-        blocking=True
-    )
-
-    print(
-        "[NOTIFICATIONS] Persistent notification gebruikt als fallback"
+    return (
+        len(successful_destinations) == len(destinations)
+        and len(failed_destinations) == 0
     )

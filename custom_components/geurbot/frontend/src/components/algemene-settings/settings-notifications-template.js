@@ -44,6 +44,7 @@ export function createNotificationsTemplate() {
                             </small>
                         </div>
 
+   
                         <div
                             id="notification-destinations"
                             class="notification-destinations-list">
@@ -59,6 +60,7 @@ export function createNotificationsTemplate() {
                             class="notification-destinations-status">
                             Bestemmingen laden...
                         </small>
+
 
                     </div>
 

@@ -1293,3 +1293,101 @@
     font-size: 13px;
     padding: 12px;
 }
+
+
+.notification-destination-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.notification-destination-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--divider-color);
+    border-radius: 10px;
+    cursor: pointer;
+    list-style: none;
+    background: var(--card-background-color);
+}
+
+.notification-destination-trigger::-webkit-details-marker {
+    display: none;
+}
+
+.notification-destination-trigger > span:first-child {
+    font-weight: 500;
+}
+
+.notification-destination-count {
+    margin-left: auto;
+    font-size: 0.85em;
+    color: var(--secondary-text-color);
+}
+
+.notification-destination-dropdown[open]
+.notification-destination-trigger {
+    border-radius: 10px 10px 0 0;
+}
+
+.notification-destination-dropdown-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 6px 12px;
+    border: 1px solid var(--divider-color);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    background: var(--card-background-color);
+}
+
+.notification-destination-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px;
+    cursor: pointer;
+}
+
+.notification-destination-option + 
+.notification-destination-option {
+    border-top: 1px solid var(--divider-color);
+}
+
+.notification-destination-option input {
+    flex-shrink: 0;
+}
+
+.notification-destination-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.notification-destination-name {
+    font-weight: 500;
+}
+
+.notification-destination-info small {
+    color: var(--secondary-text-color);
+    overflow-wrap: anywhere;
+}
+
+.notification-destination-option.unavailable {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.notification-destination-dropdown-trigger svg {
+    transition: transform 0.2s ease;
+}
+
+.notification-destination-dropdown[open]
+.notification-destination-trigger svg {
+    transform: rotate(180deg);
+}

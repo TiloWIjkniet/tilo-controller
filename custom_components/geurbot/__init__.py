@@ -1,23 +1,27 @@
+
 """Home Assistant integration for GeurBot devices."""
 from __future__ import annotations
 
-import logging
-import json
 import hashlib
+import json
+import logging
 from copy import deepcopy
 from pathlib import Path
-
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components import frontend, panel_custom
+from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, PLATFORMS, PANEL_TITLE, PANEL_ICON
 from .storage import GeurBotStore
 from .api import async_register_services
 from .coordinator import GeurBotCoordinator
 from .backend.core.device_manager import DeviceManager
+
 from .backend.api.notification_settings import (
     set_settings_provider,
     DEFAULT_NOTIFICATION_SETTINGS,
@@ -26,39 +30,59 @@ from .backend.api.notification_settings import (
 )
 
 from .backend.api.system_view import GeurBotSystemView
-from .backend.notification.notifications import notification_manager
+
+from .backend.notification.notifications import (
+    notification_manager,
+    send_notification,
+)
+
 from .backend.automations.fragrance_monitor import FragranceMonitor
 from .backend.automations.schedule_runner import ScheduleRunner
-from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import dt as dt_util
 from .backend.communication.esp_client import set_shared_session
-from .views import GeurBotApiView, GeurBotRootApiView, GeurBotDevicesAddView, GeurBotNotificationTargetsView
+
+from .views import (
+    GeurBotApiView,
+    GeurBotRootApiView,
+    GeurBotDevicesAddView,
+    GeurBotNotificationTargetsView,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up routes and services once for this HA instance."""
+
     async_register_services(hass)
+
     hass.http.register_view(GeurBotApiView())
     hass.http.register_view(GeurBotRootApiView())
     hass.http.register_view(GeurBotDevicesAddView())
     hass.http.register_view(GeurBotSystemView())
     hass.http.register_view(GeurBotNotificationTargetsView())
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
     """Set up GeurBot from a config entry."""
 
-    # Persistent storage laden
+    # ==================================================
+    # PERSISTENTE OPSLAG LADEN
+    # ==================================================
+
     store = GeurBotStore(hass)
     stored = await store.async_load()
 
     set_shared_session(async_get_clientsession(hass))
 
-    # Device manager initialiseren
+    # ==================================================
+    # DEVICE MANAGER INITIALISEREN
+    # ==================================================
+
     manager = DeviceManager()
 
     # Opgeslagen apparaten herstellen
@@ -77,13 +101,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN] = runtime
 
-    # Coordinators voor bestaande apparaten aanmaken
+    # ==================================================
+    # COORDINATORS VOOR BESTAANDE APPARATEN
+    # ==================================================
+
     for device_id, device in manager.registry.devices.items():
         coordinator = GeurBotCoordinator(hass, device)
         runtime["coordinators"][device_id] = coordinator
 
         try:
             await coordinator.async_config_entry_first_refresh()
+
         except UpdateFailed as err:
             _LOGGER.warning(
                 "GeurBot %s is momenteel niet bereikbaar: %s",
@@ -91,14 +119,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 err,
             )
 
-    # Centrale opslagfunctie voor apparaten
+    # ==================================================
+    # APPARAATOPSLAG
+    # ==================================================
+
     async def persist_devices() -> None:
         await store.async_save_devices(manager.get_devices())
 
-    # DeviceManager kan deze functie aanroepen na wijzigingen
     manager.on_devices_changed = persist_devices
 
-    # Nieuw ontdekte apparaten verwerken
+    # ==================================================
+    # NIEUWE APPARATEN VERWERKEN
+    # ==================================================
+
     async def handle_device_found(device):
         await persist_devices()
 
@@ -116,8 +149,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     manager.on_device_found = handle_device_found
 
-    # Notificatie-instellingen herstellen of migreren
+    # ==================================================
+    # NOTIFICATIE-INSTELLINGEN HERSTELLEN OF MIGREREN
+    # ==================================================
+
     if store.data.get("notification_settings") is None:
+
         legacy_file = (
             Path(__file__).parent
             / "backend"
@@ -146,69 +183,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             validate_settings(settings)
+
         except (ValueError, TypeError, KeyError):
             settings = deepcopy(DEFAULT_NOTIFICATION_SETTINGS)
 
         store.data["notification_settings"] = settings
         await store.async_save()
 
+    # Instellingen beschikbaar maken voor de notificatiebackend
     set_settings_provider(
         lambda: store.data.get("notification_settings")
         or DEFAULT_NOTIFICATION_SETTINGS
     )
 
-    # Notificaties verwerken
+    # ==================================================
+    # NOTIFICATIES VERWERKEN
+    # ==================================================
+
     async def notification_handler(**notification):
-        title = notification.get("title", "GeurBot")
-        message = notification.get("message", "")
+        """Verstuur notificaties via de geselecteerde bestemmingen."""
 
-        notification_id = (
-            f"geurbot_{notification.get('type', 'event').replace('.', '_')}_"
-            f"{notification.get('device_id') or 'general'}"
+        return await send_notification(
+            hass,
+            notification_type=notification.get(
+                "notification_type",
+                "event",
+            ),
+            title=notification.get("title", "GeurBot"),
+            message=notification.get("message", ""),
+            device_id=notification.get("device_id"),
+            details=notification.get("details"),
         )
 
-        notify_service = entry.data.get("notify_service", "").strip()
-
-        if notify_service and "." in notify_service:
-            notify_domain, notify_name = notify_service.split(".", 1)
-
-            try:
-                await hass.services.async_call(
-                    notify_domain,
-                    notify_name,
-                    {
-                        "title": title,
-                        "message": message,
-                    },
-                    blocking=True,
-                )
-                return
-
-            except Exception as err:
-                _LOGGER.warning(
-                    "GeurBot notify-service mislukt; "
-                    "persistent notification als fallback: %s",
-                    err,
-                )
-
-        await hass.services.async_call(
-            "persistent_notification",
-            "create",
-            {
-                "title": title,
-                "message": message,
-                "notification_id": notification_id,
-            },
-            blocking=True,
-        )
-
+    # Handler koppelen aan de notificatiemanager
     notification_manager.set_handler(notification_handler)
+
+    # Home Assistant-tijd gebruiken
     notification_manager.set_now_provider(dt_util.now)
+
+    # Eerder opgeslagen notificatiestatus herstellen
     notification_manager.restore_state(
         store.data.get("notification_state")
     )
 
-    # Notificatiestatus opslaan
+    # ==================================================
+    # NOTIFICATIESTATUS OPSLAAN
+    # ==================================================
+
     async def persist_notification_state(state):
         store.data["notification_state"] = state
         await store.async_save()
@@ -217,12 +238,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         persist_notification_state
     )
 
+    # Notificatiemanager starten
     await notification_manager.start()
 
-    # Fragrance monitor initialiseren
+    # ==================================================
+    # FRAGRANCE MONITOR INITIALISEREN
+    # ==================================================
+
     fragrance_monitor = FragranceMonitor(manager)
 
-    # Opgeslagen schema-uitvoeringen herstellen
+    # ==================================================
+    # OPGESLAGEN SCHEMA-UITVOERINGEN HERSTELLEN
+    # ==================================================
+
     stored_schedule_keys = [
         tuple(item)
         for item in store.data.get("metadata", {}).get(
@@ -232,7 +260,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if isinstance(item, list) and len(item) == 3
     ]
 
-    # Schema-status opslaan
+    # ==================================================
+    # SCHEMASTATUS OPSLAAN
+    # ==================================================
+
     async def persist_schedule_state(executed):
         store.data.setdefault("metadata", {})[
             "schedule_last_executed"
@@ -250,21 +281,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         on_state_changed=persist_schedule_state,
     )
 
+    # Achtergrondprocessen starten
     await fragrance_monitor.start()
     await schedule_runner.start()
 
-    # Achtergrondtaken stoppen bij unload
+    # ==================================================
+    # ACHTERGRONDTaken STOPPEN BIJ UNLOAD
+    # ==================================================
+
     async def stop_background_tasks():
         await fragrance_monitor.stop()
         await schedule_runner.stop()
         await notification_manager.stop()
 
     entry.async_on_unload(stop_background_tasks)
+
     entry.async_on_unload(
         entry.add_update_listener(async_reload_entry)
     )
 
-    # Frontendbestanden beschikbaar maken
+    # ==================================================
+    # FRONTENDBESTANDEN BESCHIKBAAR MAKEN
+    # ==================================================
+
     frontend_dir = Path(__file__).parent / "frontend"
     panel_file = frontend_dir / "panel.js"
 
@@ -280,6 +319,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     panel_module_url = f"/geurbot_panel.js?v={panel_hash}"
 
     if not hass.data.get(f"{DOMAIN}_static_registered"):
+
         try:
             await hass.http.async_register_static_paths([
                 StaticPathConfig(
@@ -298,13 +338,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         except (OSError, ValueError, RuntimeError) as err:
             _LOGGER.error(
-                "GeurBot frontend/paneelbestanden konden niet worden gepubliceerd: %s",
+                "GeurBot frontend/paneelbestanden konden niet "
+                "worden gepubliceerd: %s",
                 err,
             )
             raise
 
-    # GeurBot als Home Assistant-zijpaneel registreren
+    # ==================================================
+    # GEURBOT ZIJPANEEL REGISTREREN
+    # ==================================================
+
     if not hass.data.get(f"{DOMAIN}_panel_registered"):
+
         await panel_custom.async_register_panel(
             hass,
             webcomponent_name="ha-panel-geurbot",
@@ -322,6 +367,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "GeurBot-zijpaneel geregistreerd via %s",
             panel_module_url,
         )
+
+    # ==================================================
+    # PLATFORMS LADEN
+    # ==================================================
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
@@ -343,6 +392,7 @@ async def async_unload_entry(
     )
 
     if unload_ok:
+
         runtime = hass.data.pop(DOMAIN, None)
 
         if runtime:
@@ -361,4 +411,5 @@ async def async_reload_entry(
     entry: ConfigEntry,
 ) -> None:
     """Reload the integration."""
+
     await hass.config_entries.async_reload(entry.entry_id)

@@ -1,3 +1,4 @@
+
 """Home Assistant notification targets."""
 
 from homeassistant.core import HomeAssistant
@@ -6,25 +7,61 @@ from homeassistant.core import HomeAssistant
 async def get_notification_targets(
     hass: HomeAssistant
 ) -> list[dict]:
-    """Return available Home Assistant notification targets."""
+    """Return modern notify entities and legacy notify services."""
 
-    targets = []
-
+    targets = {}
     services = hass.services.async_services()
     notify_services = services.get("notify", {})
 
+    # --------------------------------------------------
+    # MODERNE NOTIFY-ENTITEITEN
+    # --------------------------------------------------
+
+    for state in hass.states.async_all("notify"):
+        entity_id = state.entity_id
+
+        targets[entity_id] = {
+            "entity_id": entity_id,
+            "name": state.attributes.get(
+                "friendly_name",
+                entity_id
+            ),
+            "available": state.state not in {
+                "unavailable",
+                "unknown"
+            },
+            "target_type": "entity"
+        }
+
+    # --------------------------------------------------
+    # OUDE NOTIFY-SERVICES
+    # --------------------------------------------------
+
     for service_name in notify_services:
-        # Dit is de algemene service, geen afzonderlijke bestemming.
-        if service_name in {"send_message", "reload"}:
+        if service_name in {
+            "send_message",
+            "reload",
+            "notify"
+        }:
             continue
 
-        # Maak van mobile_app_tilos_phone bijvoorbeeld Tilos Phone.
-        name = service_name.replace("_", " ").strip().title()
+        entity_id = f"notify.{service_name}"
 
-        targets.append({
-            "entity_id": f"notify.{service_name}",
-            "name": name,
-            "available": True
-        })
+        # Een moderne notify-entiteit heeft voorrang
+        # als dezelfde ID al bestaat.
+        if entity_id in targets:
+            continue
 
-    return targets
+        targets[entity_id] = {
+            "entity_id": entity_id,
+            "name": service_name.replace(
+                "_", " "
+            ).strip().title(),
+            "available": True,
+            "target_type": "service"
+        }
+
+    return sorted(
+        targets.values(),
+        key=lambda target: target["name"].lower()
+    )

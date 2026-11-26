@@ -329,6 +329,25 @@ export function updateNotificationSettings(path, value) {
 // HTML-TEKST VEILIG MAKEN
 // ==================================================
 
+// ==================================================
+// TIJDSDUUR WEERGEVEN
+// ==================================================
+
+function formatNotificationDuration(totalMinutes) {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours === 0) {
+        return `${minutes} minuten`;
+    }
+
+    if (minutes === 0) {
+        return `${hours} uur`;
+    }
+
+    return `${hours} uur en ${minutes} minuten`;
+}
+
 function escapeNotificationHTML(value) {
     return String(value).replace(/[&<>"']/g, character => ({
         "&": "&amp;",
@@ -343,6 +362,7 @@ function escapeNotificationHTML(value) {
 // ==================================================
 // NOTIFICATIEBESTEMMINGEN WEERGEVEN
 // ==================================================
+
 
 export function applyNotificationTargets(app) {
     if (!app) return;
@@ -400,8 +420,8 @@ export function applyNotificationTargets(app) {
         `;
     });
 
-    // Bewaar eerder geselecteerde bestemmingen die niet meer
-    // door Home Assistant worden teruggegeven.
+    // Bewaar geselecteerde bestemmingen die niet meer gevonden zijn.
+
     const missingTargets = selectedDestinations
         .filter(entityId =>
             !notificationTargets.some(
@@ -429,10 +449,34 @@ export function applyNotificationTargets(app) {
             </label>
         `);
 
-    container.innerHTML = [
-        ...availableTargets,
-        ...missingTargets
-    ].join("");
+    container.innerHTML = `
+        <details class="notification-destination-dropdown">
+
+            <summary class="notification-destination-trigger">
+                <span>Notificatiebestemmingen</span>
+
+                <span
+                    id="notification-destinations-count"
+                    class="notification-destination-count">
+                    ${selectedDestinations.length} geselecteerd
+                </span>
+
+                <i data-lucide="chevron-down"></i>
+            </summary>
+
+            <div class="notification-destination-dropdown-content">
+                ${availableTargets.join("")}
+                ${missingTargets.join("")}
+            </div>
+
+        </details>
+    `;
+
+    // Lucide-iconen opnieuw initialiseren indien beschikbaar.
+
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
 
     updateNotificationDestinationStatus(app);
 }
@@ -442,23 +486,34 @@ export function applyNotificationTargets(app) {
 // STATUS VAN NOTIFICATIEBESTEMMINGEN
 // ==================================================
 
+
 function updateNotificationDestinationStatus(app) {
+    const count = notificationSettings.destinations.length;
+
     const status = app.querySelector(
         "#notification-destinations-status"
     );
 
-    if (!status) return;
+    const dropdownCount = app.querySelector(
+        "#notification-destinations-count"
+    );
 
-    const count = notificationSettings.destinations.length;
+    if (dropdownCount) {
+        dropdownCount.textContent =
+            `${count} geselecteerd`;
+    }
 
-    if (count === 0) {
-        status.textContent =
-            "Er zijn nog geen notificatiebestemmingen geselecteerd.";
-    } else if (count === 1) {
-        status.textContent = "1 bestemming geselecteerd.";
-    } else {
-        status.textContent =
-            `${count} bestemmingen geselecteerd.`;
+    if (status) {
+        if (count === 0) {
+            status.textContent =
+                "Er zijn nog geen bestemmingen geselecteerd.";
+        } else if (count === 1) {
+            status.textContent =
+                "1 bestemming geselecteerd.";
+        } else {
+            status.textContent =
+                `${count} bestemmingen geselecteerd.`;
+        }
     }
 }
 
@@ -516,29 +571,30 @@ export function applyNotificationSettings(settings, app) {
 
     // Sliderwaarden en eenheden bijwerken.
 
+// Sliderwaarden en eenheden bijwerken.
+
     const outputs = [
         [
             "notification-prediction-value",
-            settings.fragrances.predictionDays,
-            "dagen"
+            `${settings.fragrances.predictionDays} dagen`
         ],
         [
             "notification-buffer-delay-value",
-            settings.buffer.delaySeconds,
-            "seconden"
+            `${settings.buffer.delaySeconds} seconden`
         ],
         [
             "notification-repeat-interval-value",
-            settings.repeat.intervalMinutes,
-            "minuten"
+            formatNotificationDuration(
+                settings.repeat.intervalMinutes
+            )
         ]
     ];
 
-    outputs.forEach(([id, value, unit]) => {
+    outputs.forEach(([id, value]) => {
         const element = app.querySelector(`#${id}`);
 
         if (element) {
-            element.textContent = `${value} ${unit}`;
+            element.textContent = value;
         }
     });
 
@@ -572,31 +628,34 @@ export function setupNotificationListeners(app) {
 
             // Slidertekst direct bijwerken.
 
+            // Slidertekst direct bijwerken.
+
             const outputs = {
-                "notification-prediction-days": [
-                    "notification-prediction-value",
-                    "dagen"
-                ],
+                "notification-prediction-days": {
+                    element: "notification-prediction-value",
+                    format: value => `${value} dagen`
+                },
 
-                "notification-buffer-delay": [
-                    "notification-buffer-delay-value",
-                    "seconden"
-                ],
+                "notification-buffer-delay": {
+                    element: "notification-buffer-delay-value",
+                    format: value => `${value} seconden`
+                },
 
-                "notification-repeat-interval": [
-                    "notification-repeat-interval-value",
-                    "minuten"
-                ]
+                "notification-repeat-interval": {
+                    element: "notification-repeat-interval-value",
+                    format: formatNotificationDuration
+                }
             };
 
             const outputConfig = outputs[id];
 
             if (outputConfig) {
-                const [outputId, unit] = outputConfig;
-                const output = app.querySelector(`#${outputId}`);
+                const output = app.querySelector(
+                    `#${outputConfig.element}`
+                );
 
                 if (output) {
-                    output.textContent = `${value} ${unit}`;
+                    output.textContent = outputConfig.format(value);
                 }
             }
         });
