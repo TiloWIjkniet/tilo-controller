@@ -6,7 +6,12 @@ import {
     fetchDeviceFirmwareInfo,
     fetchDeviceDiagnostics
 } from "../../../services/device-settings-api.js";
-import { formatBytes, formatUptime, setText } from "./settings-utils.js";
+import {
+    formatBytes,
+    formatUptime,
+    setText,
+    updateDeviceNameInFrontend
+} from "./settings-utils.js";
 
 export function createGeneralTemplate() {
     return `
@@ -465,26 +470,10 @@ export function setupGeneralSettings({ overlay, getSelectedDevice }) {
                     result.error || "Naam wijzigen mislukt."
                 );
             }
-
             device.name = result.name;
             input.value = result.name;
-
-            const card = document.querySelector(
-                `[data-device-id="${CSS.escape(String(device.id))}"]`
-            );
-
-            const cardName = card?.querySelector(".device-card-left h3");
-
-            if (cardName) {
-                cardName.textContent = result.name;
-            }
-
-            const title = document.querySelector("#fragrance-title");
-
-            if (title && String(device.id) === String(getSelectedDevice()?.id)) {
-                title.textContent = result.name;
-            }
-
+          
+            updateDeviceNameInFrontend(device);
             loadingFeedback.remove();
 
             showFeedback(

@@ -799,7 +799,7 @@ document.addEventListener("geurbot:fragrance-updated", event => {
         const clusterRemoveButton = event.target.closest('[data-action="remove-cluster-event"]');
         const clusterCard = event.target.closest('[data-action="open-schedule-cluster"]');
         const eventCard = event.target.closest(".schedule-event-card");
-
+        
         if (addButton) openScheduleModal();
 
         if (closeButton || event.target === modal) closeScheduleModal();
@@ -832,6 +832,22 @@ document.addEventListener("geurbot:fragrance-updated", event => {
             if (item) openScheduleModal(item);
         }
     });
+
+    document.addEventListener("click", event => {
+    const openStack = document.querySelector(".schedule-cluster-details");
+
+    if (!openStack) return;
+
+    // Klik binnen de stack? Dan blijft hij open.
+    if (openStack.contains(event.target)) return;
+
+    // Klik op een stackkaart? Dan mag de bestaande handler
+    // bepalen of de stack geopend of gesloten wordt.
+    if (event.target.closest(".schedule-cluster-card")) return;
+
+    // Alle andere klikken sluiten de stack.
+    openStack.remove();
+});
 
     const spraysInput = document.getElementById("schedule-sprays");
     const fragranceSelect = document.getElementById("schedule-fragrance");

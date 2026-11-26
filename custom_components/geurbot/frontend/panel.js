@@ -1,3 +1,4 @@
+
 class GeurBotPanel extends HTMLElement {
     constructor() {
         super();
@@ -6,8 +7,9 @@ class GeurBotPanel extends HTMLElement {
         this._iframe = null;
         this._resizeObserver = null;
         this._lastSentToken = null;
-
         this._authMessageHandler = null;
+        this._refreshPromise = null;
+
 
         this.attachShadow({ mode: "open" });
     }
@@ -65,8 +67,6 @@ class GeurBotPanel extends HTMLElement {
         iframe.src = "/geurbot_static/index.html";
 
         iframe.addEventListener("load", () => {
-            // Een nieuwe iframe moet het token opnieuw ontvangen,
-            // ook wanneer het token zelf niet veranderd is.
             this._sendAuth(true);
         });
 
@@ -81,43 +81,26 @@ class GeurBotPanel extends HTMLElement {
 
         this._resizeObserver.observe(this);
 
-
-        _sendAuth(force = false, requestId = null) {
-            const token = this._hass?.auth?.data?.access_token;
-
+        // Luistert naar authenticatieverzoeken vanuit het iframe.
+         this._authMessageHandler = (event) => {
             if (
-                typeof token !== "string" ||
-                !token ||
-                !this._iframe?.contentWindow
+                event.origin !== window.location.origin ||
+                event.source !== this._iframe?.contentWindow ||
+                event.data?.type !== "geurbot-auth-request"
             ) {
-                console.warn("[GeurBot Auth] Geen HA-token beschikbaar.");
-                return false;
+                return;
             }
 
-            if (!force && token === this._lastSentToken) {
-                return false;
-            }
+            console.info("[GeurBot] Iframe vraagt om HA-token.");
 
-            this._iframe.contentWindow.postMessage(
-                {
-                    type: "geurbot-auth",
-                    token,
-                    requestId
-                },
-                window.location.origin
-            );
+            this._sendAuth(true, event.data.requestId ?? null, true);
+        };
 
-            this._lastSentToken = token;
 
-            console.info("[GeurBot Auth] Token verstuurd:", {
-                length: token.length,
-                requestId: Boolean(requestId)
-            });
-
-            return true;
-        }
-
-        
+        window.addEventListener(
+            "message",
+            this._authMessageHandler
+        );
     }
 
     disconnectedCallback() {
@@ -132,6 +115,9 @@ class GeurBotPanel extends HTMLElement {
 
             this._authMessageHandler = null;
         }
+
+        this._iframe = null;
+        this._lastSentToken = null;
     }
 
     // Zoekt ook binnen Shadow DOM-elementen.
@@ -142,7 +128,7 @@ class GeurBotPanel extends HTMLElement {
 
         if (found) return found;
 
-            for (const element of root.querySelectorAll?.("*") ?? []) {
+        for (const element of root.querySelectorAll?.("*") ?? []) {
             if (!element.shadowRoot) continue;
 
             const result = this._findElement(
@@ -174,43 +160,58 @@ class GeurBotPanel extends HTMLElement {
         panel.style.setProperty("min-height", "0", "important");
     }
 
-    // Stuurt het nieuwste beschikbare Home Assistant-token naar de iframe.
-   _sendAuth(force = false) {
-        const token = this._hass?.auth?.data?.access_token;
+    // Stuurt het actuele HA-token naar de iframe.
+    // Stuurt het actuele (en indien nodig ververste) HA-token naar de iframe.
+    async _sendAuth(force = false, requestId = null, forceRefresh = false) {
+        const auth = this._hass?.auth;
 
-        if (
-            typeof token !== "string" ||
-            !token ||
-            !this._iframe?.contentWindow
-        ) {
-            return;
+        if (!auth || !this._iframe?.contentWindow) {
+            console.warn("[GeurBot Auth] Geen HA-auth of iframe beschikbaar.");
+            return false;
         }
 
-        // Alleen overslaan als we hetzelfde token al hebben
-        // verstuurd en er geen expliciet verzoek is.
+        // Ververs het token als het verlopen is of als de iframe expliciet om een nieuw token vraagt
+        if (forceRefresh || auth.expired) {
+            try {
+                this._refreshPromise ??= auth.refreshAccessToken();
+                await this._refreshPromise;
+            } catch (err) {
+                console.error("[GeurBot Auth] Token verversen mislukt:", err);
+                return false;
+            } finally {
+                this._refreshPromise = null;
+            }
+        }
+
+        const token = auth.data?.access_token;
+
+        if (typeof token !== "string" || !token) {
+            console.warn("[GeurBot Auth] Geen geldig HA-token beschikbaar.");
+            return false;
+        }
+
         if (!force && token === this._lastSentToken) {
-            return;
+            return false;
         }
 
-        console.log("[GeurBot Auth] Token vanuit HA:", {
-            lengte: token.length,
-            laatsteTekens: token.slice(-6)
-        });
         this._iframe.contentWindow.postMessage(
             {
                 type: "geurbot-auth",
-                token
+                token,
+                requestId
             },
             window.location.origin
         );
 
         this._lastSentToken = token;
 
-        console.info(
-            "[GeurBot] Home Assistant-token verstuurd."
-        );
-    }
+        console.info("[GeurBot Auth] Token verstuurd:", {
+            length: token.length,
+            requestId: Boolean(requestId)
+        });
 
+        return true;
+    }
 
 }
 

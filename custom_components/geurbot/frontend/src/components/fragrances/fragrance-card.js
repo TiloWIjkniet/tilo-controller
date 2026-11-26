@@ -199,13 +199,15 @@ export function createFragranceCard(fragrance, expanded = false) {
                     <div class="fragrance-card-details">
                         <div class="fragrance-stat">
                             <span>Verwacht leeg op</span>
-                            <strong>${emptyDate
-                            ? emptyDate.toLocaaleDateString("nl-NL", {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric"
-                            })
-                            : "Nog onbekend"}</strong>
+                            <strong>
+                            ${emptyDate instanceof Date && !Number.isNaN(emptyDate.getTime())
+                                ? emptyDate.toLocaleDateString("nl-NL", {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric"
+                                })
+                                : "Nog onbekend"}
+                        </strong>
                         </div>
 
                         <div class="fragrance-stat">

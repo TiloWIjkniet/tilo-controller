@@ -2,7 +2,7 @@
  // Home Assistant authenticatiemanager voor GeurBot.
 
 const AUTH_TIMEOUT = 10000;
-const REFRESH_TIMEOUT = 5000;
+const REFRESH_TIMEOUT = 10000;
 
 const homeAssistantOrigin = window.location.origin;
 const isEmbedded = window.parent !== window;
