@@ -5,8 +5,8 @@ from datetime import datetime
 from ..api.notification_settings import load_settings
 
 
-BUFFER_DELAY = 120       # Seconden
-REPEAT_INTERVAL = 360    # Minuten
+BUFFER_DELAY = 120
+REPEAT_INTERVAL = 360
 
 
 class NotificationManager:
@@ -44,12 +44,10 @@ class NotificationManager:
     def export_state(self):
         return {
             "active_alerts": list(self.active_alerts),
-
             "last_sent": [
                 [list(key), value]
                 for key, value in self.last_sent.items()
             ],
-
             "pending": [
                 [list(key), value]
                 for key, value in self.pending.items()
@@ -60,25 +58,61 @@ class NotificationManager:
         if not isinstance(state, dict):
             return
 
-        self.active_alerts = set(
-            state.get("active_alerts", [])
-        )
+        active_alerts = state.get("active_alerts", [])
 
-        self.last_sent = {
-            tuple(key): value
-            for key, value in state.get("last_sent", [])
-            if isinstance(key, list) and len(key) == 2
-        }
+        self.active_alerts = {
+            item
+            for item in active_alerts
+            if isinstance(item, str)
+        } if isinstance(active_alerts, list) else set()
 
-        self.pending = {
-            tuple(key): value
-            for key, value in state.get("pending", [])
+        self.last_sent = {}
+
+        for item in state.get("last_sent", []):
+            if not isinstance(item, list) or len(item) != 2:
+                continue
+
+            key, value = item
+
+            if not isinstance(key, list) or len(key) != 2:
+                continue
+
+            try:
+                timestamp = float(value)
+            except (TypeError, ValueError):
+                continue
+
+            self.last_sent[tuple(key)] = timestamp
+
+        self.pending = {}
+
+        for item in state.get("pending", []):
+            if not isinstance(item, list) or len(item) != 2:
+                continue
+
+            key, value = item
+
             if (
-                isinstance(key, list)
-                and len(key) == 2
-                and isinstance(value, dict)
-            )
-        }
+                not isinstance(key, list)
+                or len(key) != 2
+                or not isinstance(value, dict)
+            ):
+                continue
+
+            notification_type = value.get("type")
+            items = value.get("items")
+            details = value.get("details")
+
+            if not isinstance(notification_type, str):
+                continue
+
+            if not isinstance(items, dict):
+                continue
+
+            if not isinstance(details, list):
+                value["details"] = []
+
+            self.pending[tuple(key)] = value
 
     async def _persist_state(self):
         if self.persist_handler is None:
@@ -90,7 +124,7 @@ class NotificationManager:
         except Exception as error:
             print(
                 "[NOTIFICATIONS] Status opslaan mislukt:",
-                error
+                error,
             )
 
     # ==================================================
@@ -106,18 +140,16 @@ class NotificationManager:
 
         print("[NOTIFICATIONS] Manager gestart")
 
-        # Direct een startmelding versturen.
         await self.send_startup_notification()
 
     async def stop(self):
         self.running = False
 
-        if self.task:
+        if self.task is not None:
             self.task.cancel()
 
             try:
                 await self.task
-
             except asyncio.CancelledError:
                 pass
 
@@ -126,8 +158,6 @@ class NotificationManager:
         print("[NOTIFICATIONS] Manager gestopt")
 
     async def send_startup_notification(self):
-        """Send a notification when the manager starts."""
-
         if self.handler is None:
             print(
                 "[NOTIFICATIONS] Geen handler voor startmelding"
@@ -154,9 +184,12 @@ class NotificationManager:
             result = await self.handler(
                 notification_type="system.started",
                 title="GeurBot",
-                message="GeurBot is succesvol gestart en klaar voor gebruik.",
+                message=(
+                    "GeurBot is succesvol gestart "
+                    "en klaar voor gebruik."
+                ),
                 device_id=None,
-                details=[]
+                details=[],
             )
 
             if result is False:
@@ -172,7 +205,7 @@ class NotificationManager:
         except Exception as error:
             print(
                 "[NOTIFICATIONS] Startmelding mislukt:",
-                error
+                error,
             )
 
     async def run(self):
@@ -180,15 +213,17 @@ class NotificationManager:
             try:
                 settings = load_settings()
 
-                delay = max(
-                    1,
-                    int(
+                try:
+                    delay = int(
                         settings.get("buffer", {}).get(
                             "delaySeconds",
-                            BUFFER_DELAY
+                            BUFFER_DELAY,
                         )
                     )
-                )
+                except (TypeError, ValueError):
+                    delay = BUFFER_DELAY
+
+                delay = max(1, delay)
 
                 await asyncio.sleep(delay)
 
@@ -203,7 +238,7 @@ class NotificationManager:
             except Exception as error:
                 print(
                     "[NOTIFICATIONS] Fout in achtergrondtaak:",
-                    error
+                    error,
                 )
 
                 await asyncio.sleep(5)
@@ -219,7 +254,7 @@ class NotificationManager:
         message,
         device_id=None,
         fragrance_mac=None,
-        details=None
+        details=None,
     ):
         settings = load_settings()
 
@@ -230,14 +265,13 @@ class NotificationManager:
             notification_type
         )
 
-        if not self.is_enabled(settings, notification_type):
-            return
-
         alert_key = self.get_alert_key(
             notification_type,
             device_id,
-            fragrance_mac
+            fragrance_mac,
         )
+
+        state_changed = False
 
         async with self.lock:
 
@@ -253,14 +287,13 @@ class NotificationManager:
                         self.get_alert_key(
                             "fragrances.empty",
                             device_id,
-                            fragrance_mac
+                            fragrance_mac,
                         ),
-
                         self.get_alert_key(
                             "fragrances.predictedEmpty",
                             device_id,
-                            fragrance_mac
-                        )
+                            fragrance_mac,
+                        ),
                     ])
 
                 active_keys = [
@@ -275,12 +308,34 @@ class NotificationManager:
                 for key in active_keys:
                     self.active_alerts.discard(key)
 
+                state_changed = True
+
             # ------------------------------------------
             # NIEUWE STORING
             # ------------------------------------------
 
             elif state == "problem":
-                self.active_alerts.add(alert_key)
+                if not self.is_enabled(
+                    settings,
+                    notification_type,
+                ):
+                    return
+
+                if alert_key not in self.active_alerts:
+                    self.active_alerts.add(alert_key)
+                    state_changed = True
+
+            # ------------------------------------------
+            # CATEGORIE-INSTELLING CONTROLEREN
+            # ------------------------------------------
+
+            if not self.is_enabled(
+                settings,
+                notification_type,
+            ):
+                if state_changed:
+                    await self._persist_state()
+                return
 
             # ------------------------------------------
             # MELDING GROEPEREN
@@ -288,7 +343,7 @@ class NotificationManager:
 
             group_key = (
                 notification_type,
-                device_id
+                device_id,
             )
 
             if group_key not in self.pending:
@@ -297,7 +352,7 @@ class NotificationManager:
                     "title": title,
                     "device_id": device_id,
                     "items": {},
-                    "details": []
+                    "details": [],
                 }
 
             item_key = (
@@ -309,9 +364,14 @@ class NotificationManager:
             self.pending[group_key]["items"][item_key] = message
 
             if details:
-                self.pending[group_key]["details"].append(
-                    details
-                )
+                if isinstance(details, dict):
+                    self.pending[group_key]["details"].append(
+                        details
+                    )
+                elif isinstance(details, list):
+                    self.pending[group_key]["details"].extend(
+                        details
+                    )
 
         await self._persist_state()
 
@@ -331,12 +391,12 @@ class NotificationManager:
             "fragrances.available": ("recovered", "fragrances"),
 
             "fragrances.empty": ("problem", "fragrances"),
-            "fragrances.predictedEmpty": ("problem", "fragrances")
+            "fragrances.predictedEmpty": ("problem", "fragrances"),
         }
 
         return states.get(
             notification_type,
-            ("normal", notification_type)
+            ("normal", notification_type),
         )
 
     # ==================================================
@@ -347,14 +407,14 @@ class NotificationManager:
         self,
         notification_type,
         device_id,
-        fragrance_mac
+        fragrance_mac,
     ):
         if notification_type.startswith("devices."):
             return f"device:{device_id}"
 
         if notification_type in {
             "fragrances.unavailable",
-            "fragrances.available"
+            "fragrances.available",
         }:
             kind = "availability"
 
@@ -383,37 +443,37 @@ class NotificationManager:
 
             "fragrances.unavailable": (
                 "fragrances",
-                "unavailable"
+                "unavailable",
             ),
 
             "fragrances.available": (
                 "fragrances",
-                "available"
+                "available",
             ),
 
             "fragrances.empty": (
                 "fragrances",
-                "empty"
+                "empty",
             ),
 
             "fragrances.predictedEmpty": (
                 "fragrances",
-                "predictedEmpty"
+                "predictedEmpty",
             ),
 
             "schedule.sprayError": (
                 "schedule",
-                "sprayError"
+                "sprayError",
             ),
 
             "schedule.scheduleError": (
                 "schedule",
-                "scheduleError"
+                "scheduleError",
             ),
 
             "firmware.available": (
                 "firmware",
-                "available"
+                "available",
             ),
         }
 
@@ -440,17 +500,25 @@ class NotificationManager:
         if not quiet.get("enabled", False):
             return False
 
-        now = self.now_provider().time()
+        try:
+            now = self.now_provider().time()
 
-        start = datetime.strptime(
-            quiet.get("start", "22:00"),
-            "%H:%M"
-        ).time()
+            start = datetime.strptime(
+                quiet.get("start", "22:00"),
+                "%H:%M",
+            ).time()
 
-        end = datetime.strptime(
-            quiet.get("end", "08:00"),
-            "%H:%M"
-        ).time()
+            end = datetime.strptime(
+                quiet.get("end", "08:00"),
+                "%H:%M",
+            ).time()
+
+        except (TypeError, ValueError):
+            print(
+                "[NOTIFICATIONS] Ongeldige instellingen "
+                "voor stille uren"
+            )
+            return False
 
         if start <= end:
             return start <= now < end
@@ -470,10 +538,14 @@ class NotificationManager:
             try:
                 await self.process_notification(group)
 
+            except asyncio.CancelledError:
+                await self.requeue_notification(group)
+                raise
+
             except Exception as error:
                 print(
                     "[NOTIFICATIONS] Verwerken van melding mislukt:",
-                    error
+                    error,
                 )
 
                 await self.requeue_notification(group)
@@ -483,23 +555,23 @@ class NotificationManager:
     async def requeue_notification(self, group):
         key = (
             group.get("type"),
-            group.get("device_id")
+            group.get("device_id"),
         )
 
         async with self.lock:
             if key not in self.pending:
                 self.pending[key] = group
-            else:
-                # Voeg berichten toe aan een reeds bestaande groep.
-                existing = self.pending[key]
+                return
 
-                existing.setdefault("items", {}).update(
-                    group.get("items", {})
-                )
+            existing = self.pending[key]
 
-                existing.setdefault("details", []).extend(
-                    group.get("details", [])
-                )
+            existing.setdefault("items", {}).update(
+                group.get("items", {})
+            )
+
+            existing.setdefault("details", []).extend(
+                group.get("details", [])
+            )
 
     # ==================================================
     # NOTIFICATIE VERWERKEN
@@ -511,11 +583,10 @@ class NotificationManager:
         if not settings.get("enabled", True):
             return
 
-        notification_type = group["type"]
+        notification_type = group.get("type")
 
-        state, _ = self.get_notification_state(
-            notification_type
-        )
+        if not notification_type:
+            return
 
         if not self.is_enabled(settings, notification_type):
             return
@@ -526,7 +597,8 @@ class NotificationManager:
 
         if self.is_quiet_hours(settings):
             print(
-                "[NOTIFICATIONS] Melding uitgesteld vanwege stille uren"
+                "[NOTIFICATIONS] Melding uitgesteld "
+                "vanwege stille uren"
             )
 
             await self.requeue_notification(group)
@@ -536,30 +608,42 @@ class NotificationManager:
         # HERHAALINTERVAL
         # ----------------------------------------------
 
-        now = self.now_provider().timestamp()
+        try:
+            now = self.now_provider().timestamp()
+        except (AttributeError, TypeError, ValueError):
+            now = datetime.now().timestamp()
 
         repeat_settings = settings.get("repeat", {})
 
         repeat_enabled = repeat_settings.get(
             "enabled",
-            True
+            True,
         )
 
-        repeat_interval = int(
-            repeat_settings.get(
-                "intervalMinutes",
-                REPEAT_INTERVAL
-            )
-        ) * 60
+        try:
+            repeat_interval = int(
+                repeat_settings.get(
+                    "intervalMinutes",
+                    REPEAT_INTERVAL,
+                )
+            ) * 60
+        except (TypeError, ValueError):
+            repeat_interval = REPEAT_INTERVAL * 60
+
+        repeat_interval = max(0, repeat_interval)
 
         repeat_key = (
             notification_type,
-            group["device_id"]
+            group.get("device_id"),
         )
 
         last_sent = self.last_sent.get(
             repeat_key,
-            0
+            0,
+        )
+
+        state, _ = self.get_notification_state(
+            notification_type
         )
 
         if state == "problem" and repeat_enabled:
@@ -570,13 +654,17 @@ class NotificationManager:
         # BERICHT OPBOUWEN
         # ----------------------------------------------
 
-        messages = list(
-            group["items"].values()
-        )
+        items = group.get("items", {})
 
-        message = "\n".join(
-            str(item) for item in messages
-        )
+        if not isinstance(items, dict) or not items:
+            return
+
+        messages = [
+            str(item)
+            for item in items.values()
+        ]
+
+        message = "\n".join(messages)
 
         if len(messages) > 1:
             message = (
@@ -599,10 +687,10 @@ class NotificationManager:
         try:
             result = await self.handler(
                 notification_type=notification_type,
-                title=group["title"],
+                title=group.get("title", "GeurBot"),
                 message=message,
-                device_id=group["device_id"],
-                details=group["details"]
+                device_id=group.get("device_id"),
+                details=group.get("details", []),
             )
 
             if result is False:
@@ -614,10 +702,14 @@ class NotificationManager:
                 await self.requeue_notification(group)
                 return
 
+        except asyncio.CancelledError:
+            await self.requeue_notification(group)
+            raise
+
         except Exception as error:
             print(
                 "[NOTIFICATIONS] Versturen mislukt:",
-                error
+                error,
             )
 
             await self.requeue_notification(group)
@@ -653,7 +745,7 @@ async def send_notification(
     title,
     message,
     device_id=None,
-    details=None
+    details=None,
 ):
     """Send a notification to all selected HA targets."""
 
@@ -667,7 +759,7 @@ async def send_notification(
 
     destinations = settings.get("destinations", [])
 
-    if not destinations:
+    if not isinstance(destinations, list) or not destinations:
         print(
             "[NOTIFICATIONS] Geen bestemmingen geselecteerd"
         )
@@ -676,8 +768,10 @@ async def send_notification(
     successful_destinations = []
     failed_destinations = []
 
-    for entity_id in destinations:
+    # Dubbele bestemmingen voorkomen.
+    destinations = list(dict.fromkeys(destinations))
 
+    for entity_id in destinations:
         if (
             not isinstance(entity_id, str)
             or not entity_id.startswith("notify.")
@@ -693,31 +787,34 @@ async def send_notification(
             state = hass.states.get(entity_id)
 
             if state is not None:
+                if state.state in {"unavailable", "unknown"}:
+                    raise RuntimeError(
+                        f"Notify-entiteit niet beschikbaar: {entity_id}"
+                    )
+
                 await hass.services.async_call(
                     "notify",
                     "send_message",
                     {
                         "title": title,
-                        "message": message
+                        "message": message,
                     },
                     target={
-                        "entity_id": entity_id
+                        "entity_id": entity_id,
                     },
-                    blocking=True
+                    blocking=True,
                 )
 
             # ------------------------------------------
-            # OUDE NOTIFY-SERVICE
+            # LEGACY NOTIFY-SERVICE
             # ------------------------------------------
 
             else:
-                service_name = entity_id.removeprefix(
-                    "notify."
-                )
+                service_name = entity_id.removeprefix("notify.")
 
                 if not hass.services.has_service(
                     "notify",
-                    service_name
+                    service_name,
                 ):
                     raise RuntimeError(
                         f"Notify-service bestaat niet: {service_name}"
@@ -728,9 +825,9 @@ async def send_notification(
                     service_name,
                     {
                         "title": title,
-                        "message": message
+                        "message": message,
                     },
-                    blocking=True
+                    blocking=True,
                 )
 
             successful_destinations.append(entity_id)
@@ -754,16 +851,16 @@ async def send_notification(
     if failed_destinations:
         print(
             "[NOTIFICATIONS] Mislukte bestemmingen:",
-            ", ".join(failed_destinations)
+            ", ".join(failed_destinations),
         )
 
     if successful_destinations:
         print(
             "[NOTIFICATIONS] Succesvol verzonden:",
-            ", ".join(successful_destinations)
+            ", ".join(successful_destinations),
         )
 
     return (
         len(successful_destinations) == len(destinations)
-        and len(failed_destinations) == 0
+        and not failed_destinations
     )

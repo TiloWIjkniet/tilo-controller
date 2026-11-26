@@ -1,4 +1,5 @@
 
+import asyncio
 import json
 import re
 import inspect
@@ -22,15 +23,15 @@ DEFAULT_NOTIFICATION_SETTINGS = {
         "quietHours": {
             "enabled": False,
             "start": "22:00",
-            "end": "08:00"
-        }
+            "end": "08:00",
+        },
     },
 
     "devices": {
         "errors": True,
         "offline": True,
         "online": True,
-        "sensorErrors": True
+        "sensorErrors": True,
     },
 
     "fragrances": {
@@ -38,27 +39,27 @@ DEFAULT_NOTIFICATION_SETTINGS = {
         "predictedEmpty": True,
         "unavailable": True,
         "available": True,
-        "predictionDays": 3
+        "predictionDays": 3,
     },
 
     "schedule": {
         "sprayError": True,
-        "scheduleError": True
+        "scheduleError": True,
     },
 
     "firmware": {
-        "available": True
+        "available": True,
     },
 
     "buffer": {
         "enabled": True,
-        "delaySeconds": 120
+        "delaySeconds": 120,
     },
 
     "repeat": {
         "enabled": True,
-        "intervalMinutes": 360
-    }
+        "intervalMinutes": 360,
+    },
 }
 
 
@@ -100,6 +101,7 @@ def merge_settings(defaults, supplied):
         return result
 
     for key, value in supplied.items():
+
         if key not in defaults:
             continue
 
@@ -107,7 +109,7 @@ def merge_settings(defaults, supplied):
             if isinstance(value, dict):
                 result[key] = merge_settings(
                     defaults[key],
-                    value
+                    value,
                 )
 
         else:
@@ -124,7 +126,9 @@ def validate_settings(settings):
     """Validate all notification settings."""
 
     if not isinstance(settings, dict):
-        raise ValueError("Settings must be a JSON object")
+        raise ValueError(
+            "Settings must be a JSON object"
+        )
 
     boolean_paths = [
         ("enabled",),
@@ -148,7 +152,7 @@ def validate_settings(settings):
         ("firmware", "available"),
 
         ("buffer", "enabled"),
-        ("repeat", "enabled")
+        ("repeat", "enabled"),
     ]
 
     for path in boolean_paths:
@@ -171,24 +175,24 @@ def validate_settings(settings):
     # NOTIFICATIEBESTEMMINGEN
     # ----------------------------------------------
 
-    destinations = settings["destinations"]
+    destinations = settings.get("destinations")
 
     if not isinstance(destinations, list):
         raise ValueError(
             "destinations must be a list"
         )
 
-    if not all(
-        isinstance(destination, str)
-        and re.fullmatch(
-            r"notify\.[a-z0-9_]+",
-            destination
-        )
-        for destination in destinations
-    ):
-        raise ValueError(
-            "destinations must contain valid notify entity IDs"
-        )
+    for destination in destinations:
+        if (
+            not isinstance(destination, str)
+            or not re.fullmatch(
+                r"notify\.[a-z0-9_]+",
+                destination,
+            )
+        ):
+            raise ValueError(
+                "destinations must contain valid notify entity IDs"
+            )
 
     if len(destinations) != len(set(destinations)):
         raise ValueError(
@@ -199,9 +203,9 @@ def validate_settings(settings):
     # NUMERIEKE INSTELLINGEN
     # ----------------------------------------------
 
-    days = settings["fragrances"]["predictionDays"]
-    delay = settings["buffer"]["delaySeconds"]
-    repeat_interval = settings["repeat"]["intervalMinutes"]
+    days = settings["fragrances"].get("predictionDays")
+    delay = settings["buffer"].get("delaySeconds")
+    repeat_interval = settings["repeat"].get("intervalMinutes")
 
     if type(days) is not int or not 1 <= days <= 14:
         raise ValueError(
@@ -228,18 +232,20 @@ def validate_settings(settings):
     quiet_hours = settings["general"]["quietHours"]
 
     for key in ("start", "end"):
-        value = quiet_hours[key]
+        value = quiet_hours.get(key)
 
         if (
             not isinstance(value, str)
             or not re.fullmatch(
                 r"(?:[01]\d|2[0-3]):[0-5]\d",
-                value
+                value,
             )
         ):
             raise ValueError(
                 f"Invalid quiet hours time: {key}"
             )
+
+    return True
 
 
 # ==================================================
@@ -251,18 +257,23 @@ def save_settings(settings):
 
     SETTINGS_FILE.parent.mkdir(
         parents=True,
-        exist_ok=True
+        exist_ok=True,
     )
 
     temporary_file = SETTINGS_FILE.with_suffix(".tmp")
 
-    with temporary_file.open("w", encoding="utf-8") as file:
+    with temporary_file.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
         json.dump(
             settings,
             file,
             indent=4,
-            ensure_ascii=False
+            ensure_ascii=False,
         )
+
+        file.flush()
 
     temporary_file.replace(SETTINGS_FILE)
 
@@ -274,17 +285,25 @@ def save_settings(settings):
 def load_settings():
     """Load notification settings."""
 
+    # ----------------------------------------------
+    # HOME ASSISTANT PROVIDER
+    # ----------------------------------------------
+
     if _SETTINGS_PROVIDER is not None:
         supplied = _SETTINGS_PROVIDER()
 
         settings = merge_settings(
             DEFAULT_NOTIFICATION_SETTINGS,
-            supplied or {}
+            supplied or {},
         )
 
         validate_settings(settings)
 
         return settings
+
+    # ----------------------------------------------
+    # LOKAAL JSON-BESTAND
+    # ----------------------------------------------
 
     if not SETTINGS_FILE.exists():
         settings = deepcopy(
@@ -296,25 +315,35 @@ def load_settings():
         return settings
 
     try:
-        with SETTINGS_FILE.open("r", encoding="utf-8") as file:
+        with SETTINGS_FILE.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
             stored_settings = json.load(file)
 
         if not isinstance(stored_settings, dict):
-            raise ValueError("Invalid settings format")
+            raise ValueError(
+                "Invalid settings format"
+            )
 
         settings = merge_settings(
             DEFAULT_NOTIFICATION_SETTINGS,
-            stored_settings
+            stored_settings,
         )
 
         validate_settings(settings)
 
         return settings
 
-    except (OSError, ValueError, TypeError, KeyError) as error:
+    except (
+        OSError,
+        ValueError,
+        TypeError,
+        KeyError,
+    ) as error:
         print(
             "[NOTIFICATIONS] Failed to load settings:",
-            error
+            error,
         )
 
         settings = deepcopy(
@@ -341,13 +370,16 @@ async def get_notification_settings(request):
     except Exception as error:
         print(
             "[NOTIFICATIONS] Failed to get settings:",
-            error
+            error,
         )
 
-        return web.json_response({
-            "success": False,
-            "error": "Could not load notification settings"
-        }, status=500)
+        return web.json_response(
+            {
+                "success": False,
+                "error": "Could not load notification settings",
+            },
+            status=500,
+        )
 
 
 # ==================================================
@@ -361,11 +393,23 @@ async def update_notification_settings(request):
         data = await request.json()
 
         if not isinstance(data, dict):
-            raise ValueError("Expected a JSON object")
+            raise ValueError(
+                "Expected a JSON object"
+            )
+
+        # ------------------------------------------
+        # HUIDIGE INSTELLINGEN OPHALEN
+        # ------------------------------------------
+
+        current_settings = load_settings()
+
+        # ------------------------------------------
+        # NIEUWE INSTELLINGEN SAMENVOEGEN
+        # ------------------------------------------
 
         settings = merge_settings(
-            DEFAULT_NOTIFICATION_SETTINGS,
-            data
+            current_settings,
+            data,
         )
 
         validate_settings(settings)
@@ -375,6 +419,7 @@ async def update_notification_settings(request):
         # ------------------------------------------
 
         if _SETTINGS_PROVIDER is not None:
+
             if _SETTINGS_WRITER is None:
                 raise RuntimeError(
                     "Home Assistant settings provider has no writer"
@@ -390,50 +435,76 @@ async def update_notification_settings(request):
         # ------------------------------------------
 
         else:
-            save_settings(settings)
+            await asyncio.to_thread(
+                save_settings,
+                settings,
+            )
 
-        print("[NOTIFICATIONS] Settings updated")
+        print(
+            "[NOTIFICATIONS] Settings updated"
+        )
 
-        return web.json_response({
-            "success": True,
-            "settings": settings
-        })
+        return web.json_response(
+            {
+                "success": True,
+                "settings": settings,
+            }
+        )
 
-    except (ValueError, TypeError, KeyError) as error:
-        return web.json_response({
-            "success": False,
-            "error": str(error)
-        }, status=400)
+    except (
+        ValueError,
+        TypeError,
+        KeyError,
+    ) as error:
+        return web.json_response(
+            {
+                "success": False,
+                "error": str(error),
+            },
+            status=400,
+        )
 
     except RuntimeError as error:
         print(
             "[NOTIFICATIONS] Settings configuration error:",
-            error
+            error,
         )
 
-        return web.json_response({
-            "success": False,
-            "error": "Notification settings storage is not configured"
-        }, status=500)
+        return web.json_response(
+            {
+                "success": False,
+                "error": (
+                    "Notification settings storage "
+                    "is not configured"
+                ),
+            },
+            status=500,
+        )
 
     except OSError as error:
         print(
             "[NOTIFICATIONS] Failed to save settings:",
-            error
+            error,
         )
 
-        return web.json_response({
-            "success": False,
-            "error": "Could not save notification settings"
-        }, status=500)
+        return web.json_response(
+            {
+                "success": False,
+                "error": "Could not save notification settings",
+            },
+            status=500,
+        )
 
     except Exception as error:
         print(
             "[NOTIFICATIONS] Failed to update settings:",
-            error
+            error,
         )
 
-        return web.json_response({
-            "success": False,
-            "error": "Could not update notification settings"
-        }, status=500)
+        return web.json_response(
+            {
+                "success": False,
+                "error": "Could not update notification settings",
+            },
+            status=500,
+        )

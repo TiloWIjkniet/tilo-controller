@@ -1,10 +1,12 @@
 
 """Home Assistant integration for GeurBot devices."""
+
 from __future__ import annotations
 
 import hashlib
 import json
 import logging
+
 from copy import deepcopy
 from pathlib import Path
 
@@ -46,6 +48,7 @@ from .views import (
     GeurBotDevicesAddView,
     GeurBotNotificationTargetsView,
 )
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +93,9 @@ async def async_setup_entry(
     store = GeurBotStore(hass)
     stored = await store.async_load()
 
+    if not isinstance(stored, dict):
+        stored = {}
+
     set_shared_session(
         async_get_clientsession(hass)
     )
@@ -100,13 +106,15 @@ async def async_setup_entry(
 
     manager = DeviceManager()
 
-    # Opgeslagen apparaten herstellen.
-    for device in stored.get("devices", {}).values():
-        if (
-            isinstance(device, dict)
-            and device.get("device_id")
-        ):
-            manager.registry.add(device)
+    devices = stored.get("devices", {})
+
+    if isinstance(devices, dict):
+        for device in devices.values():
+            if (
+                isinstance(device, dict)
+                and device.get("device_id")
+            ):
+                manager.registry.add(device)
 
     runtime = {
         "store": store,
@@ -158,14 +166,12 @@ async def async_setup_entry(
 
         device_id = device["device_id"]
 
-        coordinator = runtime["coordinators"].get(
-            device_id
-        )
+        coordinator = runtime["coordinators"].get(device_id)
 
         if coordinator is None:
             coordinator = GeurBotCoordinator(
                 hass,
-                device
+                device,
             )
 
             runtime["coordinators"][device_id] = coordinator
@@ -182,7 +188,6 @@ async def async_setup_entry(
     # ==================================================
 
     if store.data.get("notification_settings") is None:
-
         legacy_file = (
             Path(__file__).parent
             / "backend"
@@ -194,15 +199,11 @@ async def async_setup_entry(
             try:
                 with legacy_file.open(
                     "r",
-                    encoding="utf-8"
+                    encoding="utf-8",
                 ) as legacy:
                     value = json.load(legacy)
 
-                return (
-                    value
-                    if isinstance(value, dict)
-                    else None
-                )
+                return value if isinstance(value, dict) else None
 
             except (
                 OSError,
@@ -216,7 +217,7 @@ async def async_setup_entry(
         )
 
         settings = merge_settings(
-            DEFAULT_NOTIFICATION_SETTINGS,
+            deepcopy(DEFAULT_NOTIFICATION_SETTINGS),
             legacy_settings or {},
         )
 
@@ -253,10 +254,12 @@ async def async_setup_entry(
     def get_notification_settings():
         """Return the current notification settings."""
 
-        return (
-            store.data.get("notification_settings")
-            or DEFAULT_NOTIFICATION_SETTINGS
-        )
+        settings = store.data.get("notification_settings")
+
+        if not isinstance(settings, dict):
+            return deepcopy(DEFAULT_NOTIFICATION_SETTINGS)
+
+        return settings
 
     async def persist_notification_settings(settings):
         """Persist updated notification settings."""
@@ -305,17 +308,14 @@ async def async_setup_entry(
     # NOTIFICATIEMANAGER CONFIGUREREN
     # ==================================================
 
-    # Handler moet ingesteld zijn voordat de manager start.
     notification_manager.set_handler(
         notification_handler
     )
 
-    # Home Assistant-tijd gebruiken.
     notification_manager.set_now_provider(
         dt_util.now
     )
 
-    # Eerder opgeslagen notificatiestatus herstellen.
     notification_manager.restore_state(
         store.data.get("notification_state")
     )
@@ -349,9 +349,7 @@ async def async_setup_entry(
     # FRAGRANCE MONITOR INITIALISEREN
     # ==================================================
 
-    fragrance_monitor = FragranceMonitor(
-        manager
-    )
+    fragrance_monitor = FragranceMonitor(manager)
 
     # ==================================================
     # OPGESLAGEN SCHEMA-UITVOERINGEN HERSTELLEN
@@ -360,7 +358,8 @@ async def async_setup_entry(
     stored_schedule_keys = [
         tuple(item)
         for item in store.data.get(
-            "metadata", {}
+            "metadata",
+            {},
         ).get(
             "schedule_last_executed",
             [],
@@ -378,7 +377,7 @@ async def async_setup_entry(
     async def persist_schedule_state(executed):
         store.data.setdefault(
             "metadata",
-            {}
+            {},
         )["schedule_last_executed"] = [
             list(item)
             for item in executed
@@ -445,8 +444,13 @@ async def async_setup_entry(
             f"GeurBot panelbestand ontbreekt: {panel_file}"
         )
 
+    # Bestand asynchroon lezen om de eventloop niet te blokkeren.
+    panel_content = await hass.async_add_executor_job(
+        panel_file.read_bytes
+    )
+
     panel_hash = hashlib.sha256(
-        panel_file.read_bytes()
+        panel_content
     ).hexdigest()[:12]
 
     panel_module_url = (
@@ -456,7 +460,6 @@ async def async_setup_entry(
     if not hass.data.get(
         f"{DOMAIN}_static_registered"
     ):
-
         try:
             await hass.http.async_register_static_paths([
                 StaticPathConfig(
@@ -495,7 +498,6 @@ async def async_setup_entry(
     if not hass.data.get(
         f"{DOMAIN}_panel_registered"
     ):
-
         await panel_custom.async_register_panel(
             hass,
             webcomponent_name="ha-panel-geurbot",
@@ -548,10 +550,9 @@ async def async_unload_entry(
     )
 
     if unload_ok:
-
         runtime = hass.data.pop(
             DOMAIN,
-            None
+            None,
         )
 
         if runtime:
@@ -561,11 +562,11 @@ async def async_unload_entry(
 
         if hass.data.pop(
             f"{DOMAIN}_panel_registered",
-            False
+            False,
         ):
             frontend.async_remove_panel(
                 hass,
-                DOMAIN
+                DOMAIN,
             )
 
         _LOGGER.info(

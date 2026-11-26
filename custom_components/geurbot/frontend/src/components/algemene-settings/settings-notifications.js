@@ -2,7 +2,6 @@
 const NOTIFICATIONS_API = "/api/notifications";
 const NOTIFICATION_TARGETS_API = "/api/notifications/targets";
 
-
 // ==================================================
 // STANDAARDINSTELLINGEN
 // ==================================================
@@ -53,6 +52,31 @@ const DEFAULT_NOTIFICATION_SETTINGS = {
     repeat: {
         enabled: true,
         intervalMinutes: 360
+    }
+};
+
+
+// ==================================================
+// SLIDER-INSTELLINGEN
+// ==================================================
+
+const NOTIFICATION_SLIDERS = {
+    "notification-prediction-days": {
+        min: 1,
+        max: 14,
+        step: 1
+    },
+
+    "notification-buffer-delay": {
+        min: 1,
+        max: 300,
+        step: 1
+    },
+
+    "notification-repeat-interval": {
+        min: 30,
+        max: 10080,
+        step: 30
     }
 };
 
@@ -164,6 +188,58 @@ function mergeNotificationSettings(settings = {}) {
             ...settings.repeat
         }
     };
+}
+
+
+// ==================================================
+// SLIDERBEREIK INSTELLEN
+// ==================================================
+
+function configureNotificationSliders(app) {
+    Object.entries(NOTIFICATION_SLIDERS).forEach(
+        ([id, config]) => {
+            const slider = app.querySelector(`#${id}`);
+
+            if (!slider) return;
+
+            slider.min = String(config.min);
+            slider.max = String(config.max);
+            slider.step = String(config.step);
+        }
+    );
+}
+
+
+// ==================================================
+// SLIDERWAARDE CONTROLEREN
+// ==================================================
+
+function normalizeSliderValue(id, value) {
+    const config = NOTIFICATION_SLIDERS[id];
+
+    if (!config) return value;
+
+    let normalized = Number(value);
+
+    if (!Number.isFinite(normalized)) {
+        normalized = config.min;
+    }
+
+    normalized = Math.max(
+        config.min,
+        Math.min(config.max, normalized)
+    );
+
+    normalized =
+        config.min +
+        Math.round(
+            (normalized - config.min) / config.step
+        ) * config.step;
+
+    return Math.max(
+        config.min,
+        Math.min(config.max, normalized)
+    );
 }
 
 
@@ -329,25 +405,6 @@ export function updateNotificationSettings(path, value) {
 // HTML-TEKST VEILIG MAKEN
 // ==================================================
 
-// ==================================================
-// TIJDSDUUR WEERGEVEN
-// ==================================================
-
-function formatNotificationDuration(totalMinutes) {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    if (hours === 0) {
-        return `${minutes} minuten`;
-    }
-
-    if (minutes === 0) {
-        return `${hours} uur`;
-    }
-
-    return `${hours} uur en ${minutes} minuten`;
-}
-
 function escapeNotificationHTML(value) {
     return String(value).replace(/[&<>"']/g, character => ({
         "&": "&amp;",
@@ -360,9 +417,77 @@ function escapeNotificationHTML(value) {
 
 
 // ==================================================
-// NOTIFICATIEBESTEMMINGEN WEERGEVEN
+// TIJDSDUUR WEERGEVEN
 // ==================================================
 
+function formatNotificationDuration(totalMinutes) {
+    totalMinutes = Math.max(0, Math.floor(totalMinutes));
+
+    const days = Math.floor(totalMinutes / 1440);
+    const remainingAfterDays = totalMinutes % 1440;
+
+    const hours = Math.floor(remainingAfterDays / 60);
+    const minutes = remainingAfterDays % 60;
+
+    const parts = [];
+
+    if (days > 0) {
+        parts.push(`${days} ${days === 1 ? "dag" : "dagen"}`);
+    }
+
+    if (hours > 0) {
+        parts.push(`${hours} uur`);
+    }
+
+    if (minutes > 0) {
+        parts.push(`${minutes} min`);
+    }
+
+    if (parts.length === 0) {
+        return "0 min";
+    }
+
+    return parts.join(" ");
+}
+
+
+// ==================================================
+// SLIDERWAARDE WEERGEVEN
+// ==================================================
+
+function updateNotificationSliderOutput(app, id, value) {
+    const outputs = {
+        "notification-prediction-days": {
+            element: "notification-prediction-value",
+            format: value => `${value} dagen`
+        },
+
+        "notification-buffer-delay": {
+            element: "notification-buffer-delay-value",
+            format: value => `${value} seconden`
+        },
+
+        "notification-repeat-interval": {
+            element: "notification-repeat-interval-value",
+            format: formatNotificationDuration
+        }
+    };
+
+    const config = outputs[id];
+
+    if (!config) return;
+
+    const output = app.querySelector(`#${config.element}`);
+
+    if (output) {
+        output.textContent = config.format(value);
+    }
+}
+
+
+// ==================================================
+// NOTIFICATIEBESTEMMINGEN WEERGEVEN
+// ==================================================
 
 export function applyNotificationTargets(app) {
     if (!app) return;
@@ -472,8 +597,6 @@ export function applyNotificationTargets(app) {
         </details>
     `;
 
-    // Lucide-iconen opnieuw initialiseren indien beschikbaar.
-
     if (window.lucide) {
         window.lucide.createIcons();
     }
@@ -485,7 +608,6 @@ export function applyNotificationTargets(app) {
 // ==================================================
 // STATUS VAN NOTIFICATIEBESTEMMINGEN
 // ==================================================
-
 
 function updateNotificationDestinationStatus(app) {
     const count = notificationSettings.destinations.length;
@@ -551,12 +673,14 @@ async function updateNotificationDestinations(app) {
 export function applyNotificationSettings(settings, app) {
     if (!app || !settings) return;
 
+    configureNotificationSliders(app);
+
     Object.entries(NOTIFICATION_ELEMENTS).forEach(([id, path]) => {
         const element = app.querySelector(`#${id}`);
 
         if (!element) return;
 
-        const value = path.split(".").reduce(
+        let value = path.split(".").reduce(
             (object, key) => object?.[key],
             settings
         );
@@ -565,36 +689,19 @@ export function applyNotificationSettings(settings, app) {
             element.checked = Boolean(value);
 
         } else if (value !== undefined && value !== null) {
+            if (element.type === "range") {
+                value = normalizeSliderValue(id, value);
+            }
+
             element.value = value;
         }
-    });
 
-    // Sliderwaarden en eenheden bijwerken.
-
-// Sliderwaarden en eenheden bijwerken.
-
-    const outputs = [
-        [
-            "notification-prediction-value",
-            `${settings.fragrances.predictionDays} dagen`
-        ],
-        [
-            "notification-buffer-delay-value",
-            `${settings.buffer.delaySeconds} seconden`
-        ],
-        [
-            "notification-repeat-interval-value",
-            formatNotificationDuration(
-                settings.repeat.intervalMinutes
-            )
-        ]
-    ];
-
-    outputs.forEach(([id, value]) => {
-        const element = app.querySelector(`#${id}`);
-
-        if (element) {
-            element.textContent = value;
+        if (element.type === "range") {
+            updateNotificationSliderOutput(
+                app,
+                id,
+                Number(element.value)
+            );
         }
     });
 
@@ -609,6 +716,8 @@ export function applyNotificationSettings(settings, app) {
 export function setupNotificationListeners(app) {
     if (!app || initializedApps.has(app)) return;
 
+    configureNotificationSliders(app);
+
     // Gewone notificatie-instellingen.
 
     Object.entries(NOTIFICATION_ELEMENTS).forEach(([id, path]) => {
@@ -617,48 +726,53 @@ export function setupNotificationListeners(app) {
         if (!element) return;
 
         element.addEventListener("change", () => {
-            const value = element.type === "checkbox"
-                ? element.checked
-                : element.type === "range" ||
-                  element.type === "number"
-                    ? Number(element.value)
-                    : element.value;
+            let value;
+
+            if (element.type === "checkbox") {
+                value = element.checked;
+
+            } else if (
+                element.type === "range" ||
+                element.type === "number"
+            ) {
+                value = Number(element.value);
+
+            } else {
+                value = element.value;
+            }
+
+            // Sliderwaarde binnen het ingestelde bereik houden.
+
+            if (element.type === "range") {
+                value = normalizeSliderValue(id, value);
+                element.value = value;
+
+                updateNotificationSliderOutput(
+                    app,
+                    id,
+                    value
+                );
+            }
 
             void updateNotificationSettings(path, value);
+        });
 
-            // Slidertekst direct bijwerken.
+        // Slidertekst direct bijwerken tijdens het slepen.
 
-            // Slidertekst direct bijwerken.
-
-            const outputs = {
-                "notification-prediction-days": {
-                    element: "notification-prediction-value",
-                    format: value => `${value} dagen`
-                },
-
-                "notification-buffer-delay": {
-                    element: "notification-buffer-delay-value",
-                    format: value => `${value} seconden`
-                },
-
-                "notification-repeat-interval": {
-                    element: "notification-repeat-interval-value",
-                    format: formatNotificationDuration
-                }
-            };
-
-            const outputConfig = outputs[id];
-
-            if (outputConfig) {
-                const output = app.querySelector(
-                    `#${outputConfig.element}`
+        if (element.type === "range") {
+            element.addEventListener("input", () => {
+                const value = normalizeSliderValue(
+                    id,
+                    element.value
                 );
 
-                if (output) {
-                    output.textContent = outputConfig.format(value);
-                }
-            }
-        });
+                updateNotificationSliderOutput(
+                    app,
+                    id,
+                    value
+                );
+            });
+        }
     });
 
     // Algemene notificatiebestemmingen.
@@ -701,10 +815,11 @@ export async function setupNotifications(app) {
 
         const settings = await loadNotificationSettings();
 
-        // Eventlisteners installeren voordat de interface
-        // interactief wordt.
+        // Sliders en eventlisteners instellen.
 
         setupNotificationListeners(app);
+
+        // Instellingen in de interface plaatsen.
 
         applyNotificationSettings(settings, app);
 
