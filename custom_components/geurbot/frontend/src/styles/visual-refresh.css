@@ -6,24 +6,24 @@
 ========================================================= */
 
 :root {
-    --bg-main: #0b1020;
-    --bg-sidebar: #10182a;
-    --bg-content: #0e1728;
-    --bg-card: #172338;
-    --bg-input: #101b2e;
-    --bg-hover: #20314b;
-    --border: #2b3b55;
-    --border-soft: #22324a;
-    --text-primary: #edf3ff;
-    --text-secondary: #a4b3c9;
-    --text-muted: #71839e;
-    --accent: #69a8ff;
-    --accent-dark: #347bd2;
-    --accent-light: #a9d0ff;
+    --bg-main: #09090e;
+    --bg-sidebar: #101016;
+    --bg-content: #111119;
+    --bg-card: #191922;
+    --bg-input: #101018;
+    --bg-hover: #23222d;
+    --border: #34313f;
+    --border-soft: #292733;
+    --text-primary: #f0eef5;
+    --text-secondary: #aaa5b5;
+    --text-muted: #777382;
+    --accent: #89799f;
+    --accent-dark: #5d506f;
+    --accent-light: #c0b3d0;
     --success: #58d6a0;
     --warning: #f4bd68;
     --danger: #ff7888;
-    --surface-raised: #1b2a42;
+    --surface-raised: #211f2b;
     --shadow-soft: 0 8px 24px rgba(0, 0, 0, .18);
     --radius-card: 14px;
     --radius-control: 9px;
@@ -243,13 +243,13 @@ body {
 .device-card:hover,
 .fragrance-card:hover,
 .discovered-device:hover {
-    border-color: #45658d;
+    border-color: #51485f;
     background: var(--bg-hover);
     box-shadow: var(--shadow-soft);
 }
 .device-card.selected {
     border-color: var(--accent);
-    background: rgba(105, 168, 255, .11);
+    background: rgba(137, 121, 159, .12);
     box-shadow: inset 3px 0 var(--accent), var(--shadow-soft);
 }
 .fragrance-card {
@@ -287,7 +287,7 @@ input::placeholder, textarea::placeholder {
 input:focus, select:focus, textarea:focus {
     border-color: var(--accent) !important;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(105, 168, 255, .14);
+    box-shadow: 0 0 0 3px rgba(137, 121, 159, .16);
 }
 .device-search {
     height: 40px;
@@ -307,8 +307,8 @@ input:focus, select:focus, textarea:focus {
 .add-discovered-device,
 .device-form-submit,
 .settings-refresh {
-    border: 1px solid rgba(105, 168, 255, .35);
-    background: rgba(105, 168, 255, .13);
+    border: 1px solid rgba(137, 121, 159, .34);
+    background: rgba(137, 121, 159, .12);
     color: var(--accent-light);
     font-weight: 650;
 }
@@ -323,7 +323,7 @@ input:focus, select:focus, textarea:focus {
 .device-form-submit:hover,
 .settings-refresh:hover {
     border-color: var(--accent);
-    background: rgba(105, 168, 255, .22);
+    background: rgba(137, 121, 159, .20);
     color: #fff;
 }
 .add-device-button {
@@ -378,7 +378,7 @@ input:focus, select:focus, textarea:focus {
 .schedule-view-button.active,
 .schedule-weekday.active {
     border-color: var(--accent);
-    background: rgba(105, 168, 255, .16);
+    background: rgba(137, 121, 159, .15);
     color: var(--accent-light);
 }
 
@@ -390,7 +390,7 @@ input:focus, select:focus, textarea:focus {
 .schedule-modal {
     border-color: var(--border);
     border-radius: 16px;
-    background: #142137;
+    background: #15141d;
     color: var(--text-primary);
     box-shadow: 0 24px 80px rgba(0, 0, 0, .48);
 }
@@ -404,7 +404,7 @@ input:focus, select:focus, textarea:focus {
 }
 .settings-tab.active,
 .general-settings-tab.active {
-    background: rgba(105, 168, 255, .16);
+    background: rgba(137, 121, 159, .15);
     color: var(--accent-light);
 }
 .settings-card,
