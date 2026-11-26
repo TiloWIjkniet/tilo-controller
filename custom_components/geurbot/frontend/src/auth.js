@@ -62,8 +62,7 @@ if (isEmbedded) {
 
 console.log("[GeurBot Auth] Token gebruikt voor request:", {
     lengte: accessToken?.length,
-    laatsteTekens: accessToken?.slice(-6),
-    url: url.pathname
+    laatsteTekens: accessToken?.slice(-6)
 });
 const originalFetch = window.fetch.bind(window);
 
