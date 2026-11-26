@@ -58,7 +58,7 @@ class ScheduleRunner:
 
     # ==================================================
     # MAIN LOOP
-    # ==================================================
+    # ==================================================s
 
     async def run(self):
         while self.running:
@@ -95,7 +95,15 @@ class ScheduleRunner:
 
             for fragrance in device.get("fragrances", []):
 
+                # Controleer of de geur is ingeschakeld.
+                if not fragrance.get("enabled", True):
+                    continue
+
                 for schedule in fragrance.get("schedule", []):
+
+                    # Controleer of het schema is ingeschakeld.
+                    if not schedule.get("enabled", True):
+                        continue
 
                     schedule_id = schedule.get("id")
 
@@ -105,16 +113,19 @@ class ScheduleRunner:
                         minute_key
                     )
 
+                    # Voorkom dubbele uitvoering.
                     if schedule_key in self.executed_schedules:
                         continue
 
+                    # Controleer de ingestelde tijd.
                     if schedule.get("time") != current_time:
                         continue
 
+                    # Controleer de ingestelde dagen.
                     if current_weekday not in schedule.get("days", []):
                         continue
 
-                    # Voorkom dubbele uitvoering.
+                    # Markeer het schema als uitgevoerd.
                     self.executed_schedules.add(schedule_key)
 
                     if self.on_state_changed:
@@ -137,55 +148,68 @@ class ScheduleRunner:
         device_id = device["id"]
         mac_address = fragrance["mac_address"]
 
-        amount = schedule.get("sprays", 1)
+        amount = int(schedule.get("sprays", 1))
         schedule_id = schedule.get("id")
 
-        fragrance_name = fragrance.get("name", "Onbekende geur")
-        device_name = device.get("name", "Onbekend apparaat")
+        fragrance_name = fragrance.get(
+            "name",
+            "Onbekende geur"
+        )
+
+        device_name = device.get(
+            "name",
+            "Onbekend apparaat"
+        )
+
+        if amount <= 0:
+            print(
+                f"[SCHEDULE] Ongeldig aantal sprays: {amount}"
+            )
+            return
 
         print(
             f"[SCHEDULE] Uitvoeren: {fragrance_name} "
             f"op {device_name} ({amount} sprays)"
         )
 
+        # --------------------------------------------------
+        # SPRAYS UITVOEREN
+        # --------------------------------------------------
+
         for spray_number in range(amount):
 
             try:
+                print(
+                    f"[SCHEDULE] Aanvraag versturen: "
+                    f"{spray_number + 1}/{amount} "
+                    f"naar {device_name}"
+                )
+
                 result = await execute_device_fragrance_spray(
                     device,
                     mac_address
                 )
 
+                print(
+                    f"[SCHEDULE] ESP antwoord: {result}"
+                )
+
                 if not result or not result.get("success"):
                     error_message = (
                         result.get("error", "Spray mislukt")
-                        if result else "Geen resultaat ontvangen"
+                        if result
+                        else "Geen resultaat ontvangen"
                     )
 
                     raise Exception(error_message)
 
                 print(
-                    f"[SCHEDULE] Spray {spray_number + 1}/{amount} "
-                    f"uitgevoerd: {fragrance_name}"
+                    f"[SCHEDULE] Spray "
+                    f"{spray_number + 1}/{amount} uitgevoerd: "
+                    f"{fragrance_name}"
                 )
 
-                await send_notification(
-                    notification_type="schedule.spraySuccess",
-                    title="GeurBot heeft gesprayd",
-                    message=(
-                        f"{fragrance_name} is succesvol gesprayd "
-                        f"op apparaat {device_name}."
-                    ),
-                    device_id=device_id,
-                    fragrance_mac=mac_address,
-                    details={
-                        "schedule_id": schedule_id,
-                        "sprays": amount,
-                        "device_name": device_name,
-                        "fragrance_name": fragrance_name
-                    }
-                )
-
+                # Wacht tussen de sprays.
                 if spray_number < amount - 1:
                     await asyncio.sleep(SPRAY_INTERVAL)
 
@@ -194,27 +218,38 @@ class ScheduleRunner:
 
             except Exception as error:
 
-                print(f"[SCHEDULE] Spray mislukt: {error}")
+                print(
+                    f"[SCHEDULE] Spray "
+                    f"{spray_number + 1}/{amount} mislukt: {error}"
+                )
+
+                # --------------------------------------------------
+                # FOUTNOTIFICATIE
+                # --------------------------------------------------
 
                 try:
                     await send_notification(
                         notification_type="schedule.sprayError",
                         title="Geplande spray mislukt",
-                      message=(
+                        message=(
                             f"De geplande spray van {fragrance_name} "
                             f"op apparaat {device_name} is mislukt. "
-                            f"Spray {spray_number + 1} van {amount}."
+                            f"Spray {spray_number + 1} van {amount}. "
+                            f"Fout: {error}"
                         ),
-                                    
                         device_id=device_id,
-                        fragrance_mac=mac_address,
                         details={
                             "schedule_id": schedule_id,
                             "spray_number": spray_number + 1,
                             "total_sprays": amount,
+                            "device_name": device_name,
+                            "fragrance_name": fragrance_name,
                             "error": str(error)
                         }
                     )
+
+                except asyncio.CancelledError:
+                    raise
 
                 except Exception as notification_error:
                     print(
@@ -224,7 +259,11 @@ class ScheduleRunner:
 
                 return
 
+        # --------------------------------------------------
+        # KLAAR
+        # --------------------------------------------------
+
         print(
             f"[SCHEDULE] Uitgevoerd: {fragrance_name} "
-            f"op {device_name}"
+            f"op {device_name} ({amount} sprays)"
         )

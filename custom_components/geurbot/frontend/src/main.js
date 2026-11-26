@@ -1,5 +1,6 @@
 import { geurbotAuthReady } from "./auth.js";
 
+
 import { createApp } from "./app/app.js";
 import { updateDeviceStatus } from "./components/devices/device-status.js";
 import { updateDeviceFirmware } from "./components/devices/device-firmware.js";
@@ -13,6 +14,7 @@ import { startScheduleClock } from "./components/schedule/schedule-list.js";
 import { initializeScheduleEvents } from "./components/schedule/schedule-events.js";
 import { fetchDeviceFirmwareInfo } from "./services/services.js";
 import { setupGeneralSettings } from "./components/algemene-settings/settings-general.js";
+
 
 const authReady = await geurbotAuthReady;
 if (!authReady) {
@@ -34,92 +36,11 @@ setupFragranceSelection(app);
 setupDeviceSettings(app);
 setupGeneralSettings(app);
 
-// --------------------------------------------------
-// Back-off helper tegen overbelasting en IP-bans
-// --------------------------------------------------
-
-function createBackoff(baseErrorDelay = 30 * 1000, maxErrorDelay = 5 * 60 * 1000) {
-    let errorCount = 0;
-
-    return {
-        recordSuccess() {
-            errorCount = 0;
-        },
-        recordError() {
-            errorCount++;
-            return Math.min(baseErrorDelay * Math.pow(2, errorCount - 1), maxErrorDelay);
-        },
-        reset() {
-            errorCount = 0;
-        }
-    };
-}
-
-// --------------------------------------------------
-// 1. Netwerkstatus polling (elke 60s)
-// --------------------------------------------------
-
-const networkBackoff = createBackoff(30 * 1000, 5 * 60 * 1000);
-let networkTimer = null;
-
-async function pollNetworkStatus() {
-    let hasError = false;
-
-    const cards = [...app.querySelectorAll(".device-card")];
-
-    await Promise.all(
-        cards.map(async (card) => {
-            try {
-                await updateDeviceStatus(card, card.dataset.deviceId);
-            } catch (error) {
-                hasError = true;
-                console.error(`[NETWORK] Status ophalen mislukt ${card.dataset.deviceId}:`, error);
-            }
-        })
-    );
-
-    const nextDelay = hasError ? networkBackoff.recordError() : 60 * 1000;
-    if (!hasError) networkBackoff.recordSuccess();
-
-    clearTimeout(networkTimer);
-    networkTimer = setTimeout(pollNetworkStatus, nextDelay);
-}
-
-// --------------------------------------------------
-// 2. Geurstatus polling (elke 30s)
-// --------------------------------------------------
-
-function updateFragranceIcons() {
+function refreshNetworkStatus() {
     app.querySelectorAll(".device-card").forEach(card => {
-        const device = devices.find(device => device.id === card.dataset.deviceId);
-
-        if (device)
-            updateDeviceFragrance(card, device.fragrances, !device.unreachable);
+        updateDeviceStatus(card, card.dataset.deviceId);
     });
 }
-
-const fragranceBackoff = createBackoff(30 * 1000, 5 * 60 * 1000);
-let fragranceTimer = null;
-
-async function pollFragranceStatus() {
-    let nextDelay = 30 * 1000;
-
-    try {
-        await refreshDevices();
-        updateFragranceIcons();
-        fragranceBackoff.recordSuccess();
-    } catch (error) {
-        console.error("[FRAGRANCE] Status ophalen mislukt:", error);
-        nextDelay = fragranceBackoff.recordError();
-    }
-
-    clearTimeout(fragranceTimer);
-    fragranceTimer = setTimeout(pollFragranceStatus, nextDelay);
-}
-
-// --------------------------------------------------
-// 3. Firmwarestatus polling (elke 2s, of 10m bij update)
-// --------------------------------------------------
 
 async function refreshFirmwareStatus() {
     const targets = [...app.querySelectorAll(".device-card")].map(card => ({
@@ -148,8 +69,6 @@ async function refreshFirmwareStatus() {
         grouped.get(target.deviceId).push(target);
     }
 
-    let hasError = false;
-
     const results = await Promise.all(
         [...grouped.entries()].map(async ([deviceId, elements]) => {
             try {
@@ -159,18 +78,38 @@ async function refreshFirmwareStatus() {
                     updateDeviceFirmware(element, deviceId, firmware)
                 );
             } catch (error) {
-                hasError = true;
                 console.error(`[FIRMWARE] Status ophalen mislukt ${deviceId}:`, error);
                 return [];
             }
         })
     );
 
-    const running = results.flat().some(status => status?.running);
-    return { running, hasError };
+    return results.flat().some(status => status?.running);
 }
 
-const firmwareBackoff = createBackoff(30 * 1000, 5 * 60 * 1000);
+function updateFragranceIcons() {
+    app.querySelectorAll(".device-card").forEach(card => {
+        const device = devices.find(device => device.id === card.dataset.deviceId);
+
+        if (device)
+            updateDeviceFragrance(card, device.fragrances, !device.unreachable);
+    });
+}
+
+async function refreshFragranceStatus() {
+    await refreshDevices();
+    updateFragranceIcons();
+}
+
+// De gegevens zijn al opgehaald door loadDevices().
+initializeScheduleEvents();
+startScheduleClock();
+refreshNetworkStatus();
+updateFragranceIcons();
+
+setInterval(refreshNetworkStatus, 60 * 1000);
+setInterval(refreshFragranceStatus, 30 * 1000);
+
 let firmwareInterval = null;
 let firmwarePolling = false;
 let firmwareStartPending = false;
@@ -181,14 +120,10 @@ async function pollFirmwareStatus() {
     firmwarePolling = true;
 
     let updating = false;
-    let hasError = false;
 
     try {
-        const result = await refreshFirmwareStatus();
-        updating = result.running;
-        hasError = result.hasError;
+        updating = await refreshFirmwareStatus();
     } catch (error) {
-        hasError = true;
         console.error("[FIRMWARE] Status ophalen mislukt:", error);
     } finally {
         firmwarePolling = false;
@@ -199,32 +134,17 @@ async function pollFirmwareStatus() {
 
     clearTimeout(firmwareInterval);
 
-    let nextDelay;
-    if (hasError) {
-        nextDelay = firmwareBackoff.recordError();
-    } else {
-        firmwareBackoff.recordSuccess();
-        nextDelay = updating || firmwareStartPending ? 10 * 60 * 1000 : 2000;
-    }
-
-    firmwareInterval = setTimeout(pollFirmwareStatus, nextDelay);
+    firmwareInterval = setTimeout(
+        pollFirmwareStatus,
+        updating || firmwareStartPending ?  2000 : 10 * 60 * 1000 ;
+    );
 }
+    document.addEventListener("geurbot:firmware-update-started", () => {
+  
 
-document.addEventListener("geurbot:firmware-update-started", () => {
     firmwareStartPending = true;
-    firmwareBackoff.reset();
     clearTimeout(firmwareInterval);
     pollFirmwareStatus();
 });
 
-// --------------------------------------------------
-// Initialisatie
-// --------------------------------------------------
-
-initializeScheduleEvents();
-startScheduleClock();
-updateFragranceIcons();
-
-pollNetworkStatus();
-pollFragranceStatus();
 pollFirmwareStatus();
