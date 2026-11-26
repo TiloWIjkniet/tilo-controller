@@ -451,11 +451,11 @@ export function createNotificationsTemplate() {
                                 id="notification-buffer-delay"
                                 min="1"
                                 max="300"
-                                value="10"
-                                step="1">
+                                value="15"
+                                step="15">
 
                             <div class="notification-slider-labels">
-                                <span>1 seconde</span>
+                                <span>15 seconde</span>
                                 <span>300 seconden</span>
                             </div>
 
@@ -511,13 +511,13 @@ export function createNotificationsTemplate() {
                             <input
                                 type="range"
                                 id="notification-repeat-interval"
-                                min="1"
+                                min="30"
                                 max="10080"
                                 value="360"
-                                step="1">
+                                step="60">
 
                             <div class="notification-slider-labels">
-                                <span>1 minuut</span>
+                                <span>1 uur</span>
                                 <span>7 dagen</span>
                             </div>
 

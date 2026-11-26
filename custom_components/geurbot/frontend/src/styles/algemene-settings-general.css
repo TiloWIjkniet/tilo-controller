@@ -1343,6 +1343,7 @@
     border-top: none;
     border-radius: 0 0 10px 10px;
     background: var(--card-background-color);
+    
 }
 
 .notification-destination-option {
@@ -1390,4 +1391,14 @@
 .notification-destination-dropdown[open]
 .notification-destination-trigger svg {
     transform: rotate(180deg);
+}
+
+/* Alle notificatie-interval sliders volledige breedte geven */
+.notification-settings input[type="range"] {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    flex: 1 1 100%;
 }

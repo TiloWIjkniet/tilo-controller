@@ -81,18 +81,44 @@ class FragranceMonitor:
         title,
         message,
         device_id=None,
+        device_name=None,
         fragrance_mac=None,
+        fragrance_name=None,
         details=None,
     ):
         notification_details = dict(details or {})
 
+        # Apparaatgegevens altijd meesturen.
+        if device_id is not None:
+            notification_details["device_id"] = device_id
+
+        if device_name:
+            notification_details["device_name"] = device_name
+
+        # Gegevens van de geurmodule meesturen indien beschikbaar.
         if fragrance_mac:
             notification_details["fragrance_mac"] = fragrance_mac
+
+        if fragrance_name:
+            notification_details["fragrance_name"] = fragrance_name
+
+        # Voeg apparaat en geur toe aan de leesbare notificatie.
+        context = []
+
+        if device_name:
+            context.append(f"Apparaat: {device_name}")
+
+        if fragrance_name:
+            context.append(f"Geur: {fragrance_name}")
+
+        if context:
+            message = f"{message}\n\n" + " | ".join(context)
 
         try:
             print(
                 f"[FRAGRANCE MONITOR] Notificatie toegevoegd: "
-                f"{notification_type}"
+                f"{notification_type} "
+                f"(apparaat: {device_name or device_id or 'onbekend'})"
             )
 
             await notification_manager.send_notification(
@@ -103,6 +129,9 @@ class FragranceMonitor:
                 fragrance_mac=fragrance_mac,
                 details=notification_details,
             )
+
+        except asyncio.CancelledError:
+            raise
 
         except Exception as error:
             print(
@@ -140,13 +169,14 @@ class FragranceMonitor:
                 )
                 continue
 
-            name = device.get("name", device_id)
+            device_name = device.get("name", str(device_id))
 
             try:
                 await self.check_device(device, device_id)
 
                 print(
-                    f"[FRAGRANCE MONITOR] {name}: controle afgerond"
+                    f"[FRAGRANCE MONITOR] {device_name}: "
+                    f"controle afgerond"
                 )
 
             except asyncio.CancelledError:
@@ -154,7 +184,7 @@ class FragranceMonitor:
 
             except Exception as error:
                 print(
-                    f"[FRAGRANCE MONITOR] {name}: "
+                    f"[FRAGRANCE MONITOR] {device_name}: "
                     f"controle mislukt: {error}"
                 )
 
@@ -165,7 +195,7 @@ class FragranceMonitor:
     # ==================================================
 
     async def check_device(self, device, device_id):
-        name = device.get("name", device_id)
+        device_name = device.get("name", str(device_id))
 
         try:
             result = await get_data(
@@ -179,7 +209,7 @@ class FragranceMonitor:
         except Exception as error:
             print(
                 f"[FRAGRANCE MONITOR] Verbinding mislukt "
-                f"met {name}: {error}"
+                f"met {device_name}: {error}"
             )
 
             result = {
@@ -189,7 +219,8 @@ class FragranceMonitor:
 
         if not isinstance(result, dict):
             print(
-                f"[FRAGRANCE MONITOR] Ongeldige response van {name}"
+                f"[FRAGRANCE MONITOR] Ongeldige response "
+                f"van {device_name}"
             )
 
             result = {
@@ -216,15 +247,19 @@ class FragranceMonitor:
             self.device_states[device_id] = False
 
             print(
-                f"[FRAGRANCE MONITOR] {name}: NIET BEREIKBAAR"
+                f"[FRAGRANCE MONITOR] "
+                f"{device_name}: NIET BEREIKBAAR"
             )
 
             if was_reachable is not False:
                 await self.notify(
                     notification_type="devices.offline",
                     title="Apparaat niet bereikbaar",
-                    message=f"Apparaat {name} is niet bereikbaar.",
+                    message=(
+                        f"Apparaat {device_name} is niet bereikbaar."
+                    ),
                     device_id=device_id,
+                    device_name=device_name,
                     details={
                         "error": result.get("error")
                     },
@@ -242,8 +277,11 @@ class FragranceMonitor:
             await self.notify(
                 notification_type="devices.online",
                 title="Apparaat weer bereikbaar",
-                message=f"Apparaat {name} is weer bereikbaar.",
+                message=(
+                    f"Apparaat {device_name} is weer bereikbaar."
+                ),
                 device_id=device_id,
+                device_name=device_name,
             )
 
         # ----------------------------------------------
@@ -263,7 +301,8 @@ class FragranceMonitor:
 
         if not isinstance(esp_fragrances, list):
             print(
-                f"[FRAGRANCE MONITOR] Ongeldige geurdata van {name}"
+                f"[FRAGRANCE MONITOR] "
+                f"Ongeldige geurdata van {device_name}"
             )
             return
 
@@ -287,7 +326,7 @@ class FragranceMonitor:
             fragrances = []
 
         print(
-            f"[FRAGRANCE MONITOR] {name}: "
+            f"[FRAGRANCE MONITOR] {device_name}: "
             f"{len(fragrances)} geurmodule(s) gevonden"
         )
 
@@ -337,11 +376,11 @@ class FragranceMonitor:
                 print(
                     f"[FRAGRANCE MONITOR] Geurmodule "
                     f"{fragrance.get('name', 'onbekend')} "
-                    f"controle mislukt: {error}"
+                    f"op {device_name}: controle mislukt: {error}"
                 )
 
         print(
-            f"[FRAGRANCE MONITOR] {name}: "
+            f"[FRAGRANCE MONITOR] {device_name}: "
             f"alle geurmodules gecontroleerd"
         )
 
@@ -361,8 +400,10 @@ class FragranceMonitor:
         if not mac_address:
             return
 
-        name = fragrance.get("name", mac_address)
-        key = (device_id, mac_address)
+        device_name = device.get("name", str(device_id))
+        fragrance_name = fragrance.get("name", mac_address)
+
+        key = (device_id, mac_address, "availability")
 
         was_reachable = self.fragrance_states.get(key)
 
@@ -381,16 +422,22 @@ class FragranceMonitor:
 
             print(
                 f"[FRAGRANCE MONITOR] "
-                f"Geurmodule {name}: NIET BEREIKBAAR"
+                f"Geurmodule {fragrance_name} op "
+                f"{device_name}: NIET BEREIKBAAR"
             )
 
             if was_reachable is not False:
                 await self.notify(
                     notification_type="fragrances.unavailable",
                     title="Geurmodule niet bereikbaar",
-                    message=f"Geurmodule {name} is niet bereikbaar.",
+                    message=(
+                        f"Geurmodule {fragrance_name} "
+                        f"is niet bereikbaar."
+                    ),
                     device_id=device_id,
+                    device_name=device_name,
                     fragrance_mac=mac_address,
+                    fragrance_name=fragrance_name,
                 )
 
         else:
@@ -400,9 +447,14 @@ class FragranceMonitor:
                 await self.notify(
                     notification_type="fragrances.available",
                     title="Geurmodule weer bereikbaar",
-                    message=f"Geurmodule {name} is weer bereikbaar.",
+                    message=(
+                        f"Geurmodule {fragrance_name} "
+                        f"is weer bereikbaar."
+                    ),
                     device_id=device_id,
+                    device_name=device_name,
                     fragrance_mac=mac_address,
+                    fragrance_name=fragrance_name,
                 )
 
     # ==================================================
@@ -421,7 +473,8 @@ class FragranceMonitor:
         if not mac_address:
             return
 
-        name = saved_fragrance.get("name", mac_address)
+        device_name = device.get("name", str(device_id))
+        fragrance_name = saved_fragrance.get("name", mac_address)
 
         # ----------------------------------------------
         # BESCHIKBAARHEID
@@ -430,7 +483,6 @@ class FragranceMonitor:
         available = esp_fragrance.get("available", False) is True
 
         empty_key = (device_id, mac_address, "empty")
-
         was_available = self.fragrance_states.get(empty_key)
 
         active_empty_key = (
@@ -452,10 +504,12 @@ class FragranceMonitor:
                     title="Geur niet beschikbaar",
                     message=(
                         f"Er is geen geur meer beschikbaar "
-                        f"in flacon {name}."
+                        f"in flacon {fragrance_name}."
                     ),
                     device_id=device_id,
+                    device_name=device_name,
                     fragrance_mac=mac_address,
+                    fragrance_name=fragrance_name,
                 )
 
         else:
@@ -467,10 +521,12 @@ class FragranceMonitor:
                     title="Geur weer beschikbaar",
                     message=(
                         f"Er is weer geur beschikbaar "
-                        f"in flacon {name}."
+                        f"in flacon {fragrance_name}."
                     ),
                     device_id=device_id,
+                    device_name=device_name,
                     fragrance_mac=mac_address,
+                    fragrance_name=fragrance_name,
                 )
 
         # ----------------------------------------------
@@ -488,7 +544,8 @@ class FragranceMonitor:
             except (TypeError, ValueError):
                 print(
                     f"[FRAGRANCE MONITOR] Ongeldige "
-                    f"leegmeting voor {name}"
+                    f"leegmeting voor {fragrance_name} "
+                    f"op {device_name}"
                 )
 
             else:
@@ -515,9 +572,14 @@ class FragranceMonitor:
                     await self.notify(
                         notification_type="fragrances.empty",
                         title="Geurflacon fysiek leeg",
-                        message=f"De geurflacon {name} is fysiek leeg.",
+                        message=(
+                            f"De geurflacon {fragrance_name} "
+                            f"is fysiek leeg."
+                        ),
                         device_id=device_id,
+                        device_name=device_name,
                         fragrance_mac=mac_address,
+                        fragrance_name=fragrance_name,
                         details={
                             "empty_bottle_value": empty_value,
                             "empty_bottle_threshold": threshold,
@@ -551,7 +613,8 @@ class FragranceMonitor:
         except (TypeError, ValueError):
             print(
                 f"[FRAGRANCE MONITOR] Ongeldige "
-                f"voorraadgegevens voor {name}"
+                f"voorraadgegevens voor {fragrance_name} "
+                f"op {device_name}"
             )
             return
 
@@ -587,9 +650,7 @@ class FragranceMonitor:
             f"fragrance:{device_id}:{mac_address}:predicted_empty"
         )
 
-        was_predicted = self.fragrance_states.get(
-            prediction_key
-        )
+        was_predicted = self.fragrance_states.get(prediction_key)
 
         if (
             was_predicted is None
@@ -606,11 +667,13 @@ class FragranceMonitor:
                 notification_type="fragrances.predictedEmpty",
                 title="Geurflacon bijna leeg",
                 message=(
-                    f"De geurflacon {name} is naar verwachting "
-                    f"over {days_remaining:.1f} dagen leeg."
+                    f"De geurflacon {fragrance_name} is naar "
+                    f"verwachting over {days_remaining:.1f} dagen leeg."
                 ),
                 device_id=device_id,
+                device_name=device_name,
                 fragrance_mac=mac_address,
+                fragrance_name=fragrance_name,
                 details={
                     "days_remaining": round(days_remaining, 1),
                     "remaining_sprays": remaining_sprays,
@@ -625,10 +688,12 @@ class FragranceMonitor:
                 title="Geurflacon weer op voorraad",
                 message=(
                     f"De voorspelde bijna-leeg waarschuwing "
-                    f"voor {name} is niet meer van toepassing."
+                    f"voor {fragrance_name} is niet meer van toepassing."
                 ),
                 device_id=device_id,
+                device_name=device_name,
                 fragrance_mac=mac_address,
+                fragrance_name=fragrance_name,
             )
 
     # ==================================================
