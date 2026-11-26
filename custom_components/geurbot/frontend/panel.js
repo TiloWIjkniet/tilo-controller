@@ -81,18 +81,42 @@ class GeurBotPanel extends HTMLElement {
 
         this._resizeObserver.observe(this);
 
-        this._authMessageHandler = (event) => {
+
+        _sendAuth(force = false, requestId = null) {
+            const token = this._hass?.auth?.data?.access_token;
+
             if (
-                event.origin !== window.location.origin ||
-                event.source !== this._iframe?.contentWindow ||
-                event.data?.type !== "geurbot-auth-request"
+                typeof token !== "string" ||
+                !token ||
+                !this._iframe?.contentWindow
             ) {
-                return;
+                console.warn("[GeurBot Auth] Geen HA-token beschikbaar.");
+                return false;
             }
-            // De iframe vraagt expliciet om het actuele token.
-            this._sendAuth(true);
-        };
-        window.addEventListener("message",this._authMessageHandler);
+
+            if (!force && token === this._lastSentToken) {
+                return false;
+            }
+
+            this._iframe.contentWindow.postMessage(
+                {
+                    type: "geurbot-auth",
+                    token,
+                    requestId
+                },
+                window.location.origin
+            );
+
+            this._lastSentToken = token;
+
+            console.info("[GeurBot Auth] Token verstuurd:", {
+                length: token.length,
+                requestId: Boolean(requestId)
+            });
+
+            return true;
+        }
+
         
     }
 
