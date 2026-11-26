@@ -7,7 +7,7 @@ import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .esp_client import EspClient
+from .backend.communication.esp_client import EspClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +24,9 @@ class GeurBotCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self):
-        result = await EspClient(self.hass, self.device).request(
-            "GET", "/api/device/fragrances/get-all"
-        )
+        result = await EspClient(self.device).request(
+        "GET", "/api/device/fragrances/get-all"
+    )
         if not result.get("success"):
             raise UpdateFailed(result.get("error") or f"ESP HTTP {result.get('status')}")
         payload = result.get("data")
@@ -73,9 +73,6 @@ class GeurBotCoordinator(DataUpdateCoordinator):
 
             updated_fragrances.append(updated_fragrance)
 
-        # Keep fragrances that are no longer returned by the ESP.
-        for mac_address, fragrance in existing_fragrances.items():
-            if mac_address not in returned_mac_addresses:
-                updated_fragrances.append(fragrance)
+
 
         self.device["fragrances"] = updated_fragrances

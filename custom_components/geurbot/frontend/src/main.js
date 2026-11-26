@@ -136,7 +136,7 @@ async function pollFirmwareStatus() {
 
     firmwareInterval = setTimeout(
         pollFirmwareStatus,
-        updating || firmwareStartPending ?  2000 : 10 * 60 * 1000 ;
+        updating || firmwareStartPending ?  2000 : 10 * 60 * 1000
     );
 }
     document.addEventListener("geurbot:firmware-update-started", () => {
