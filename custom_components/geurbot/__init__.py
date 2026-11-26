@@ -50,7 +50,14 @@ from .views import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+# ==================================================
+# HOME ASSISTANT SETUP
+# ==================================================
+
+async def async_setup(
+    hass: HomeAssistant,
+    config: dict,
+) -> bool:
     """Set up routes and services once for this HA instance."""
 
     async_register_services(hass)
@@ -64,11 +71,17 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
+# ==================================================
+# CONFIG ENTRY SETUP
+# ==================================================
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
 ) -> bool:
     """Set up GeurBot from a config entry."""
+
+    _LOGGER.info("GeurBot-integratie wordt gestart")
 
     # ==================================================
     # PERSISTENTE OPSLAG LADEN
@@ -77,7 +90,9 @@ async def async_setup_entry(
     store = GeurBotStore(hass)
     stored = await store.async_load()
 
-    set_shared_session(async_get_clientsession(hass))
+    set_shared_session(
+        async_get_clientsession(hass)
+    )
 
     # ==================================================
     # DEVICE MANAGER INITIALISEREN
@@ -85,9 +100,12 @@ async def async_setup_entry(
 
     manager = DeviceManager()
 
-    # Opgeslagen apparaten herstellen
+    # Opgeslagen apparaten herstellen.
     for device in stored.get("devices", {}).values():
-        if isinstance(device, dict) and device.get("device_id"):
+        if (
+            isinstance(device, dict)
+            and device.get("device_id")
+        ):
             manager.registry.add(device)
 
     runtime = {
@@ -107,6 +125,7 @@ async def async_setup_entry(
 
     for device_id, device in manager.registry.devices.items():
         coordinator = GeurBotCoordinator(hass, device)
+
         runtime["coordinators"][device_id] = coordinator
 
         try:
@@ -124,7 +143,9 @@ async def async_setup_entry(
     # ==================================================
 
     async def persist_devices() -> None:
-        await store.async_save_devices(manager.get_devices())
+        await store.async_save_devices(
+            manager.get_devices()
+        )
 
     manager.on_devices_changed = persist_devices
 
@@ -136,10 +157,17 @@ async def async_setup_entry(
         await persist_devices()
 
         device_id = device["device_id"]
-        coordinator = runtime["coordinators"].get(device_id)
+
+        coordinator = runtime["coordinators"].get(
+            device_id
+        )
 
         if coordinator is None:
-            coordinator = GeurBotCoordinator(hass, device)
+            coordinator = GeurBotCoordinator(
+                hass,
+                device
+            )
+
             runtime["coordinators"][device_id] = coordinator
 
         await coordinator.async_refresh()
@@ -164,12 +192,23 @@ async def async_setup_entry(
 
         def read_legacy_settings():
             try:
-                with legacy_file.open("r", encoding="utf-8") as legacy:
+                with legacy_file.open(
+                    "r",
+                    encoding="utf-8"
+                ) as legacy:
                     value = json.load(legacy)
 
-                return value if isinstance(value, dict) else None
+                return (
+                    value
+                    if isinstance(value, dict)
+                    else None
+                )
 
-            except (OSError, ValueError, TypeError):
+            except (
+                OSError,
+                ValueError,
+                TypeError,
+            ):
                 return None
 
         legacy_settings = await hass.async_add_executor_job(
@@ -184,16 +223,57 @@ async def async_setup_entry(
         try:
             validate_settings(settings)
 
-        except (ValueError, TypeError, KeyError):
-            settings = deepcopy(DEFAULT_NOTIFICATION_SETTINGS)
+        except (
+            ValueError,
+            TypeError,
+            KeyError,
+        ) as err:
+            _LOGGER.warning(
+                "Oude notificatie-instellingen zijn ongeldig. "
+                "Standaardinstellingen worden gebruikt: %s",
+                err,
+            )
+
+            settings = deepcopy(
+                DEFAULT_NOTIFICATION_SETTINGS
+            )
 
         store.data["notification_settings"] = settings
+
         await store.async_save()
 
-    # Instellingen beschikbaar maken voor de notificatiebackend
+        _LOGGER.info(
+            "Notificatie-instellingen hersteld of gemigreerd"
+        )
+
+    # ==================================================
+    # NOTIFICATIE-INSTELLINGEN PROVIDER EN WRITER
+    # ==================================================
+
+    def get_notification_settings():
+        """Return the current notification settings."""
+
+        return (
+            store.data.get("notification_settings")
+            or DEFAULT_NOTIFICATION_SETTINGS
+        )
+
+    async def persist_notification_settings(settings):
+        """Persist updated notification settings."""
+
+        store.data["notification_settings"] = deepcopy(
+            settings
+        )
+
+        await store.async_save()
+
+        _LOGGER.debug(
+            "Notificatie-instellingen opgeslagen"
+        )
+
     set_settings_provider(
-        lambda: store.data.get("notification_settings")
-        or DEFAULT_NOTIFICATION_SETTINGS
+        get_notification_settings,
+        persist_notification_settings,
     )
 
     # ==================================================
@@ -201,7 +281,7 @@ async def async_setup_entry(
     # ==================================================
 
     async def notification_handler(**notification):
-        """Verstuur notificaties via de geselecteerde bestemmingen."""
+        """Send notifications through selected HA targets."""
 
         return await send_notification(
             hass,
@@ -209,19 +289,33 @@ async def async_setup_entry(
                 "notification_type",
                 "event",
             ),
-            title=notification.get("title", "GeurBot"),
-            message=notification.get("message", ""),
+            title=notification.get(
+                "title",
+                "GeurBot",
+            ),
+            message=notification.get(
+                "message",
+                "",
+            ),
             device_id=notification.get("device_id"),
             details=notification.get("details"),
         )
 
-    # Handler koppelen aan de notificatiemanager
-    notification_manager.set_handler(notification_handler)
+    # ==================================================
+    # NOTIFICATIEMANAGER CONFIGUREREN
+    # ==================================================
 
-    # Home Assistant-tijd gebruiken
-    notification_manager.set_now_provider(dt_util.now)
+    # Handler moet ingesteld zijn voordat de manager start.
+    notification_manager.set_handler(
+        notification_handler
+    )
 
-    # Eerder opgeslagen notificatiestatus herstellen
+    # Home Assistant-tijd gebruiken.
+    notification_manager.set_now_provider(
+        dt_util.now
+    )
+
+    # Eerder opgeslagen notificatiestatus herstellen.
     notification_manager.restore_state(
         store.data.get("notification_state")
     )
@@ -231,21 +325,33 @@ async def async_setup_entry(
     # ==================================================
 
     async def persist_notification_state(state):
+        """Persist notification manager state."""
+
         store.data["notification_state"] = state
+
         await store.async_save()
 
     notification_manager.set_persist_handler(
         persist_notification_state
     )
 
-    # Notificatiemanager starten
+    # ==================================================
+    # NOTIFICATIEMANAGER STARTEN
+    # ==================================================
+
     await notification_manager.start()
+
+    _LOGGER.info(
+        "GeurBot-notificatiemanager is gestart"
+    )
 
     # ==================================================
     # FRAGRANCE MONITOR INITIALISEREN
     # ==================================================
 
-    fragrance_monitor = FragranceMonitor(manager)
+    fragrance_monitor = FragranceMonitor(
+        manager
+    )
 
     # ==================================================
     # OPGESLAGEN SCHEMA-UITVOERINGEN HERSTELLEN
@@ -253,11 +359,16 @@ async def async_setup_entry(
 
     stored_schedule_keys = [
         tuple(item)
-        for item in store.data.get("metadata", {}).get(
+        for item in store.data.get(
+            "metadata", {}
+        ).get(
             "schedule_last_executed",
             [],
         )
-        if isinstance(item, list) and len(item) == 3
+        if (
+            isinstance(item, list)
+            and len(item) == 3
+        )
     ]
 
     # ==================================================
@@ -265,9 +376,10 @@ async def async_setup_entry(
     # ==================================================
 
     async def persist_schedule_state(executed):
-        store.data.setdefault("metadata", {})[
-            "schedule_last_executed"
-        ] = [
+        store.data.setdefault(
+            "metadata",
+            {}
+        )["schedule_last_executed"] = [
             list(item)
             for item in executed
         ]
@@ -281,7 +393,10 @@ async def async_setup_entry(
         on_state_changed=persist_schedule_state,
     )
 
-    # Achtergrondprocessen starten
+    # ==================================================
+    # ACHTERGRONDPROCESSEN STARTEN
+    # ==================================================
+
     await fragrance_monitor.start()
     await schedule_runner.start()
 
@@ -290,21 +405,39 @@ async def async_setup_entry(
     # ==================================================
 
     async def stop_background_tasks():
+        """Stop all GeurBot background tasks."""
+
+        _LOGGER.info(
+            "GeurBot-achtergrondprocessen worden gestopt"
+        )
+
         await fragrance_monitor.stop()
         await schedule_runner.stop()
         await notification_manager.stop()
 
-    entry.async_on_unload(stop_background_tasks)
+    entry.async_on_unload(
+        stop_background_tasks
+    )
+
+    # ==================================================
+    # UPDATE LISTENER
+    # ==================================================
 
     entry.async_on_unload(
-        entry.add_update_listener(async_reload_entry)
+        entry.add_update_listener(
+            async_reload_entry
+        )
     )
 
     # ==================================================
     # FRONTENDBESTANDEN BESCHIKBAAR MAKEN
     # ==================================================
 
-    frontend_dir = Path(__file__).parent / "frontend"
+    frontend_dir = (
+        Path(__file__).parent
+        / "frontend"
+    )
+
     panel_file = frontend_dir / "panel.js"
 
     if not panel_file.is_file():
@@ -316,9 +449,13 @@ async def async_setup_entry(
         panel_file.read_bytes()
     ).hexdigest()[:12]
 
-    panel_module_url = f"/geurbot_panel.js?v={panel_hash}"
+    panel_module_url = (
+        f"/geurbot_panel.js?v={panel_hash}"
+    )
 
-    if not hass.data.get(f"{DOMAIN}_static_registered"):
+    if not hass.data.get(
+        f"{DOMAIN}_static_registered"
+    ):
 
         try:
             await hass.http.async_register_static_paths([
@@ -334,21 +471,30 @@ async def async_setup_entry(
                 ),
             ])
 
-            hass.data[f"{DOMAIN}_static_registered"] = True
+            hass.data[
+                f"{DOMAIN}_static_registered"
+            ] = True
 
-        except (OSError, ValueError, RuntimeError) as err:
+        except (
+            OSError,
+            ValueError,
+            RuntimeError,
+        ) as err:
             _LOGGER.error(
                 "GeurBot frontend/paneelbestanden konden niet "
                 "worden gepubliceerd: %s",
                 err,
             )
+
             raise
 
     # ==================================================
     # GEURBOT ZIJPANEEL REGISTREREN
     # ==================================================
 
-    if not hass.data.get(f"{DOMAIN}_panel_registered"):
+    if not hass.data.get(
+        f"{DOMAIN}_panel_registered"
+    ):
 
         await panel_custom.async_register_panel(
             hass,
@@ -361,7 +507,9 @@ async def async_setup_entry(
             require_admin=False,
         )
 
-        hass.data[f"{DOMAIN}_panel_registered"] = True
+        hass.data[
+            f"{DOMAIN}_panel_registered"
+        ] = True
 
         _LOGGER.info(
             "GeurBot-zijpaneel geregistreerd via %s",
@@ -377,8 +525,16 @@ async def async_setup_entry(
         PLATFORMS,
     )
 
+    _LOGGER.info(
+        "GeurBot-integratie succesvol gestart"
+    )
+
     return True
 
+
+# ==================================================
+# CONFIG ENTRY UNLOAD
+# ==================================================
 
 async def async_unload_entry(
     hass: HomeAssistant,
@@ -393,18 +549,35 @@ async def async_unload_entry(
 
     if unload_ok:
 
-        runtime = hass.data.pop(DOMAIN, None)
+        runtime = hass.data.pop(
+            DOMAIN,
+            None
+        )
 
         if runtime:
             await runtime["store"].async_save_devices(
                 runtime["device_manager"].get_devices()
             )
 
-        if hass.data.pop(f"{DOMAIN}_panel_registered", False):
-            frontend.async_remove_panel(hass, DOMAIN)
+        if hass.data.pop(
+            f"{DOMAIN}_panel_registered",
+            False
+        ):
+            frontend.async_remove_panel(
+                hass,
+                DOMAIN
+            )
+
+        _LOGGER.info(
+            "GeurBot-integratie succesvol gestopt"
+        )
 
     return unload_ok
 
+
+# ==================================================
+# CONFIG ENTRY RELOAD
+# ==================================================
 
 async def async_reload_entry(
     hass: HomeAssistant,
@@ -412,4 +585,6 @@ async def async_reload_entry(
 ) -> None:
     """Reload the integration."""
 
-    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_reload(
+        entry.entry_id
+    )

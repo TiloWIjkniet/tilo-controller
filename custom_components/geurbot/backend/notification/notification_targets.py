@@ -10,6 +10,7 @@ async def get_notification_targets(
     """Return modern notify entities and legacy notify services."""
 
     targets = {}
+
     services = hass.services.async_services()
     notify_services = services.get("notify", {})
 
@@ -47,8 +48,6 @@ async def get_notification_targets(
 
         entity_id = f"notify.{service_name}"
 
-        # Een moderne notify-entiteit heeft voorrang
-        # als dezelfde ID al bestaat.
         if entity_id in targets:
             continue
 

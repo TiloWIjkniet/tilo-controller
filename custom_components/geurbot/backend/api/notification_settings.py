@@ -15,7 +15,6 @@ from aiohttp import web
 DEFAULT_NOTIFICATION_SETTINGS = {
     "enabled": True,
 
-    # Algemene notificatiebestemmingen.
     "destinations": [],
 
     "general": {
@@ -53,7 +52,7 @@ DEFAULT_NOTIFICATION_SETTINGS = {
 
     "buffer": {
         "enabled": True,
-        "delaySeconds": 10
+        "delaySeconds": 120
     },
 
     "repeat": {
@@ -72,16 +71,7 @@ _SETTINGS_WRITER = None
 
 
 def set_settings_provider(provider, writer=None):
-    """
-    Configure the settings provider.
-
-    provider:
-        Function that returns the current settings.
-
-    writer:
-        Optional function that saves updated settings.
-        Can be synchronous or asynchronous.
-    """
+    """Configure the settings provider and optional writer."""
 
     global _SETTINGS_PROVIDER
     global _SETTINGS_WRITER
@@ -102,12 +92,7 @@ SETTINGS_FILE = (
 # ==================================================
 
 def merge_settings(defaults, supplied):
-    """
-    Merge supplied settings with defaults.
-
-    Unknown settings are ignored.
-    Missing settings automatically receive their default value.
-    """
+    """Merge supplied settings with defaults."""
 
     result = deepcopy(defaults)
 
@@ -120,7 +105,10 @@ def merge_settings(defaults, supplied):
 
         if isinstance(defaults[key], dict):
             if isinstance(value, dict):
-                result[key] = merge_settings(defaults[key], value)
+                result[key] = merge_settings(
+                    defaults[key],
+                    value
+                )
 
         else:
             result[key] = value
@@ -284,12 +272,7 @@ def save_settings(settings):
 # ==================================================
 
 def load_settings():
-    """
-    Load notification settings.
-
-    Home Assistant Store is authoritative when configured.
-    Otherwise, settings are loaded from the local JSON file.
-    """
+    """Load notification settings."""
 
     if _SETTINGS_PROVIDER is not None:
         supplied = _SETTINGS_PROVIDER()
@@ -304,7 +287,9 @@ def load_settings():
         return settings
 
     if not SETTINGS_FILE.exists():
-        settings = deepcopy(DEFAULT_NOTIFICATION_SETTINGS)
+        settings = deepcopy(
+            DEFAULT_NOTIFICATION_SETTINGS
+        )
 
         save_settings(settings)
 
@@ -332,7 +317,9 @@ def load_settings():
             error
         )
 
-        settings = deepcopy(DEFAULT_NOTIFICATION_SETTINGS)
+        settings = deepcopy(
+            DEFAULT_NOTIFICATION_SETTINGS
+        )
 
         save_settings(settings)
 

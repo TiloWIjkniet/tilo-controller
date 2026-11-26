@@ -5,8 +5,8 @@ from datetime import datetime
 from ..api.notification_settings import load_settings
 
 
-BUFFER_DELAY = 120
-REPEAT_INTERVAL = 360
+BUFFER_DELAY = 120       # Seconden
+REPEAT_INTERVAL = 360    # Minuten
 
 
 class NotificationManager:
@@ -81,8 +81,17 @@ class NotificationManager:
         }
 
     async def _persist_state(self):
-        if self.persist_handler:
+        if self.persist_handler is None:
+            return
+
+        try:
             await self.persist_handler(self.export_state())
+
+        except Exception as error:
+            print(
+                "[NOTIFICATIONS] Status opslaan mislukt:",
+                error
+            )
 
     # ==================================================
     # STARTEN EN STOPPEN
@@ -97,6 +106,9 @@ class NotificationManager:
 
         print("[NOTIFICATIONS] Manager gestart")
 
+        # Direct een startmelding versturen.
+        await self.send_startup_notification()
+
     async def stop(self):
         self.running = False
 
@@ -105,27 +117,96 @@ class NotificationManager:
 
             try:
                 await self.task
+
             except asyncio.CancelledError:
                 pass
 
+            self.task = None
+
         print("[NOTIFICATIONS] Manager gestopt")
+
+    async def send_startup_notification(self):
+        """Send a notification when the manager starts."""
+
+        if self.handler is None:
+            print(
+                "[NOTIFICATIONS] Geen handler voor startmelding"
+            )
+            return
+
+        try:
+            settings = load_settings()
+
+            if not settings.get("enabled", True):
+                print(
+                    "[NOTIFICATIONS] Startmelding overgeslagen: "
+                    "notificaties zijn uitgeschakeld"
+                )
+                return
+
+            if not settings.get("destinations", []):
+                print(
+                    "[NOTIFICATIONS] Startmelding overgeslagen: "
+                    "geen bestemmingen geselecteerd"
+                )
+                return
+
+            result = await self.handler(
+                notification_type="system.started",
+                title="GeurBot",
+                message="GeurBot is succesvol gestart en klaar voor gebruik.",
+                device_id=None,
+                details=[]
+            )
+
+            if result is False:
+                print(
+                    "[NOTIFICATIONS] Startmelding kon niet "
+                    "naar alle bestemmingen worden verstuurd"
+                )
+            else:
+                print(
+                    "[NOTIFICATIONS] Startmelding verstuurd"
+                )
+
+        except Exception as error:
+            print(
+                "[NOTIFICATIONS] Startmelding mislukt:",
+                error
+            )
 
     async def run(self):
         while self.running:
-            settings = load_settings()
+            try:
+                settings = load_settings()
 
-            delay = max(
-                1,
-                int(
-                    settings.get("buffer", {}).get(
-                        "delaySeconds",
-                        BUFFER_DELAY
+                delay = max(
+                    1,
+                    int(
+                        settings.get("buffer", {}).get(
+                            "delaySeconds",
+                            BUFFER_DELAY
+                        )
                     )
                 )
-            )
 
-            await asyncio.sleep(delay)
-            await self.flush()
+                await asyncio.sleep(delay)
+
+                if not self.running:
+                    break
+
+                await self.flush()
+
+            except asyncio.CancelledError:
+                raise
+
+            except Exception as error:
+                print(
+                    "[NOTIFICATIONS] Fout in achtergrondtaak:",
+                    error
+                )
+
+                await asyncio.sleep(5)
 
     # ==================================================
     # NOTIFICATIE TOEVOEGEN
@@ -145,7 +226,7 @@ class NotificationManager:
         if not settings.get("enabled", True):
             return
 
-        state, category = self.get_notification_state(
+        state, _ = self.get_notification_state(
             notification_type
         )
 
@@ -350,20 +431,24 @@ class NotificationManager:
     # ==================================================
 
     def is_quiet_hours(self, settings):
-        quiet = settings["general"]["quietHours"]
+        quiet = settings.get(
+            "general", {}
+        ).get(
+            "quietHours", {}
+        )
 
-        if not quiet["enabled"]:
+        if not quiet.get("enabled", False):
             return False
 
         now = self.now_provider().time()
 
         start = datetime.strptime(
-            quiet["start"],
+            quiet.get("start", "22:00"),
             "%H:%M"
         ).time()
 
         end = datetime.strptime(
-            quiet["end"],
+            quiet.get("end", "08:00"),
             "%H:%M"
         ).time()
 
@@ -382,9 +467,39 @@ class NotificationManager:
             self.pending = {}
 
         for group in notifications.values():
-            await self.process_notification(group)
+            try:
+                await self.process_notification(group)
+
+            except Exception as error:
+                print(
+                    "[NOTIFICATIONS] Verwerken van melding mislukt:",
+                    error
+                )
+
+                await self.requeue_notification(group)
 
         await self._persist_state()
+
+    async def requeue_notification(self, group):
+        key = (
+            group.get("type"),
+            group.get("device_id")
+        )
+
+        async with self.lock:
+            if key not in self.pending:
+                self.pending[key] = group
+            else:
+                # Voeg berichten toe aan een reeds bestaande groep.
+                existing = self.pending[key]
+
+                existing.setdefault("items", {}).update(
+                    group.get("items", {})
+                )
+
+                existing.setdefault("details", []).extend(
+                    group.get("details", [])
+                )
 
     # ==================================================
     # NOTIFICATIE VERWERKEN
@@ -398,7 +513,7 @@ class NotificationManager:
 
         notification_type = group["type"]
 
-        state, category = self.get_notification_state(
+        state, _ = self.get_notification_state(
             notification_type
         )
 
@@ -414,14 +529,7 @@ class NotificationManager:
                 "[NOTIFICATIONS] Melding uitgesteld vanwege stille uren"
             )
 
-            async with self.lock:
-                key = (
-                    notification_type,
-                    group["device_id"]
-                )
-
-                self.pending[key] = group
-
+            await self.requeue_notification(group)
             return
 
         # ----------------------------------------------
@@ -430,15 +538,18 @@ class NotificationManager:
 
         now = self.now_provider().timestamp()
 
-        repeat_enabled = settings.get(
-            "repeat", {}
-        ).get("enabled", True)
+        repeat_settings = settings.get("repeat", {})
 
-        repeat_interval = settings.get(
-            "repeat", {}
-        ).get(
-            "intervalMinutes",
-            REPEAT_INTERVAL
+        repeat_enabled = repeat_settings.get(
+            "enabled",
+            True
+        )
+
+        repeat_interval = int(
+            repeat_settings.get(
+                "intervalMinutes",
+                REPEAT_INTERVAL
+            )
         ) * 60
 
         repeat_key = (
@@ -463,7 +574,9 @@ class NotificationManager:
             group["items"].values()
         )
 
-        message = "\n".join(messages)
+        message = "\n".join(
+            str(item) for item in messages
+        )
 
         if len(messages) > 1:
             message = (
@@ -471,57 +584,43 @@ class NotificationManager:
                 + message
             )
 
-      
         # ----------------------------------------------
         # VERZENDEN
         # ----------------------------------------------
 
-        if self.handler:
-            try:
-                result = await self.handler(
-                    notification_type=notification_type,
-                    title=group["title"],
-                    message=message,
-                    device_id=group["device_id"],
-                    details=group["details"]
-                )
-
-                if result is False:
-                    print(
-                        "[NOTIFICATIONS] Niet alle bestemmingen "
-                        "hebben de melding ontvangen"
-                    )
-
-                    async with self.lock:
-                        key = (
-                            notification_type,
-                            group["device_id"]
-                        )
-
-                        self.pending[key] = group
-
-                    return
-
-            except Exception as error:
-                print(
-                    "[NOTIFICATIONS] Versturen mislukt:",
-                    error
-                )
-
-                async with self.lock:
-                    key = (
-                        notification_type,
-                        group["device_id"]
-                    )
-
-                    self.pending[key] = group
-
-                return
-
-        else:
+        if self.handler is None:
             print(
                 "[NOTIFICATIONS] Geen notificatie-handler ingesteld"
             )
+
+            await self.requeue_notification(group)
+            return
+
+        try:
+            result = await self.handler(
+                notification_type=notification_type,
+                title=group["title"],
+                message=message,
+                device_id=group["device_id"],
+                details=group["details"]
+            )
+
+            if result is False:
+                print(
+                    "[NOTIFICATIONS] Niet alle bestemmingen "
+                    "hebben de melding ontvangen"
+                )
+
+                await self.requeue_notification(group)
+                return
+
+        except Exception as error:
+            print(
+                "[NOTIFICATIONS] Versturen mislukt:",
+                error
+            )
+
+            await self.requeue_notification(group)
             return
 
         # ----------------------------------------------
@@ -537,18 +636,11 @@ class NotificationManager:
         await self._persist_state()
 
 
-
 # ==================================================
 # GLOBALE NOTIFICATION MANAGER
 # ==================================================
 
 notification_manager = NotificationManager()
-
-
-# ==================================================
-# HOME ASSISTANT NOTIFICATIES VERZENDEN
-# ==================================================
-
 
 
 # ==================================================
@@ -567,6 +659,12 @@ async def send_notification(
 
     settings = load_settings()
 
+    if not settings.get("enabled", True):
+        print(
+            "[NOTIFICATIONS] Notificaties zijn uitgeschakeld"
+        )
+        return False
+
     destinations = settings.get("destinations", [])
 
     if not destinations:
@@ -580,12 +678,11 @@ async def send_notification(
 
     for entity_id in destinations:
 
-        if not isinstance(entity_id, str):
+        if (
+            not isinstance(entity_id, str)
+            or not entity_id.startswith("notify.")
+        ):
             failed_destinations.append(str(entity_id))
-            continue
-
-        if not entity_id.startswith("notify."):
-            failed_destinations.append(entity_id)
             continue
 
         try:
@@ -665,9 +762,6 @@ async def send_notification(
             "[NOTIFICATIONS] Succesvol verzonden:",
             ", ".join(successful_destinations)
         )
-
-    # Alleen True als iedere geselecteerde bestemming
-    # succesvol een bericht heeft ontvangen.
 
     return (
         len(successful_destinations) == len(destinations)
