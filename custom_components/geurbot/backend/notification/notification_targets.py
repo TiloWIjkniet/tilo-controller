@@ -3,24 +3,28 @@
 from homeassistant.core import HomeAssistant
 
 
-async def get_notification_targets(hass: HomeAssistant) -> list[dict]:
-    """Return all available notify entities."""
+async def get_notification_targets(
+    hass: HomeAssistant
+) -> list[dict]:
+    """Return available Home Assistant notification targets."""
 
     targets = []
 
-    for entity_id in hass.states.async_entity_ids("notify"):
-        state = hass.states.get(entity_id)
+    services = hass.services.async_services()
+    notify_services = services.get("notify", {})
 
-        if state is None:
+    for service_name in notify_services:
+        # Dit is de algemene service, geen afzonderlijke bestemming.
+        if service_name in {"send_message", "reload"}:
             continue
 
+        # Maak van mobile_app_tilos_phone bijvoorbeeld Tilos Phone.
+        name = service_name.replace("_", " ").strip().title()
+
         targets.append({
-            "entity_id": entity_id,
-            "name": state.attributes.get(
-                "friendly_name",
-                entity_id
-            ),
-            "available": state.state != "unavailable"
+            "entity_id": f"notify.{service_name}",
+            "name": name,
+            "available": True
         })
 
     return targets

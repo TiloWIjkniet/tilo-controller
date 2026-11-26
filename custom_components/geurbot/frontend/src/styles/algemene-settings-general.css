@@ -1235,4 +1235,61 @@
     color: var(--text-muted);
     font-size: 11px;
     line-height: 1.5;
+}.notification-destinations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.notification-destination-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--notification-surface);
+    border: 1px solid var(--notification-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.notification-destination-option:hover {
+    background: var(--notification-hover);
+}
+
+.notification-destination-option input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--notification-accent);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.notification-destination-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.notification-destination-name {
+    font-weight: 500;
+}
+
+.notification-destination-info small {
+    color: var(--notification-muted);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.notification-destination-option.unavailable {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.notification-empty-targets {
+    color: var(--notification-muted);
+    font-size: 13px;
+    padding: 12px;
 }
