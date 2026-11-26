@@ -238,7 +238,7 @@
 
 #performance-time-range:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px #7187ff22;
+    box-shadow: 0 0 0 3px var(--c-7187ff22);
 }
 
 /* ========================================

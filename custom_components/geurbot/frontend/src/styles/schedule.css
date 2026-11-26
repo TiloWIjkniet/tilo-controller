@@ -144,7 +144,7 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(0, 0, 0, .65);
+    background: var(--c-rgba-0-0-0-65);
     backdrop-filter: blur(4px);
 }
 
@@ -164,7 +164,7 @@
     border-radius: 14px;
     background: var(--bg-card);
     color: var(--text-primary);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+    box-shadow: 0 20px 60px var(--c-rgba-0-0-0-35);
 }
 
 .schedule-modal-main {
@@ -252,14 +252,14 @@
 }
 
 .schedule-save-button {
-    border: 1px solid rgba(125, 217, 165, .35);
-    background: rgba(125, 217, 165, .13);
+    border: 1px solid var(--c-rgba-125-217-165-35);
+    background: var(--c-rgba-125-217-165-13);
     color: var(--success);
 }
 
 .schedule-save-button:hover {
     border-color: var(--success);
-    background: rgba(125, 217, 165, .2);
+    background: var(--c-rgba-125-217-165-2);
 }
 
 .schedule-cancel-button {
@@ -275,14 +275,14 @@
 
 .schedule-remove-button {
     margin-right: auto;
-    border: 1px solid rgba(237, 119, 119, .35);
-    background: rgba(237, 119, 119, .12);
+    border: 1px solid var(--c-rgba-237-119-119-35);
+    background: var(--c-rgba-237-119-119-12);
     color: var(--danger);
 }
 
 .schedule-remove-button:hover {
     border-color: var(--danger);
-    background: rgba(237, 119, 119, .2);
+    background: var(--c-rgba-237-119-119-2);
 }
 
 .schedule-remove-button[hidden] {
@@ -346,8 +346,8 @@
 }
 
 .schedule-fragrance-info.unavailable {
-    border-color: rgba(237, 119, 119, .6);
-    background: rgba(237, 119, 119, .06);
+    border-color: var(--c-rgba-237-119-119-6);
+    background: var(--c-rgba-237-119-119-06);
 }
 
 
@@ -635,9 +635,9 @@
 
 .schedule-info-warning {
     padding: 10px;
-    border: 1px solid rgba(242, 189, 101, .2);
+    border: 1px solid var(--c-rgba-242-189-101-2);
     border-radius: 7px;
-    background: rgba(242, 189, 101, .1);
+    background: var(--c-rgba-242-189-101-1);
     color: var(--warning);
     font-size: 12px;
 }
@@ -698,7 +698,7 @@
 .schedule-event-card.unavailable {
     border: 1px solid var(--danger);
     border-left: 4px solid var(--danger);
-    background: rgba(237, 119, 119, .14);
+    background: var(--c-rgba-237-119-119-14);
 }
 
 .schedule-event-card.unavailable::after {
@@ -713,7 +713,7 @@
 
 .schedule-event-card.disabled {
     border-left-color: var(--text-muted);
-    background: rgba(120, 134, 156, .18);
+    background: var(--c-rgba-120-134-156-18);
     opacity: .65;
 }
 
@@ -949,7 +949,7 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     background: var(--bg-card);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, .4);
+    box-shadow: 0 8px 25px var(--c-rgba-0-0-0-4);
     pointer-events: auto;
 }
 
@@ -1027,7 +1027,7 @@
 
 .schedule-cluster-item.unavailable {
     border-radius: 5px;
-    background: rgba(237, 119, 119, .06);
+    background: var(--c-rgba-237-119-119-06);
 }
 
 .schedule-cluster-name {
@@ -1113,7 +1113,7 @@
 .schedule-add-button:hover {
     filter: brightness(1.1);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(113, 135, 255, .2);
+    box-shadow: 0 4px 12px var(--c-rgba-113-135-255-2);
 }
 
 .schedule-add-button:active {

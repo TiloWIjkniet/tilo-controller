@@ -15,12 +15,12 @@
 
 .add-device-overlay {
     z-index: 1000;
-    background: #080b12b8;
+    background: var(--c-080b12b8);
 }
 
 .device-form-overlay {
     z-index: 2000;
-    background: #080b12d9;
+    background: var(--c-080b12d9);
     backdrop-filter: blur(8px);
 }
 
@@ -41,7 +41,7 @@
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--text-primary);
-    box-shadow: 0 24px 80px #0009;
+    box-shadow: 0 24px 80px var(--c-0009);
 }
 
 .add-device-modal {
@@ -57,7 +57,7 @@
     max-height: calc(100vh - 40px);
     padding: 23px;
     border-radius: 17px;
-    box-shadow: 0 20px 60px #0009;
+    box-shadow: 0 20px 60px var(--c-0009);
 }
 
 /* ========================================
@@ -120,7 +120,7 @@
 
 .modal-close:hover {
     border-color: var(--border);
-    background: #35415a;
+    background: var(--c-35415a);
     color: var(--text-primary);
 }
 
@@ -143,9 +143,9 @@
 
 .discovery-count {
     padding: 5px 9px;
-    border: 1px solid #485a91;
+    border: 1px solid var(--c-485a91);
     border-radius: 20px;
-    background: #303b56;
+    background: var(--c-303b56);
     color: var(--accent-light);
     font-size: 11px;
     font-weight: 700;
@@ -174,7 +174,7 @@
 }
 
 .discovered-device:hover {
-    border-color: #4a5876;
+    border-color: var(--c-4a5876);
     background: var(--bg-hover);
 }
 
@@ -184,9 +184,9 @@
     place-items: center;
     width: 40px;
     height: 40px;
-    border: 1px solid #485a91;
+    border: 1px solid var(--c-485a91);
     border-radius: 11px;
-    background: #303b56;
+    background: var(--c-303b56);
     color: var(--accent-light);
     font-size: 20px;
 }
@@ -245,7 +245,7 @@
 }
 
 .add-discovered-device.added {
-    background: #287b56;
+    background: var(--c-287b56);
 }
 
 /* ========================================
@@ -324,14 +324,14 @@
     color: white;
     font-size: 13px;
     font-weight: 700;
-    box-shadow: 0 5px 16px #344bb544;
+    box-shadow: 0 5px 16px var(--c-344bb544);
     cursor: pointer;
     transition: filter .2s, transform .2s, box-shadow .2s;
 }
 
 .scan-button:hover {
     filter: brightness(1.1);
-    box-shadow: 0 6px 20px #344bb566;
+    box-shadow: 0 6px 20px var(--c-344bb566);
 }
 
 .scan-button:active {
@@ -419,7 +419,7 @@
 .device-form-field input:focus {
     border-color: var(--accent);
     background: var(--bg-hover);
-    box-shadow: 0 0 0 3px #7187ff22;
+    box-shadow: 0 0 0 3px var(--c-7187ff22);
 }
 
 .device-form-field input::placeholder {
@@ -458,7 +458,7 @@
 }
 
 .device-form-cancel:hover {
-    background: #35415a;
+    background: var(--c-35415a);
     color: var(--text-primary);
 }
 
@@ -484,10 +484,10 @@
 .device-form-error {
     margin: 0;
     padding: 10px;
-    border: 1px solid #8d4149;
+    border: 1px solid var(--c-8d4149);
     border-radius: 8px;
-    background: #512d36;
-    color: #ffb8bf;
+    background: var(--c-512d36);
+    color: var(--c-ffb8bf);
     font-size: 12px;
 }
 
@@ -508,9 +508,9 @@
     width: 52px;
     height: 52px;
     margin-bottom: 15px;
-    border: 1px solid #39956c;
+    border: 1px solid var(--c-39956c);
     border-radius: 50%;
-    background: #287b56;
+    background: var(--c-287b56);
     color: white;
     font-size: 27px;
 }

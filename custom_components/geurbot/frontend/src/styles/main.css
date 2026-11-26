@@ -8,31 +8,13 @@
     font-family: Inter, "Segoe UI", Arial, sans-serif;
     font-synthesis: none;
 
-    --bg-main: #11151e;
-    --bg-sidebar: #191d27;
-    --bg-content: #191e2a;
-    --bg-card: #222834;
-    --bg-input: #252d3d;
-    --bg-hover: #293247;
 
-    --border: #343d50;
-    --border-soft: #2c3444;
 
-    --text-primary: #f1f3f9;
-    --text-secondary: #929bad;
-    --text-muted: #78869c;
 
-    --accent: #7187ff;
-    --accent-dark: #485ed5;
-    --accent-light: #aab8ff;
 
-    --success: #7dd9a5;
-    --warning: #f2bd65;
-    --danger: #ed7777;
 
     background: var(--bg-main);
-    color: var(--text-primary);
-}
+    color: var(--text-primary);}
 
 html,
 body {

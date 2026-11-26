@@ -84,7 +84,7 @@
 
 .device-settings:hover {
     background: var(--bg-hover);
-    border-color: #46536c;
+    border-color: var(--c-46536c);
 }
 
 /* ========================================
@@ -100,10 +100,10 @@
     padding: 10px;
     box-sizing: border-box;
     overflow: hidden;
-    border: 1px solid #8d4149;
+    border: 1px solid var(--c-8d4149);
     border-radius: 8px;
-    background: #3b2529;
-    color: #ffb8bf;
+    background: var(--c-3b2529);
+    color: var(--c-ffb8bf);
     font-size: 11px;
 }
 
@@ -134,7 +134,7 @@
     height: 6px;
     overflow: hidden;
     border-radius: 5px;
-    background: #572e32;
+    background: var(--c-572e32);
 }
 
 .firmware-update-progress-bar {
@@ -150,14 +150,14 @@
     padding: 8px;
     border: 0;
     border-radius: 6px;
-    background: #b94747;
+    background: var(--c-b94747);
     color: white;
     cursor: pointer;
     transition: background .2s;
 }
 
 .firmware-update-button:hover {
-    background: #d15757;
+    background: var(--c-d15757);
 }
 
 /* ========================================
@@ -181,7 +181,7 @@
 }
 
 .fragrance-card:hover {
-    border-color: #46536c;
+    border-color: var(--c-46536c);
     background: var(--bg-hover);
 }
 
@@ -240,7 +240,7 @@
     border: 1px solid var(--border);
     border-radius: 999px;
 
-    background: #454d5d;
+    background: var(--c-454d5d);
     cursor: pointer;
 
     transition:
@@ -251,8 +251,8 @@
 
 /* INGESCHAKELD */
 .fragrance-toggle.enabled {
-    background: #287b56;
-    border-color: #39956c;
+    background: var(--c-287b56);
+    border-color: var(--c-39956c);
 }
 
 /* RONDE SCHAKELAAR */
@@ -265,11 +265,11 @@
     height: 20px;
 
     border-radius: 50%;
-    background: #ffffff;
+    background: var(--c-ffffff);
 
     transform: translateY(-50%);
 
-    box-shadow: 0 1px 4px #00000040;
+    box-shadow: 0 1px 4px var(--c-00000040);
 
     transition:
         transform .25s cubic-bezier(.4, 0, .2, 1);
@@ -282,7 +282,7 @@
 
 /* HOVER */
 .fragrance-toggle:not(:disabled):hover {
-    box-shadow: 0 0 0 3px #ffffff12;
+    box-shadow: 0 0 0 3px var(--c-ffffff12);
 }
 
 /* UITGESCHAKELD */
@@ -332,7 +332,7 @@
 }
 
 .fragrance-progress-bar.exceeded-dark {
-    background: #a92735;
+    background: var(--c-a92735);
 }
 
 .fragrance-progress-label {
@@ -418,26 +418,26 @@
 
 .fragrance-spray-button {
     flex: 1;
-    border: 1px solid #39956c;
-    background: #1e3b30;
+    border: 1px solid var(--c-39956c);
+    background: var(--c-1e3b30);
     color: var(--success);
 }
 
 .fragrance-spray-button:hover {
-    background: #28513e;
+    background: var(--c-28513e);
 }
 
 .fragrance-reset-button {
     min-height: 30px !important;
     padding: 0 9px !important;
-    border: 1px solid #754047;
+    border: 1px solid var(--c-754047);
     background: transparent;
-    color: #fca5a5;
+    color: var(--c-fca5a5);
     font-size: 10px !important;
 }
 
 .fragrance-reset-button:hover {
-    background: #3b2529;
+    background: var(--c-3b2529);
 }
 
 /* ========================================
@@ -445,14 +445,14 @@
 ======================================== */
 
 .fragrance-card.unavailable {
-    border-color: #754047;
-    background: #2c2229;
-    box-shadow: 0 0 14px #ed77771a;
+    border-color: var(--c-754047);
+    background: var(--c-2c2229);
+    box-shadow: 0 0 14px var(--c-ed77771a);
 }
 
 .fragrance-card.unavailable:hover {
-    border-color: #98535b;
-    background: #35252d;
+    border-color: var(--c-98535b);
+    background: var(--c-35252d);
 }
 
 .fragrance-availability.unavailable {
@@ -464,18 +464,18 @@
     flex-direction: column;
     gap: 5px;
     padding: 14px;
-    border: 1px solid #754047;
+    border: 1px solid var(--c-754047);
     border-radius: 10px;
-    background: #3b2529;
+    background: var(--c-3b2529);
 }
 
 .fragrance-empty-message strong {
-    color: #ffb8bf;
+    color: var(--c-ffb8bf);
     font-size: 14px;
 }
 
 .fragrance-empty-message span {
-    color: #d99a9a;
+    color: var(--c-d99a9a);
     font-size: 12px;
 }
 
@@ -484,9 +484,9 @@
 ======================================== */
 
 .fragrance-card.unreachable {
-    border-color: #98535b;
-    background: #35252d;
-    box-shadow: 0 0 18px #ed777725;
+    border-color: var(--c-98535b);
+    background: var(--c-35252d);
+    box-shadow: 0 0 18px var(--c-ed777725);
 }
 
 .fragrance-unreachable-content {
@@ -498,23 +498,23 @@
 
 .fragrance-unreachable-content h3 {
     margin: 0;
-    color: #ffb8bf;
+    color: var(--c-ffb8bf);
     font-size: 14px;
 }
 
 .remove-fragrance-button {
     padding: 8px 12px;
-    border: 1px solid #754047;
+    border: 1px solid var(--c-754047);
     border-radius: 7px;
-    background: #3b2529;
-    color: #ffb8bf;
+    background: var(--c-3b2529);
+    color: var(--c-ffb8bf);
     cursor: pointer;
     transition: background .2s, border-color .2s;
 }
 
 .remove-fragrance-button:hover {
-    border-color: #98535b;
-    background: #512d36;
+    border-color: var(--c-98535b);
+    background: var(--c-512d36);
 }
 
 /* ========================================
@@ -532,8 +532,8 @@
     gap: 8px;
     padding: 16px;
     box-sizing: border-box;
-    background: #35252de8;
-    color: #ffb8bf;
+    background: var(--c-35252de8);
+    color: var(--c-ffb8bf);
     text-align: center;
     backdrop-filter: blur(3px);
 }
@@ -544,9 +544,9 @@
     justify-content: center;
     width: 28px;
     height: 28px;
-    border: 1px solid #98535b;
+    border: 1px solid var(--c-98535b);
     border-radius: 50%;
-    background: #512d36;
+    background: var(--c-512d36);
     font-size: 18px;
     font-weight: 800;
 }
@@ -574,10 +574,10 @@
 .remove-fragrance {
     margin-top: 6px;
     padding: 7px 12px;
-    border: 1px solid #754047;
+    border: 1px solid var(--c-754047);
     border-radius: 7px;
     background: var(--bg-card);
-    color: #ffb8bf;
+    color: var(--c-ffb8bf);
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
@@ -601,30 +601,30 @@
 }
 
 .device-unreachable {
-    border: 1px solid #98535b !important;
-    background: linear-gradient(135deg, #6e0f0f47, #2d0a0a2e) !important;
+    border: 1px solid var(--c-98535b) !important;
+    background: linear-gradient(135deg, var(--c-6e0f0f47), var(--c-2d0a0a2e)) !important;
     box-shadow:
-        0 0 8px #ff1e1e55,
-        0 0 20px #ff1e1e38,
-        0 0 40px #ff1e1e20,
-        inset 0 0 25px #ff1e1e12 !important;
+        0 0 8px var(--c-ff1e1e55),
+        0 0 20px var(--c-ff1e1e38),
+        0 0 40px var(--c-ff1e1e20),
+        inset 0 0 25px var(--c-ff1e1e12) !important;
     transition: all .3s ease;
 }
 
 .device-unreachable * {
-    border-color: #ff4b4b73;
+    border-color: var(--c-ff4b4b73);
 }
 
 .device-unreachable h2,
 .device-unreachable h3,
 .device-unreachable p,
 .device-unreachable span {
-    color: #ffb3b3;
+    color: var(--c-ffb3b3);
 }
 
 .device-unreachable button {
-    border-color: #ff4646cc;
-    background-color: #96191940;
+    border-color: var(--c-ff4646cc);
+    background-color: var(--c-96191940);
 }
 
 /* ========================================
@@ -632,16 +632,16 @@
 ======================================== */
 
 .settings-fragrance.unreachable {
-    border-color: #754047;
-    background: #ed77771a;
+    border-color: var(--c-754047);
+    background: var(--c-ed77771a);
 }
 
 .settings-fragrance.unreachable summary {
-    background: #ed77770f;
+    background: var(--c-ed77770f);
 }
 
 .settings-fragrance.unreachable .settings-fragrance-content {
-    background: #ed77770a;
+    background: var(--c-ed77770a);
 }
 
 .settings-fragrance.unreachable .settings-fragrance-status {
@@ -707,7 +707,7 @@
     border-radius: 10px;
     background: var(--bg-sidebar);
     color: var(--text-primary);
-    box-shadow: 0 12px 35px #00000059;
+    box-shadow: 0 12px 35px var(--c-00000059);
     animation: maintenance-confirm-in .2s ease-out;
 }
 
@@ -740,25 +740,25 @@
 }
 
 .fragrance-feedback.success {
-    border-color: #315d49;
+    border-color: var(--c-315d49);
 }
 
 .fragrance-feedback.success .fragrance-feedback-icon {
-    background: #1e3b30;
+    background: var(--c-1e3b30);
     color: var(--success);
 }
 
 .fragrance-feedback.error {
-    border-color: #754047;
+    border-color: var(--c-754047);
 }
 
 .fragrance-feedback.error .fragrance-feedback-icon {
-    background: #3b2529;
+    background: var(--c-3b2529);
     color: var(--danger);
 }
 
 .fragrance-feedback.loading {
-    border-color: #46588c;
+    border-color: var(--c-46588c);
 }
 
 .fragrance-feedback.loading .fragrance-feedback-icon {
@@ -800,10 +800,10 @@
 
 .reset-all-counters {
     padding: 5px 9px;
-    border: 1px solid #754047;
+    border: 1px solid var(--c-754047);
     border-radius: 6px;
     background: transparent;
-    color: #fca5a5;
+    color: var(--c-fca5a5);
     cursor: pointer;
     font-size: 11px;
     font-weight: 500;
@@ -811,7 +811,7 @@
 }
 
 .reset-all-counters:hover {
-    background: #754047;
+    background: var(--c-754047);
     color: white;
 }
 

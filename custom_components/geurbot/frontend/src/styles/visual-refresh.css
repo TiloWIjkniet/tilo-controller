@@ -5,29 +5,7 @@
    remain unchanged.
 ========================================================= */
 
-:root {
-    --bg-main: #09090e;
-    --bg-sidebar: #101016;
-    --bg-content: #111119;
-    --bg-card: #191922;
-    --bg-input: #101018;
-    --bg-hover: #23222d;
-    --border: #34313f;
-    --border-soft: #292733;
-    --text-primary: #f0eef5;
-    --text-secondary: #aaa5b5;
-    --text-muted: #777382;
-    --accent: #89799f;
-    --accent-dark: #5d506f;
-    --accent-light: #c0b3d0;
-    --success: #58d6a0;
-    --warning: #f4bd68;
-    --danger: #ff7888;
-    --surface-raised: #211f2b;
-    --shadow-soft: 0 8px 24px rgba(0, 0, 0, .18);
-    --radius-card: 14px;
-    --radius-control: 9px;
-}
+:root {}
 
 html, body {
     width: 100%;
@@ -234,7 +212,7 @@ body {
     border-color: var(--border-soft);
     border-radius: var(--radius-card);
     background: var(--bg-card);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .10);
+    box-shadow: 0 2px 8px var(--c-rgba-0-0-0-10);
 }
 .device-card {
     padding: 13px;
@@ -243,13 +221,13 @@ body {
 .device-card:hover,
 .fragrance-card:hover,
 .discovered-device:hover {
-    border-color: #51485f;
+    border-color: var(--c-51485f);
     background: var(--bg-hover);
     box-shadow: var(--shadow-soft);
 }
 .device-card.selected {
     border-color: var(--accent);
-    background: rgba(137, 121, 159, .12);
+    background: var(--c-rgba-137-121-159-12);
     box-shadow: inset 3px 0 var(--accent), var(--shadow-soft);
 }
 .fragrance-card {
@@ -287,7 +265,7 @@ input::placeholder, textarea::placeholder {
 input:focus, select:focus, textarea:focus {
     border-color: var(--accent) !important;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(137, 121, 159, .16);
+    box-shadow: 0 0 0 3px var(--c-rgba-137-121-159-16);
 }
 .device-search {
     height: 40px;
@@ -307,8 +285,8 @@ input:focus, select:focus, textarea:focus {
 .add-discovered-device,
 .device-form-submit,
 .settings-refresh {
-    border: 1px solid rgba(137, 121, 159, .34);
-    background: rgba(137, 121, 159, .12);
+    border: 1px solid var(--c-rgba-137-121-159-34);
+    background: var(--c-rgba-137-121-159-12);
     color: var(--accent-light);
     font-weight: 650;
 }
@@ -323,8 +301,8 @@ input:focus, select:focus, textarea:focus {
 .device-form-submit:hover,
 .settings-refresh:hover {
     border-color: var(--accent);
-    background: rgba(137, 121, 159, .20);
-    color: #fff;
+    background: var(--c-rgba-137-121-159-20);
+    color: var(--c-fff);
 }
 .add-device-button {
     min-width: 40px;
@@ -358,12 +336,12 @@ input:focus, select:focus, textarea:focus {
     border-radius: 9px;
 }
 .fragrance-spray-button {
-    border-color: rgba(88, 214, 160, .35);
-    background: rgba(88, 214, 160, .12);
+    border-color: var(--c-rgba-88-214-160-35);
+    background: var(--c-rgba-88-214-160-12);
     color: var(--success);
 }
 .fragrance-spray-button:hover {
-    background: rgba(88, 214, 160, .2);
+    background: var(--c-rgba-88-214-160-2);
 }
 .schedule-view-toolbar,
 .schedule-toolbar {
@@ -378,7 +356,7 @@ input:focus, select:focus, textarea:focus {
 .schedule-view-button.active,
 .schedule-weekday.active {
     border-color: var(--accent);
-    background: rgba(137, 121, 159, .15);
+    background: var(--c-rgba-137-121-159-15);
     color: var(--accent-light);
 }
 
@@ -390,9 +368,9 @@ input:focus, select:focus, textarea:focus {
 .schedule-modal {
     border-color: var(--border);
     border-radius: 16px;
-    background: #15141d;
+    background: var(--c-15141d);
     color: var(--text-primary);
-    box-shadow: 0 24px 80px rgba(0, 0, 0, .48);
+    box-shadow: 0 24px 80px var(--c-rgba-0-0-0-48);
 }
 .settings-tabs,
 .general-settings-tabs {
@@ -404,7 +382,7 @@ input:focus, select:focus, textarea:focus {
 }
 .settings-tab.active,
 .general-settings-tab.active {
-    background: rgba(137, 121, 159, .15);
+    background: var(--c-rgba-137-121-159-15);
     color: var(--accent-light);
 }
 .settings-card,

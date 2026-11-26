@@ -10,7 +10,7 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: rgba(0, 0, 0, .65);
+    background: var(--c-rgba-0-0-0-65);
     backdrop-filter: blur(5px);
 }
 
@@ -30,7 +30,7 @@
     border-radius: 16px;
     background: var(--bg-content);
     color: var(--text-primary);
-    box-shadow: 0 24px 80px rgba(0, 0, 0, .4);
+    box-shadow: 0 24px 80px var(--c-rgba-0-0-0-4);
 }
 
 
@@ -121,7 +121,7 @@
 }
 
 .settings-tab.active {
-    background: rgba(113, 135, 255, .16);
+    background: var(--c-rgba-113-135-255-16);
     color: var(--accent-light);
 }
 
@@ -187,12 +187,12 @@
 }
 
 .settings-status.online {
-    background: rgba(125, 217, 165, .13);
+    background: var(--c-rgba-125-217-165-13);
     color: var(--success);
 }
 
 .settings-status.offline {
-    background: rgba(237, 119, 119, .13);
+    background: var(--c-rgba-237-119-119-13);
     color: var(--danger);
 }
 
@@ -463,7 +463,7 @@
 
 .logs-filter.active {
     border-color: var(--accent);
-    background: rgba(113, 135, 255, .18);
+    background: var(--c-rgba-113-135-255-18);
     color: var(--accent-light);
 }
 
@@ -476,7 +476,7 @@
 }
 
 #clear-device-logs {
-    border-color: rgba(237, 119, 119, .4);
+    border-color: var(--c-rgba-237-119-119-4);
     color: var(--danger);
 }
 
@@ -516,7 +516,7 @@
 .log-item {
     padding: 14px;
     border: 1px solid var(--border-soft);
-    border-left: 3px solid #64748b;
+    border-left: 3px solid var(--c-64748b);
     border-radius: 8px;
     background: var(--bg-card);
 }
@@ -530,7 +530,7 @@
 }
 
 .log-item.log-log {
-    border-left-color: #4c9de0;
+    border-left-color: var(--c-4c9de0);
 }
 
 .log-item-header {
@@ -569,7 +569,7 @@
     margin-bottom: 8px;
     padding: 3px 7px;
     border-radius: 4px;
-    background: rgba(237, 119, 119, .13);
+    background: var(--c-rgba-237-119-119-13);
     color: var(--danger);
     font-size: 11px;
 }
@@ -643,25 +643,25 @@
 }
 
 .maintenance-button-warning {
-    border-color: rgba(242, 189, 101, .35);
-    background: rgba(242, 189, 101, .1);
+    border-color: var(--c-rgba-242-189-101-35);
+    background: var(--c-rgba-242-189-101-1);
     color: var(--warning);
 }
 
 .maintenance-button-warning:hover:not(:disabled) {
     border-color: var(--warning);
-    background: rgba(242, 189, 101, .17);
+    background: var(--c-rgba-242-189-101-17);
 }
 
 .maintenance-button-danger {
-    border-color: rgba(237, 119, 119, .35);
-    background: rgba(237, 119, 119, .1);
+    border-color: var(--c-rgba-237-119-119-35);
+    background: var(--c-rgba-237-119-119-1);
     color: var(--danger);
 }
 
 .maintenance-button-danger:hover:not(:disabled) {
     border-color: var(--danger);
-    background: rgba(237, 119, 119, .18);
+    background: var(--c-rgba-237-119-119-18);
 }
 
 
@@ -687,8 +687,8 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    border-color: rgba(113, 135, 255, .4);
-    background: rgba(113, 135, 255, .08);
+    border-color: var(--c-rgba-113-135-255-4);
+    background: var(--c-rgba-113-135-255-08);
     color: var(--accent-light);
 }
 
@@ -697,21 +697,21 @@
     flex-shrink: 0;
     width: 17px;
     height: 17px;
-    border: 2px solid rgba(113, 135, 255, .3);
+    border: 2px solid var(--c-rgba-113-135-255-3);
     border-top-color: var(--accent-light);
     border-radius: 50%;
     animation: maintenance-spin .8s linear infinite;
 }
 
 .maintenance-status.success {
-    border-color: rgba(125, 217, 165, .35);
-    background: rgba(125, 217, 165, .08);
+    border-color: var(--c-rgba-125-217-165-35);
+    background: var(--c-rgba-125-217-165-08);
     color: var(--success);
 }
 
 .maintenance-status.error {
-    border-color: rgba(237, 119, 119, .35);
-    background: rgba(237, 119, 119, .08);
+    border-color: var(--c-rgba-237-119-119-35);
+    background: var(--c-rgba-237-119-119-08);
     color: var(--danger);
 }
 
@@ -734,7 +734,7 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(0, 0, 0, .7);
+    background: var(--c-rgba-0-0-0-7);
     backdrop-filter: blur(4px);
 }
 
@@ -746,7 +746,7 @@
     border-radius: 14px;
     background: var(--bg-content);
     color: var(--text-primary);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, .4);
+    box-shadow: 0 20px 60px var(--c-rgba-0-0-0-4);
     text-align: center;
     animation: maintenance-confirm-in .2s ease-out;
 }
@@ -759,7 +759,7 @@
     height: 52px;
     margin: 0 auto 16px;
     border-radius: 14px;
-    background: rgba(242, 189, 101, .12);
+    background: var(--c-rgba-242-189-101-12);
     font-size: 25px;
 }
 
@@ -800,13 +800,13 @@
 }
 
 .maintenance-confirm-submit {
-    border-color: rgba(242, 189, 101, .4) !important;
-    background: rgba(242, 189, 101, .12);
+    border-color: var(--c-rgba-242-189-101-4) !important;
+    background: var(--c-rgba-242-189-101-12);
     color: var(--warning);
 }
 
 .maintenance-confirm-submit:hover {
-    background: rgba(242, 189, 101, .2);
+    background: var(--c-rgba-242-189-101-2);
 }
 
 @keyframes maintenance-confirm-in {
@@ -836,7 +836,7 @@
 }
 
 .settings-fragrance:hover {
-    border-color: #53617b;
+    border-color: var(--c-53617b);
 }
 
 .settings-fragrance[open] {
@@ -912,12 +912,12 @@
 }
 
 .settings-fragrance-status.online {
-    background: rgba(125, 217, 165, .13);
+    background: var(--c-rgba-125-217-165-13);
     color: var(--success);
 }
 
 .settings-fragrance-status.offline {
-    background: rgba(237, 119, 119, .13);
+    background: var(--c-rgba-237-119-119-13);
     color: var(--danger);
 }
 
@@ -1029,16 +1029,16 @@
 ======================================== */
 
 .settings-fragrance.unreachable {
-    border-color: rgba(237, 119, 119, .45);
-    background: rgba(237, 119, 119, .07);
+    border-color: var(--c-rgba-237-119-119-45);
+    background: var(--c-rgba-237-119-119-07);
 }
 
 .settings-fragrance.unreachable summary {
-    background: rgba(237, 119, 119, .05);
+    background: var(--c-rgba-237-119-119-05);
 }
 
 .settings-fragrance.unreachable .settings-fragrance-content {
-    background: rgba(237, 119, 119, .03);
+    background: var(--c-rgba-237-119-119-03);
 }
 
 .settings-fragrance.unreachable .settings-fragrance-status {
@@ -1057,8 +1057,8 @@
 ======================================== */
 
 .fragrance-card.unavailable {
-    border: 1px solid rgba(237, 119, 119, .5);
-    background: rgba(237, 119, 119, .08);
+    border: 1px solid var(--c-rgba-237-119-119-5);
+    background: var(--c-rgba-237-119-119-08);
 }
 
 .fragrance-unavailable {
@@ -1071,9 +1071,9 @@
 
 .remove-fragrance {
     padding: 7px 12px;
-    border: 1px solid rgba(237, 119, 119, .4);
+    border: 1px solid var(--c-rgba-237-119-119-4);
     border-radius: 6px;
-    background: rgba(237, 119, 119, .12);
+    background: var(--c-rgba-237-119-119-12);
     color: var(--danger);
     cursor: pointer;
     transition: background .2s ease, border-color .2s ease;
@@ -1081,7 +1081,7 @@
 
 .remove-fragrance:hover {
     border-color: var(--danger);
-    background: rgba(237, 119, 119, .2);
+    background: var(--c-rgba-237-119-119-2);
 }
 
 

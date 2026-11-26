@@ -92,7 +92,7 @@
 }
 
 .device-items::-webkit-scrollbar-thumb:hover {
-    background: #53617b;
+    background: var(--c-53617b);
 }
 
 /* ========================================
@@ -116,13 +116,13 @@
 }
 
 .device-card:hover {
-    border-color: #53617b;
+    border-color: var(--c-53617b);
     background: var(--bg-hover);
 }
 
 .device-card.selected {
     border-color: var(--accent);
-    background: rgba(113, 135, 255, .1);
+    background: var(--c-rgba-113-135-255-1);
     box-shadow: inset 3px 0 var(--accent);
 }
 
@@ -170,7 +170,7 @@
 }
 
 .device-status.stable {
-    color: #82b7ef;
+    color: var(--c-82b7ef);
 }
 
 .device-status.warning {
@@ -224,9 +224,9 @@
     box-sizing: border-box;
     overflow: hidden;
     padding: 9px;
-    border: 1px solid rgba(237, 119, 119, .3);
+    border: 1px solid var(--c-rgba-237-119-119-3);
     border-radius: 8px;
-    background: rgba(237, 119, 119, .08);
+    background: var(--c-rgba-237-119-119-08);
     color: var(--danger);
     font-size: 10px;
 }
@@ -256,7 +256,7 @@
     height: 5px;
     overflow: hidden;
     border-radius: 5px;
-    background: rgba(237, 119, 119, .18);
+    background: var(--c-rgba-237-119-119-18);
 }
 
 .device-update-progress-bar {
@@ -284,26 +284,26 @@
 }
 
 .device-fragrance-status.available {
-    border-color: rgba(125, 217, 165, .2);
-    background: rgba(125, 217, 165, .1);
+    border-color: var(--c-rgba-125-217-165-2);
+    background: var(--c-rgba-125-217-165-1);
     color: var(--success);
 }
 
 .device-fragrance-status.unavailable {
-    border-color: rgba(237, 119, 119, .2);
-    background: rgba(237, 119, 119, .1);
+    border-color: var(--c-rgba-237-119-119-2);
+    background: var(--c-rgba-237-119-119-1);
     color: var(--danger);
 }
 
 .device-fragrance-status.empty {
-    border-color: rgba(242, 189, 101, .2);
-    background: rgba(242, 189, 101, .1);
+    border-color: var(--c-rgba-242-189-101-2);
+    background: var(--c-rgba-242-189-101-1);
     color: var(--warning);
 }
 
 .device-fragrance-status.error {
-    border-color: rgba(237, 119, 119, .2);
-    background: rgba(237, 119, 119, .1);
+    border-color: var(--c-rgba-237-119-119-2);
+    background: var(--c-rgba-237-119-119-1);
     color: var(--danger);
 }
 
