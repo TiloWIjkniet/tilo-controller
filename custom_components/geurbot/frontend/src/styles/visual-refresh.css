@@ -1,0 +1,556 @@
+
+/* =========================================================
+   GeurBot UI refresh — shared visual system
+   Presentation-only overrides; application markup and logic
+   remain unchanged.
+========================================================= */
+
+:root {
+    --bg-main: #0b1020;
+    --bg-sidebar: #10182a;
+    --bg-content: #0e1728;
+    --bg-card: #172338;
+    --bg-input: #101b2e;
+    --bg-hover: #20314b;
+    --border: #2b3b55;
+    --border-soft: #22324a;
+    --text-primary: #edf3ff;
+    --text-secondary: #a4b3c9;
+    --text-muted: #71839e;
+    --accent: #69a8ff;
+    --accent-dark: #347bd2;
+    --accent-light: #a9d0ff;
+    --success: #58d6a0;
+    --warning: #f4bd68;
+    --danger: #ff7888;
+    --surface-raised: #1b2a42;
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, .18);
+    --radius-card: 14px;
+    --radius-control: 9px;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+body {
+    min-height: 100%;
+    overflow: hidden;
+    background: var(--bg-main);
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--bg-main);
+}
+
+.dashboard-headers,
+.dashboard-content {
+    display: grid;
+    grid-template-columns: minmax(220px, .78fr) minmax(300px, 1.22fr) minmax(320px, 1.22fr);
+    column-gap: 10px;
+    width: 100%;
+    min-width: 0;
+}
+
+.dashboard-headers {
+    align-items: stretch;
+    gap: 0;
+    padding: 14px 14px 0;
+    background: var(--bg-main);
+}
+
+.dashboard-headers > * {
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--border-soft);
+    border-bottom: 0;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    background: var(--bg-card) !important;
+}
+
+
+.dashboard-content {
+    min-height: 0;
+    align-items: stretch;
+    gap: 0;
+    padding: 0 14px 14px;
+    overflow: hidden;
+}
+
+.sidebar,
+.content,
+.extra-panel {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: 12px 16px 16px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-top: 0;
+}
+
+.sidebar {
+    border-radius: 0 0 0 var(--radius-card);
+    border-right: 0;
+    background: var(--bg-sidebar);
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    border-right: 0;
+    background: var(--bg-content);
+}
+
+.extra-panel {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0 0 var(--radius-card) 0;
+    background: var(--bg-main);
+}
+
+.sidebar::-webkit-scrollbar,
+.content::-webkit-scrollbar,
+.extra-panel::-webkit-scrollbar {
+    width: 7px;
+}
+.sidebar::-webkit-scrollbar-thumb,
+.content::-webkit-scrollbar-thumb,
+.extra-panel::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 20px;
+    background: var(--border);
+    background-clip: padding-box;
+}
+
+/* Fixed panel headings; only the matching content column scrolls. */
+.panel-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.panel-header-title h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: clamp(18px, 1.4vw, 22px);
+    font-weight: 700;
+    letter-spacing: -.025em;
+}
+.panel-header-title p {
+    margin: 4px 0 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.device-list,
+.fragrance-list,
+.schedule-content {
+    min-width: 0;
+    min-height: 0;
+}
+.device-list {
+    display: block;
+    overflow: visible;
+}
+.device-items {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-height: 0;
+    padding: 0 2px 2px 0;
+    overflow: visible;
+}
+.fragrance-list {
+    flex: 0 0 auto;
+    overflow: visible;
+}
+.fragrance-items {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+    gap: 12px;
+}
+.schedule-content {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    overflow: visible;
+}
+.schedule-timeline {
+    flex: 0 0 auto;
+    min-height: 960px;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+.schedule-timeline-inner {
+    min-width: 620px;
+}
+
+/* Cards */
+.device-card,
+.fragrance-card,
+.settings-card,
+.performance-section,
+.performance-metric,
+.performance-chart-card,
+.general-settings-card,
+.notification-category,
+.discovered-device {
+    border-color: var(--border-soft);
+    border-radius: var(--radius-card);
+    background: var(--bg-card);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .10);
+}
+.device-card {
+    padding: 13px;
+    border-radius: 12px;
+}
+.device-card:hover,
+.fragrance-card:hover,
+.discovered-device:hover {
+    border-color: #45658d;
+    background: var(--bg-hover);
+    box-shadow: var(--shadow-soft);
+}
+.device-card.selected {
+    border-color: var(--accent);
+    background: rgba(105, 168, 255, .11);
+    box-shadow: inset 3px 0 var(--accent), var(--shadow-soft);
+}
+.fragrance-card {
+    gap: 14px;
+    padding: 16px;
+    border-radius: 13px;
+}
+.fragrance-stat {
+    border-color: var(--border-soft);
+    border-radius: 10px;
+    background: var(--bg-input);
+}
+
+/* Controls — consistent without changing IDs or event hooks. */
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+button {
+    border-radius: var(--radius-control);
+    transition: background-color .18s ease, border-color .18s ease,
+                color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+input, select, textarea {
+    color: var(--text-primary);
+    border-color: var(--border);
+    border-radius: var(--radius-control);
+    background-color: var(--bg-input);
+}
+input::placeholder, textarea::placeholder {
+    color: var(--text-muted);
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--accent) !important;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(105, 168, 255, .14);
+}
+.device-search {
+    height: 40px;
+    margin: 0;
+    border-radius: 10px;
+}
+.device-header {
+    gap: 8px;
+}
+.device-header button,
+.add-device-button,
+.schedule-add-button,
+.general-settings-button,
+.device-settings,
+.firmware-update-button,
+.scan-button,
+.add-discovered-device,
+.device-form-submit,
+.settings-refresh {
+    border: 1px solid rgba(105, 168, 255, .35);
+    background: rgba(105, 168, 255, .13);
+    color: var(--accent-light);
+    font-weight: 650;
+}
+.device-header button:hover,
+.add-device-button:hover,
+.schedule-add-button:hover,
+.general-settings-button:hover,
+.device-settings:hover,
+.firmware-update-button:hover,
+.scan-button:hover,
+.add-discovered-device:hover,
+.device-form-submit:hover,
+.settings-refresh:hover {
+    border-color: var(--accent);
+    background: rgba(105, 168, 255, .22);
+    color: #fff;
+}
+.add-device-button {
+    min-width: 40px;
+    height: 40px;
+}
+.fragrance-actions {
+    gap: 7px;
+}
+.fragrance-actions button,
+.reset-all-counters,
+.toggle-all-fragrance-details {
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+.fragrance-actions button:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+.fragrance-card-actions {
+    gap: 8px;
+    margin-top: 8px;
+}
+.fragrance-card-actions button {
+    min-height: 38px;
+    border-radius: 9px;
+}
+.fragrance-spray-button {
+    border-color: rgba(88, 214, 160, .35);
+    background: rgba(88, 214, 160, .12);
+    color: var(--success);
+}
+.fragrance-spray-button:hover {
+    background: rgba(88, 214, 160, .2);
+}
+.schedule-view-toolbar,
+.schedule-toolbar {
+    flex-shrink: 0;
+}
+.schedule-view-button,
+.schedule-weekday {
+    border-color: var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+}
+.schedule-view-button.active,
+.schedule-weekday.active {
+    border-color: var(--accent);
+    background: rgba(105, 168, 255, .16);
+    color: var(--accent-light);
+}
+
+/* Modals and secondary screens share the same surface language. */
+.add-device-modal,
+.device-form-modal,
+.device-settings-modal,
+.general-settings-modal,
+.schedule-modal {
+    border-color: var(--border);
+    border-radius: 16px;
+    background: #142137;
+    color: var(--text-primary);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .48);
+}
+.settings-tabs,
+.general-settings-tabs {
+    border-color: var(--border-soft);
+}
+.settings-tab,
+.general-settings-tab {
+    border-radius: 9px;
+}
+.settings-tab.active,
+.general-settings-tab.active {
+    background: rgba(105, 168, 255, .16);
+    color: var(--accent-light);
+}
+.settings-card,
+.general-settings-card,
+.performance-section {
+    background: var(--bg-card);
+}
+.schedule-modal input,
+.schedule-modal select,
+.device-form-field input,
+.settings-name-input input {
+    min-height: 40px;
+    background: var(--bg-input);
+}
+.eyebrow {
+    color: var(--accent-light);
+}
+
+/* Responsive: headers stay paired with their own panel on narrow screens. */
+@media (max-width: 1050px) {
+    body {
+        overflow: auto;
+    }
+    #app {
+        height: auto;
+        min-height: 100%;
+    }
+    .dashboard {
+        display: grid;
+        grid-template-rows: none;
+        height: auto;
+        min-height: 100%;
+        overflow: visible;
+    }
+    .dashboard-headers,
+    .dashboard-content {
+        display: contents;
+    }
+    .device-list-header { grid-row: 1; }
+    .sidebar { grid-row: 2; }
+    .fragrance-header { grid-row: 3; }
+    .content { grid-row: 4; }
+    .schedule-header { grid-row: 5; }
+    .extra-panel { grid-row: 6; }
+    .dashboard {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .panel-header {
+        padding: 16px 16px 10px;
+        border: 0;
+    }
+    .sidebar,
+    .content,
+    .extra-panel {
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        padding: 8px 16px 18px;
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+    }
+    .sidebar {
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--border-soft);
+    }
+    .content {
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--border-soft);
+    }
+    .extra-panel {
+        padding-bottom: 18px;
+    }
+    .device-items {
+        overflow: visible;
+    }
+    .fragrance-items {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    }
+    .schedule-timeline {
+        min-height: 760px;
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+}
+
+@media (max-width: 600px) {
+    .dashboard-headers > *,
+    .panel-header {
+        padding-left: 13px;
+        padding-right: 13px;
+    }
+    .sidebar,
+    .content,
+    .extra-panel {
+        padding-left: 13px;
+        padding-right: 13px;
+    }
+    .panel-header-title h2 {
+        font-size: 19px;
+    }
+    .fragrance-header-top {
+        gap: 10px;
+    }
+    .fragrance-actions {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    .fragrance-actions button {
+        flex: 1 1 auto;
+    }
+    .fragrance-card {
+        padding: 14px;
+        gap: 12px;
+    }
+    .fragrance-card-details {
+        gap: 7px;
+    }
+    .fragrance-stat {
+        padding: 10px;
+    }
+    .fragrance-stat strong {
+        font-size: 15px;
+    }
+    .schedule-modal-overlay,
+    .device-settings-overlay,
+    .general-settings-overlay,
+    .add-device-overlay,
+    .device-form-overlay {
+        padding: 10px;
+    }
+    .schedule-modal,
+    .device-settings-modal,
+    .general-settings-modal,
+    .add-device-modal,
+    .device-form-modal {
+        width: 100%;
+        max-width: 100%;
+        max-height: calc(100dvh - 20px);
+    }
+    .schedule-modal-main {
+        padding: 18px;
+    }
+    .schedule-day-options {
+        gap: 3px;
+    }
+}
