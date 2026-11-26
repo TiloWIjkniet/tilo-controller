@@ -30,7 +30,8 @@ from ..api.device_status import (
     start_firmware_update,
     update_backend_device_fragrances,
     get_backend_device_fragrances,
-    delete_backend_device_fragrance
+    delete_backend_device_fragrance,
+    get_notification_targets_api
 )
 
 from ..api.notification_settings import (
@@ -334,4 +335,19 @@ def setup_device_routes(app, device_manager):
     app.router.add_delete(
         "/api/geurbot/devices/{device_id}/fragrance/backend/{mac_address}",
         lambda request: delete_backend_device_fragrance(request, device_manager)
+    )
+    # NOTIFICATIONS
+    app.router.add_get(
+        "/api/notifications",
+        get_notification_settings
+    )
+
+    app.router.add_put(
+        "/api/notifications",
+        update_notification_settings
+    )
+
+    app.router.add_get(
+        "/api/notifications/targets",
+        get_notification_targets_api
     )

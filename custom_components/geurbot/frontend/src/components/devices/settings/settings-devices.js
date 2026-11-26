@@ -1107,8 +1107,10 @@ export function setupDevicesSettings({ overlay, getSelectedDevice }) {
             try {
                 await renameFragrance(device.id, selectedMac, name);
 
+                // Lokale geurgegevens bijwerken.
                 fragrance.name = name;
 
+                // Dashboardkaart bijwerken.
                 const dashboardCard = [...document.querySelectorAll(".fragrance-card")]
                     .find(card => card.dataset.fragranceId === selectedMac);
 
@@ -1116,6 +1118,15 @@ export function setupDevicesSettings({ overlay, getSelectedDevice }) {
 
                 if (heading)
                     heading.textContent = name;
+
+                // Andere frontendonderdelen informeren over de naamswijziging.
+                document.dispatchEvent(new CustomEvent("geurbot:fragrance-renamed", {
+                    detail: {
+                        deviceId: device.id,
+                        fragranceMac: selectedMac,
+                        name
+                    }
+                }));
 
                 renderLayout();
 

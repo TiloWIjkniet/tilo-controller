@@ -784,6 +784,7 @@ document.addEventListener("geurbot:fragrance-updated", event => {
         populateFragrances(selectedDeviceId, selectedMac);
         updateScheduleInfo();
     }
+
 });
 
     document.addEventListener("click", event => {
@@ -951,6 +952,30 @@ form.addEventListener("submit", async event => {
         if (saveButton) saveButton.disabled = false;
     }
 });
+
+    document.addEventListener("geurbot:fragrance-renamed", event => {
+        const { deviceId, fragranceMac, name } = event.detail;
+
+        // Alleen gebeurtenissen van het betreffende apparaat aanpassen.
+        scheduleEvents.forEach(scheduleEvent => {
+            if (
+                String(scheduleEvent.deviceId) === String(deviceId) &&
+                scheduleEvent.fragranceMac === fragranceMac
+            ) {
+                scheduleEvent.fragranceName = name;
+            }
+        });
+
+        // Agenda opnieuw tekenen.
+        renderScheduleEvents();
+
+        // Eventuele geopende details van een cluster bijwerken.
+        const modal = document.getElementById("schedule-modal");
+
+        if (modal && !modal.hidden) {
+            updateScheduleInfo();
+        }
+    });
 
     updateScheduleView();
 

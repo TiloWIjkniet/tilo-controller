@@ -1174,3 +1174,65 @@
 .settings-tab.active {
     /* Je bestaande actieve tab styling */
 }
+
+/* ==================================================
+   NOTIFICATIEBESTEMMINGEN
+   ================================================== */
+
+.notification-destinations {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.notification-destinations-select {
+    width: 100%;
+    min-height: 120px;
+    padding: 8px;
+
+    color: var(--text-primary);
+    background: var(--background-secondary);
+
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+
+    font: inherit;
+    outline: none;
+
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.notification-destinations-select:focus {
+    border-color: var(--accent-color);
+}
+
+.notification-destinations-select option {
+    padding: 9px 10px;
+
+    color: var(--text-primary);
+    background: var(--background-secondary);
+}
+
+.notification-destinations-select option:checked {
+    color: white;
+    background: var(--accent-color);
+}
+
+.notification-destinations-select option:disabled {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+.notification-destinations-status {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.notification-destinations-hint {
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.5;
+}

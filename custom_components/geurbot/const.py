@@ -11,3 +11,4 @@ SERVICE_API_COMMAND = "api_command"
 
 PANEL_TITLE = "GeurBot"
 PANEL_ICON = "mdi:air-purifier"
+DEFAULT_SCAN_TIMEOUT = 15

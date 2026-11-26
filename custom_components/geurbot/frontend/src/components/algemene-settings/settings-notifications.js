@@ -1,5 +1,6 @@
 
 const NOTIFICATIONS_API = "/api/notifications";
+const NOTIFICATION_TARGETS_API = "/api/notifications/targets";
 
 
 // ==================================================
@@ -8,6 +9,9 @@ const NOTIFICATIONS_API = "/api/notifications";
 
 const DEFAULT_NOTIFICATION_SETTINGS = {
     enabled: true,
+
+    // Algemene notificatiebestemmingen.
+    destinations: [],
 
     general: {
         sound: false,
@@ -29,6 +33,8 @@ const DEFAULT_NOTIFICATION_SETTINGS = {
     fragrances: {
         empty: true,
         predictedEmpty: true,
+        unavailable: true,
+        available: true,
         predictionDays: 3
     },
 
@@ -39,6 +45,16 @@ const DEFAULT_NOTIFICATION_SETTINGS = {
 
     firmware: {
         available: true
+    },
+
+    buffer: {
+        enabled: true,
+        delaySeconds: 10
+    },
+
+    repeat: {
+        enabled: true,
+        intervalMinutes: 360
     }
 };
 
@@ -62,12 +78,20 @@ const NOTIFICATION_ELEMENTS = {
 
     "notification-empty-fragrance": "fragrances.empty",
     "notification-predicted-empty": "fragrances.predictedEmpty",
+    "notification-fragrance-unavailable": "fragrances.unavailable",
+    "notification-fragrance-available": "fragrances.available",
     "notification-prediction-days": "fragrances.predictionDays",
 
     "notification-spray-error": "schedule.sprayError",
     "notification-schedule-error": "schedule.scheduleError",
 
-    "notification-firmware-available": "firmware.available"
+    "notification-firmware-available": "firmware.available",
+
+    "notification-buffer-enabled": "buffer.enabled",
+    "notification-buffer-delay": "buffer.delaySeconds",
+
+    "notification-repeat-enabled": "repeat.enabled",
+    "notification-repeat-interval": "repeat.intervalMinutes"
 };
 
 
@@ -77,6 +101,8 @@ const NOTIFICATION_ELEMENTS = {
 
 let notificationSettings =
     structuredClone(DEFAULT_NOTIFICATION_SETTINGS);
+
+let notificationTargets = [];
 
 let notificationSaveQueue = Promise.resolve();
 
@@ -91,6 +117,12 @@ function mergeNotificationSettings(settings = {}) {
     return {
         ...structuredClone(DEFAULT_NOTIFICATION_SETTINGS),
         ...settings,
+
+        destinations: Array.isArray(settings.destinations)
+            ? [...new Set(settings.destinations.filter(
+                value => typeof value === "string"
+            ))]
+            : [],
 
         general: {
             ...DEFAULT_NOTIFICATION_SETTINGS.general,
@@ -120,8 +152,135 @@ function mergeNotificationSettings(settings = {}) {
         firmware: {
             ...DEFAULT_NOTIFICATION_SETTINGS.firmware,
             ...settings.firmware
+        },
+
+        buffer: {
+            ...DEFAULT_NOTIFICATION_SETTINGS.buffer,
+            ...settings.buffer
+        },
+
+        repeat: {
+            ...DEFAULT_NOTIFICATION_SETTINGS.repeat,
+            ...settings.repeat
         }
     };
+}
+
+
+// ==================================================
+// NOTIFICATIEBESTEMMINGEN OPHALEN
+// ==================================================
+
+export async function loadNotificationTargets() {
+    try {
+        const response = await fetch(NOTIFICATION_TARGETS_API, {
+            method: "GET",
+            credentials: "same-origin",
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.targets)) {
+            throw new Error(
+                "Ongeldig antwoord van de notificatiebestemmingen-API"
+            );
+        }
+
+        notificationTargets = data.targets.filter(target =>
+            target &&
+            typeof target.entity_id === "string" &&
+            typeof target.name === "string"
+        );
+
+        return [...notificationTargets];
+
+    } catch (error) {
+        console.error(
+            "[NOTIFICATIONS] Bestemmingen ophalen mislukt:",
+            error
+        );
+
+        throw error;
+    }
+}
+
+
+// ==================================================
+// NOTIFICATIEBESTEMMINGEN OP FRONTEND WEERGEVEN
+// ==================================================
+
+export function applyNotificationTargets(app) {
+    if (!app) return;
+
+    const container = app.querySelector(
+        "#notification-destinations"
+    );
+
+    if (!container) return;
+
+    if (notificationTargets.length === 0) {
+        container.innerHTML = `
+            <p class="notification-empty-targets">
+                Geen notificatiebestemmingen gevonden.
+            </p>
+        `;
+        return;
+    }
+
+    const selectedDestinations = notificationSettings.destinations;
+
+    container.innerHTML = notificationTargets.map(target => {
+        const selected = selectedDestinations.includes(
+            target.entity_id
+        );
+
+        const available = target.available !== false;
+
+        return `
+            <label class="notification-destination-option
+                ${available ? "" : "unavailable"}">
+
+                <input
+                    type="checkbox"
+                    class="notification-destination-checkbox"
+                    value="${escapeNotificationHTML(target.entity_id)}"
+                    ${selected ? "checked" : ""}
+                    ${available ? "" : "disabled"}>
+
+                <span class="notification-destination-info">
+                    <span class="notification-destination-name">
+                        ${escapeNotificationHTML(target.name)}
+                    </span>
+
+                    <small>
+                        ${escapeNotificationHTML(target.entity_id)}
+                        ${available ? "" : " · Niet beschikbaar"}
+                    </small>
+                </span>
+
+            </label>
+        `;
+    }).join("");
+}
+
+
+// ==================================================
+// HTML-TEKST VEILIG MAKEN
+// ==================================================
+
+function escapeNotificationHTML(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    })[character]);
 }
 
 
@@ -143,8 +302,14 @@ export async function loadNotificationSettings() {
 
         const settings = await response.json();
 
-        if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
-            throw new Error("Ongeldig antwoord van de notificatie-API");
+        if (
+            !settings ||
+            typeof settings !== "object" ||
+            Array.isArray(settings)
+        ) {
+            throw new Error(
+                "Ongeldig antwoord van de notificatie-API"
+            );
         }
 
         notificationSettings =
@@ -170,7 +335,6 @@ export async function loadNotificationSettings() {
 async function saveNotificationSettings() {
     const settings = structuredClone(notificationSettings);
 
-    // Een eerdere mislukte opslag mag de wachtrij niet blokkeren.
     notificationSaveQueue = notificationSaveQueue
         .catch(() => {})
         .then(async () => {
@@ -192,6 +356,7 @@ async function saveNotificationSettings() {
 
     try {
         await notificationSaveQueue;
+
     } catch (error) {
         console.error(
             "[NOTIFICATIONS] Instellingen opslaan mislukt:",
@@ -231,6 +396,30 @@ export function updateNotificationSettings(path, value) {
 
 
 // ==================================================
+// NOTIFICATIEBESTEMMING WIJZIGEN
+// ==================================================
+
+async function updateNotificationDestinations(app) {
+    const checkboxes = app.querySelectorAll(
+        ".notification-destination-checkbox"
+    );
+
+    notificationSettings.destinations = [
+        ...checkboxes
+    ]
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
+
+    await saveNotificationSettings();
+
+    console.info(
+        "[NOTIFICATIONS] Bestemmingen opgeslagen:",
+        notificationSettings.destinations
+    );
+}
+
+
+// ==================================================
 // FRONTEND BIJWERKEN
 // ==================================================
 
@@ -249,21 +438,40 @@ export function applyNotificationSettings(settings, app) {
 
         if (element.type === "checkbox") {
             element.checked = Boolean(value);
+
         } else if (value !== undefined && value !== null) {
             element.value = value;
         }
     });
 
+    // SLIDERWAARDEN BIJWERKEN
 
-    // SLIDERWAARDE BIJWERKEN
-    const predictionValue = app.querySelector(
-        "#notification-prediction-value"
-    );
+    const outputElements = {
+        "notification-prediction-value": {
+            value: settings.fragrances.predictionDays,
+            suffix: " dagen"
+        },
 
-    if (predictionValue) {
-        predictionValue.textContent =
-            `${settings.fragrances.predictionDays} dagen`;
-    }
+        "notification-buffer-delay-value": {
+            value: settings.buffer.delaySeconds,
+            suffix: " seconden"
+        },
+
+        "notification-repeat-interval-value": {
+            value: settings.repeat.intervalMinutes,
+            suffix: " minuten"
+        }
+    };
+
+    Object.entries(outputElements).forEach(([id, data]) => {
+        const element = app.querySelector(`#${id}`);
+
+        if (element) {
+            element.textContent = `${data.value}${data.suffix}`;
+        }
+    });
+
+    applyNotificationTargets(app);
 }
 
 
@@ -282,25 +490,61 @@ export function setupNotificationListeners(app) {
         element.addEventListener("change", () => {
             const value = element.type === "checkbox"
                 ? element.checked
-                : element.type === "range"
+                : element.type === "range" ||
+                  element.type === "number"
                     ? Number(element.value)
                     : element.value;
 
             void updateNotificationSettings(path, value);
 
+            const outputs = {
+                "notification-prediction-days": {
+                    id: "notification-prediction-value",
+                    suffix: " dagen"
+                },
 
-            // SLIDERTEKST BIJWERKEN
-            if (id === "notification-prediction-days") {
-                const output = app.querySelector(
-                    "#notification-prediction-value"
+                "notification-buffer-delay": {
+                    id: "notification-buffer-delay-value",
+                    suffix: " seconden"
+                },
+
+                "notification-repeat-interval": {
+                    id: "notification-repeat-interval-value",
+                    suffix: " minuten"
+                }
+            };
+
+            const output = outputs[id];
+
+            if (output) {
+                const outputElement = app.querySelector(
+                    `#${output.id}`
                 );
 
-                if (output) {
-                    output.textContent = `${value} dagen`;
+                if (outputElement) {
+                    outputElement.textContent =
+                        `${value}${output.suffix}`;
                 }
             }
         });
     });
+
+    // Algemene notificatiebestemmingen.
+    const destinationContainer = app.querySelector(
+        "#notification-destinations"
+    );
+
+    if (destinationContainer) {
+        destinationContainer.addEventListener("change", event => {
+            if (
+                event.target.matches(
+                    ".notification-destination-checkbox"
+                )
+            ) {
+                void updateNotificationDestinations(app);
+            }
+        });
+    }
 
     initializedApps.add(app);
 }
@@ -320,7 +564,10 @@ export async function setupNotifications(app) {
     }
 
     try {
-        const settings = await loadNotificationSettings();
+        const [settings] = await Promise.all([
+            loadNotificationSettings(),
+            loadNotificationTargets()
+        ]);
 
         applyNotificationSettings(settings, app);
 

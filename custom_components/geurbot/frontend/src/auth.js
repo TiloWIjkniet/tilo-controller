@@ -234,12 +234,6 @@ window.fetch = async (input, init = {}) => {
     const usedTokenVersion = tokenVersion;
     const usedToken = accessToken;
 
-    console.debug("[GeurBot Auth] Request:", {
-        method,
-        url: url.pathname,
-        tokenVersion: usedTokenVersion
-    });
-
     let response = await sendRequest(input, init, usedToken);
 
     if (response.status !== 401) {

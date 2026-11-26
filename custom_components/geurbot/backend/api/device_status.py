@@ -3,6 +3,8 @@ from aiohttp import web
 from ..communication.esp_client import EspClient
 from .manager import get_data, send_data, get_performance_stats
 from urllib.parse import urlencode
+from ..notification.notification_targets import get_notification_targets
+from homeassistant.core import HomeAssistant
 
 async def get_network_status(request, device_manager):
     device_id = request.match_info["device_id"]
@@ -793,3 +795,16 @@ async def execute_device_fragrance_spray(device, mac_address, amount=1, interval
             await asyncio.sleep(interval)
 
     return {"success": True}
+
+
+async def get_notification_targets_api(request: web.Request) -> web.Response:
+    """Return all available Home Assistant notification targets."""
+
+    hass = request.app["hass"]
+
+    targets = await get_notification_targets(hass)
+
+    return web.json_response({
+        "success": True,
+        "targets": targets
+    })
