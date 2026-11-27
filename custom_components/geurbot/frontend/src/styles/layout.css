@@ -3,7 +3,7 @@
 
 #app {
     width: 100%;
-    min-width: 1200px;
+    min-width: 0;
     min-height: 100vh;
 }
 
@@ -11,8 +11,11 @@
     display: grid;
     grid-template-rows: auto 1fr;
     width: 100%;
-    min-width: 1200px;
-    min-height: 100vh;
+    min-width: 0;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
     background: var(--bg-main);
 }
 
@@ -21,9 +24,9 @@
 .dashboard-headers,
 .dashboard-content {
     display: grid;
-    grid-template-columns: 20% 40% 40%;
+    grid-template-columns: minmax(0, 20fr) minmax(0, 40fr) minmax(0, 40fr);
     width: 100%;
-    min-width: 1200px;
+    min-width: 0;
 }
 
 /* Gezamenlijke header-rij */
@@ -58,6 +61,7 @@
     grid-row: 2;
     align-items: stretch;
     min-height: 0;
+    overflow: hidden;
 }
 
 .sidebar,
@@ -83,6 +87,8 @@
 .sidebar {
     background: var(--bg-sidebar);
     border-right: 1px solid var(--border-soft);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .content {
@@ -179,6 +185,10 @@
     .dashboard {
         display: flex;
         flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: visible;
     }
 
     /* Headers onder elkaar */
@@ -193,6 +203,7 @@
         width: 100%;
         min-width: 0;
         min-height: 0;
+        overflow: visible;
     }
 
     .sidebar,
@@ -200,11 +211,18 @@
     .extra-panel {
         width: 100%;
         min-width: 0;
-        min-height: auto;
+        min-height: 0;
         height: auto;
         padding: 16px;
         box-sizing: border-box;
-        overflow: visible;
+    }
+
+    .sidebar,
+    .content,
+    .extra-panel {
+        max-height: 65vh;
+        overflow: auto;
+        overscroll-behavior: contain;
     }
 
     .sidebar {
@@ -212,12 +230,10 @@
         border-bottom: 1px solid var(--border-soft);
     }
 
-    .content {
-        overflow: visible;
-    }
-
+    .content,
     .extra-panel {
-        overflow: visible;
+        display: flex;
+        flex-direction: column;
     }
 
     /* Panel headers */

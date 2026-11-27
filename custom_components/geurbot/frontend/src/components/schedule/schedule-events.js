@@ -369,199 +369,120 @@ function createClusterDetails(container, events, top) {
     container.appendChild(panel);
 }
 
-function renderDayEvents(day) {
-    const container = document.querySelector(`.schedule-events[data-day="${day}"]`);
-    const grid = container?.closest(".schedule-grid");
-
-    if (!container || !grid) return;
-
-    container.querySelectorAll(".schedule-event-card, .schedule-cluster-details").forEach(element => element.remove());
-
-    const events = scheduleEvents
-        .filter(event =>
-            String(event.deviceId) === String(selectedDeviceId) &&
-            getEventDays(event).includes(day)
-        )
-        .sort((a, b) => a.time.localeCompare(b.time));
-
+function getOverlappingEventGroups(events, gridHeight) {
     const cardHeight = 42;
-    let displayItems;
+    const positioned = events.map(event => {
+        const [hours, minutes] = event.time.split(":").map(Number);
+        const top = ((hours * 60 + minutes) / 1440) * gridHeight;
+        return { event, top, bottom: top + cardHeight };
+    }).sort((a, b) => a.top - b.top);
 
-    if (selectedScheduleView === "week") {
-        const groups = [];
-
-        events.forEach(event => {
-            const [hours, minutes] = event.time.split(":").map(Number);
-            const top = ((hours * 60 + minutes) / 1440) * grid.clientHeight;
-
-            const lastGroup = groups[groups.length - 1];
-
-            if (lastGroup && top < lastGroup.bottom) {
-                lastGroup.events.push(event);
-                lastGroup.bottom = Math.max(lastGroup.bottom, top + cardHeight);
-            } else {
-                groups.push({
-                    events: [event],
-                    bottom: top + cardHeight
-                });
-            }
-        });
-
-        displayItems = groups.map(group => ({
-            time: group.events[0].time,
-            events: group.events
-        }));
-    } else {
-        displayItems = events.map(event => ({
-            time: event.time,
-            events: [event]
-        }));
-    }
-    const positioned = [];
-
-    displayItems.forEach(item => {
-        const [hours, minutes] = item.time.split(":").map(Number);
-        const top = ((hours * 60 + minutes) / 1440) * grid.clientHeight;
-
-        let lane = 0;
-
-        while (positioned.some(other =>
-            other.lane === lane &&
-            top < other.bottom &&
-            top + cardHeight > other.top
-        )) {
-            lane++;
-        }
-
-        positioned.push({
-            top,
-            bottom: top + cardHeight,
-            lane,
-            ...item
-        });
-    });
-
+    // Eén stack per aaneengesloten overlapgroep; nooit steeds smallere lanes.
     const groups = [];
-
     positioned.forEach(item => {
-        let group = groups.find(group =>
-            group.some(other => item.top < other.bottom && item.bottom > other.top)
-        );
-
-        if (!group) {
-            group = [];
-            groups.push(group);
+        const group = groups[groups.length - 1];
+        if (group && item.top < group.bottom) {
+            group.items.push(item);
+            group.bottom = Math.max(group.bottom, item.bottom);
+        } else {
+            groups.push({ items: [item], bottom: item.bottom });
         }
-
-        group.push(item);
     });
-
-    positioned.forEach(item => {
-        const group = groups.find(group => group.includes(item));
-        const laneCount = Math.max(...group.map(other => other.lane)) + 1;
-        const width = 100 / laneCount;
-        const isCluster = item.events.length > 1;
-
-const card = document.createElement("div");
-card.className = `schedule-event-card${isCluster ? " schedule-cluster-card" : ""}`;
-
-card.style.left = `calc(${item.lane * width}% + 3px)`;
-card.style.width = `calc(${width}% - 6px)`;
-
-if (!isCluster) {
-    card.dataset.id = item.events[0].id;
-    card.style.top = `${item.top}px`;
-} else {
-    const sortedEvents = [...item.events].sort((a, b) =>
-        a.time.localeCompare(b.time)
-    );
-
-    const firstTime = sortedEvents[0].time;
-    const lastTime = sortedEvents[sortedEvents.length - 1].time;
-
-    const [firstHours, firstMinutes] = firstTime.split(":").map(Number);
-    const [lastHours, lastMinutes] = lastTime.split(":").map(Number);
-
-    const firstPosition = ((firstHours * 60 + firstMinutes) / 1440) * grid.clientHeight;
-    const lastPosition = ((lastHours * 60 + lastMinutes) / 1440) * grid.clientHeight;
-
-    card.style.top = `${firstPosition}px`;
-    card.style.height = `${Math.max(cardHeight, lastPosition - firstPosition + cardHeight + (15 / 1440) * grid.clientHeight)}px`;
-
-    card.dataset.action = "open-schedule-cluster";
+    return groups.map(group => group.items.map(item => item.event));
 }
 
-    const title = document.createElement("strong");
-    const details = document.createElement("span");
+function createScheduleEventCard(container, events, top, gridHeight, cardMode = false) {
+    const isCluster = events.length > 1;
+    const card = document.createElement("div");
+    card.className = `schedule-event-card${isCluster ? " schedule-cluster-card" : ""}${cardMode ? " schedule-list-card" : ""}`;
+
+    if (cardMode) {
+        card.style.setProperty("--event-color", getFragranceColor(events[0].fragranceName));
+    } else {
+        card.style.top = `${top}px`;
+        card.style.left = "3px";
+        card.style.right = "3px";
+        if (isCluster) {
+            const lastTop = Math.max(...events.map(event => {
+                const [h, m] = event.time.split(":").map(Number);
+                return ((h * 60 + m) / 1440) * gridHeight;
+            }));
+            card.style.height = `${Math.max(42, lastTop - top + 54)}px`;
+        }
+    }
 
     if (isCluster) {
-        const sortedEvents = [...item.events].sort((a, b) =>
-            a.time.localeCompare(b.time)
-        );
-
-        const firstTime = sortedEvents[0].time;
-        const lastTime = sortedEvents[sortedEvents.length - 1].time;
-
-        title.textContent = firstTime === lastTime
-            ? firstTime
-            : `${firstTime} – ${lastTime}`;
-
-        details.textContent = `${item.events.length} spraybeurten`;
-
+        const sorted = [...events].sort((a, b) => a.time.localeCompare(b.time));
+        const first = sorted[0].time;
+        const last = sorted[sorted.length - 1].time;
+        const title = document.createElement("strong");
+        title.textContent = first === last ? first : `${first} – ${last}`;
+        const details = document.createElement("span");
+        details.textContent = `${events.length} spraybeurten`;
         const indicators = document.createElement("div");
         indicators.className = "schedule-cluster-indicators";
-
-        item.events.forEach(event => {
+        events.forEach(event => {
             const dot = document.createElement("span");
             dot.style.background = getFragranceColor(event.fragranceName);
             indicators.appendChild(dot);
         });
-
         card.append(title, details, indicators);
-    }else {
-            const event = item.events[0];
-            const device = getDevice(event.deviceId);
-            const fragrance = device?.fragrances?.find(item =>
-                item.mac_address === event.fragranceMac
-            );
+        card.dataset.action = "open-schedule-cluster";
+        card.addEventListener("click", () => {
+            const existing = container.querySelector(".schedule-cluster-details");
+            if (existing?.dataset.time === first) {
+                existing.remove();
+                return;
+            }
+            createClusterDetails(container, events, cardMode ? 8 : top);
+            container.querySelector(".schedule-cluster-details").dataset.time = first;
+        });
+    } else {
+        const event = events[0];
+        const title = document.createElement("strong");
+        title.textContent = event.fragranceName;
+        const details = document.createElement("span");
+        details.textContent = `${event.time} · ${event.sprays} sprays`;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.dataset.action = "remove-schedule";
+        remove.dataset.id = event.id;
+        remove.setAttribute("aria-label", "Planning verwijderen");
+        remove.textContent = "×";
+        card.dataset.id = event.id;
+        const status = getEventStatus(event);
+        card.classList.toggle("unavailable", status.type === "unavailable");
+        card.classList.toggle("disabled", status.type === "disabled");
+        card.style.setProperty("--event-color", getFragranceColor(event.fragranceName));
+        card.append(title, details, remove);
+    }
+    container.appendChild(card);
+}
 
-            const unavailable = !device || device.unreachable ||
-                !fragrance || fragrance.available === false || fragrance.unreachable;
+function renderDayEvents(day) {
+    const container = document.querySelector(`.schedule-events[data-day="${day}"]`);
+    const grid = container?.closest(".schedule-grid");
+    if (!container || !grid) return;
 
-            const disabled = fragrance?.enabled === false;
+    container.querySelectorAll(".schedule-event-card, .schedule-cluster-details").forEach(element => element.remove());
+    const events = scheduleEvents
+        .filter(event => String(event.deviceId) === String(selectedDeviceId) && getEventDays(event).includes(day))
+        .sort((a, b) => a.time.localeCompare(b.time));
 
-            card.style.setProperty("--event-color", getFragranceColor(event.fragranceName));
-            card.classList.toggle("unavailable", Boolean(unavailable));
-            card.classList.toggle("disabled", Boolean(disabled));
+    const content = document.getElementById("schedule-content");
+    const cardMode = content?.classList.contains("schedule-card-mode");
+    const groups = cardMode
+        ? events.reduce((result, event) => {
+            const group = result.find(items => items[0].time === event.time);
+            if (group) group.push(event); else result.push([event]);
+            return result;
+        }, [])
+        : getOverlappingEventGroups(events, grid.clientHeight);
 
-            title.textContent = event.fragranceName;
-            details.textContent = `${event.time} · ${event.sprays} sprays`;
-
-            const remove = document.createElement("button");
-            remove.type = "button";
-            remove.dataset.action = "remove-schedule";
-            remove.dataset.id = event.id;
-            remove.setAttribute("aria-label", "Planning verwijderen");
-            remove.textContent = "×";
-
-            card.append(title, details, remove);
-        }
-
-        container.appendChild(card);
-
-        if (isCluster) {
-            card.addEventListener("click", () => {
-                const existing = container.querySelector(".schedule-cluster-details");
-
-                if (existing?.dataset.time === item.time) {
-                    existing.remove();
-                    return;
-                }
-
-                createClusterDetails(container, item.events, item.top);
-                container.querySelector(".schedule-cluster-details").dataset.time = item.time;
-            });
-        }
+    groups.forEach(group => {
+        const [hours, minutes] = group[0].time.split(":").map(Number);
+        const top = ((hours * 60 + minutes) / 1440) * grid.clientHeight;
+        createScheduleEventCard(container, group, top, grid.clientHeight, cardMode);
     });
 }
 
@@ -624,6 +545,7 @@ function selectScheduleDay(day) {
 
 function setScheduleView(view) {
     if (view !== "day" && view !== "week") return;
+    if (view === "week" && document.querySelector('[data-view="week"]')?.hidden) return;
 
     selectedScheduleView = view;
     updateScheduleView();
@@ -756,6 +678,40 @@ export function initializeScheduleEvents() {
 
     modal.dataset.initialized = "true";
     loadScheduleEvents();
+
+    const scheduleContent = document.getElementById("schedule-content");
+    const weekButton = scheduleContent?.querySelector('[data-view="week"]');
+    let scheduleResizeFrame = 0;
+    const updateResponsiveSchedule = () => {
+        if (!scheduleContent) return;
+        cancelAnimationFrame(scheduleResizeFrame);
+        scheduleResizeFrame = requestAnimationFrame(() => {
+            const width = scheduleContent.clientWidth;
+            const timeline = scheduleContent.querySelector(".schedule-timeline");
+            const availableHeight = timeline?.clientHeight ?? 0;
+            const weekFits = width >= 760;
+            const timelineFits = availableHeight >= 300;
+
+            if (weekButton) {
+                weekButton.hidden = !weekFits;
+                weekButton.disabled = !weekFits;
+                weekButton.setAttribute("aria-hidden", String(!weekFits));
+            }
+            if (!weekFits && selectedScheduleView === "week") selectedScheduleView = "day";
+            scheduleContent.classList.toggle("schedule-card-mode", !timelineFits);
+            scheduleContent.classList.toggle("schedule-timeline-mode", timelineFits);
+            updateScheduleView();
+        });
+    };
+    if (scheduleContent && "ResizeObserver" in window) {
+        const scheduleObserver = new ResizeObserver(updateResponsiveSchedule);
+        scheduleObserver.observe(scheduleContent);
+        const timeline = scheduleContent.querySelector(".schedule-timeline");
+        if (timeline) scheduleObserver.observe(timeline);
+        scheduleContent._scheduleObserver = scheduleObserver;
+    }
+    window.addEventListener("resize", updateResponsiveSchedule, { passive: true });
+    requestAnimationFrame(updateResponsiveSchedule);
     selectedDeviceId = getSelectedDeviceId();
 
     if (selectedDeviceId) {
@@ -979,7 +935,6 @@ form.addEventListener("submit", async event => {
 
     updateScheduleView();
 
-    window.addEventListener("resize", renderScheduleEvents);
 }
 
 function getEventStatus(event) {

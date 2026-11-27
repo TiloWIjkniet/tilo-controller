@@ -15,11 +15,18 @@
     flex: 1;
     min-width: 0;
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
-.schedule-toolbar {
-    flex-shrink: 0;
+.schedule-toolbar,
+.schedule-view-toolbar {
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 8;
+    background: var(--bg-main);
 }
 
 
@@ -31,7 +38,12 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    overflow-x: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
 }
@@ -40,8 +52,9 @@
     display: grid;
     grid-template-columns: 42px minmax(0, 1fr);
     width: 100%;
-    min-width: 770px;
-    height: max(100%, 960px);
+    min-width: 0;
+    height: max(100%, 720px);
+    box-sizing: border-box;
 }
 
 .schedule-hours,
@@ -55,7 +68,7 @@
     position: relative;
     flex: 1;
     min-width: 0;
-    min-height: 960px;
+    min-height: 720px;
     height: 100%;
 }
 
@@ -861,12 +874,13 @@
 ======================================== */
 
 .schedule-content.day-view .schedule-timeline-inner {
-    min-width: 420px;
-    height: max(100%, 960px);
+    min-width: 0;
+    height: max(100%, 720px);
 }
 
 .schedule-content.day-view .schedule-week-grid {
     grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
 }
 
 .schedule-content.day-view .schedule-day-column:not(.selected-day) {
@@ -1064,7 +1078,7 @@
     display: grid;
     grid-template-columns: 42px repeat(7, minmax(0, 1fr));
     width: 100%;
-    min-width: 770px;
+    min-width: 0;
     flex-shrink: 0;
 }
 
@@ -1218,17 +1232,11 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    .schedule-timeline-inner {
-        min-width: 770px;
-    }
-
-    /* Weekweergave */
-    .schedule-weekdays {
-        min-width: 770px;
-    }
-
+    .schedule-timeline-inner,
+    .schedule-weekdays,
     .schedule-week-grid {
-        min-width: 770px;
+        min-width: 0;
+        width: 100%;
     }
 
     /* Evenementen */
@@ -1308,13 +1316,10 @@
     }
 
     /* Dagweergave */
-    .schedule-content.day-view .schedule-timeline-inner {
-        min-width: 360px;
-    }
-
-    /* Tijdlijn */
+    .schedule-content.day-view .schedule-timeline-inner,
     .schedule-timeline-inner {
-        min-width: 770px;
+        min-width: 0;
+        width: 100%;
     }
 
     .schedule-hour {
@@ -1531,4 +1536,142 @@
 .fragrance-items {
     width: 100%;
     min-width: 0;
+}
+
+/* ========================================
+   ADAPTIEVE AGENDA: PANELMAAT EN KAARTENMODUS
+======================================== */
+.schedule-content,
+.schedule-content * {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.schedule-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.schedule-view-toolbar,
+.schedule-toolbar,
+.schedule-weekdays {
+    flex: 0 0 auto;
+    max-width: 100%;
+}
+
+.schedule-timeline {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.schedule-timeline-inner {
+    grid-template-columns: 38px minmax(0, 1fr);
+}
+
+.schedule-week-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 3px;
+}
+
+.schedule-content.day-view .schedule-week-grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.schedule-content.schedule-card-mode .schedule-timeline {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.schedule-content.schedule-card-mode .schedule-timeline-inner {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+}
+
+.schedule-content.schedule-card-mode .schedule-hours,
+.schedule-content.schedule-card-mode .schedule-hour-row,
+.schedule-content.schedule-card-mode .schedule-current-time {
+    display: none;
+}
+
+.schedule-content.schedule-card-mode .schedule-week-grid,
+.schedule-content.schedule-card-mode .schedule-day-column,
+.schedule-content.schedule-card-mode .schedule-grid {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+}
+
+.schedule-content.schedule-card-mode .schedule-day-column:not(.selected-day) {
+    display: none;
+}
+
+.schedule-content.schedule-card-mode .schedule-events {
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 4px 0 16px;
+    overflow: visible;
+    pointer-events: auto;
+}
+
+.schedule-content.schedule-card-mode .schedule-event-card {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    min-height: 58px;
+    padding: 10px 38px 10px 12px;
+    gap: 5px;
+}
+
+.schedule-content.schedule-card-mode .schedule-event-card strong {
+    font-size: 13px;
+}
+
+.schedule-content.schedule-card-mode .schedule-event-card span {
+    font-size: 12px;
+}
+
+.schedule-content.schedule-card-mode .schedule-cluster-card {
+    min-height: 64px;
+}
+
+.schedule-content.schedule-card-mode .schedule-cluster-details {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: 100%;
+    margin: 4px 0 8px;
+    transform: none;
+}
+
+.schedule-view-button[hidden] {
+    display: none !important;
+}
+
+.extra-panel,
+.dashboard-content,
+.sidebar,
+.content {
+    min-width: 0;
+    min-height: 0;
+}
+
+@media (max-width: 900px) {
+    .extra-panel {
+        height: auto;
+        max-height: 65vh;
+        overflow: hidden;
+    }
+
+    .schedule-content {
+        min-height: 0;
+    }
 }
